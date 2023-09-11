@@ -1,130 +1,102 @@
-<script lang="ts">
-    class NavItem {
+import type { Group } from "$lib/models.js";
 
-        constructor(name: string, url: string, icon: string) {
-            this.name = name;
-            this.url = url;
-            this.icon = icon;
-        }
-        name: string;
-        url: string;
-        icon: string;
-    }
-    class Group {
-        constructor(title: string, pages: NavItem[]) {
-            this.title = title;
-            this.pages = pages;
-        }
-        title: string;
-        pages: NavItem[];
-    }
-    const pages: Group[] = [
+export function load() {
+
+    const pageGroups: Group[] = [
         {
             "title": "Updates",
             "pages": [
                 {
                     "name": "Class Routine",
-                    "url": "/studentApp/routine",
+                    "url": "/routine",
                     "icon": "fi-tr-clock-one"
                 },
                 {
                     "name": "Due Assignments",
-                    "url": "/studentApp/assignments",
+                    "url": "/assignments",
                     "icon": "fi-tr-betamax"
                 }, 
                 {
                     "name": "Upcoming Exams",
-                    "url": "/studentApp/exams",
+                    "url": "/exams",
                     "icon": "fi-tr-border-all"
                 },
                 {
                     "name": "Notices",
-                    "url": "/studentApp/notices",
+                    "url": "/notices",
                     "icon": "fi-tr-bring-front"
                 }
-            ]
+            ],
         },
         {
             "title": "Course Information",
             "pages": [
                 {
                     "name": "Resources",
-                    "url": "/studentApp/resources",
+                    "url": "/resources",
                     "icon": "fi-tr-head-vr"
                 },
                 {
                     "name": "Result",
-                    "url": "/studentApp/result",
+                    "url": "/result",
                     "icon": "fi-tr-farm"
                 }, 
                 {
                     "name": "Attendance",
-                    "url": "/studentApp/attendance",
+                    "url": "/attendance",
                     "icon": "fi-tr-fort"
                 }
-            ]
+            ],
         },
         {
             "title": "Administration",
             "pages": [
                 {
                     "name": "Payment",
-                    "url": "/studentApp/payment",
+                    "url": "/payment",
                     "icon": "fi-tr-house-chimney-window"
                 },
                 {
                     "name": "Course Registration",
-                    "url": "/studentApp/registration",
+                    "url": "/registration",
                     "icon": "fi-tr-people-carry-box"
                 }, 
                 {
                     "name": "Important Links",
-                    "url": "/studentApp/links",
+                    "url": "/links",
                     "icon": "fi-tr-plane-prop"
                 }
-            ]
+            ],
         },
         {
             "title": "Miscellaneous",
             "pages": [
                 {
                     "name": "Bus Schedule",
-                    "url": "/studentApp/bus",
+                    "url": "/bus",
                     "icon": "fi-tr-wine-glass-crack"
                 },
                 {
                     "name": "Student Information",
-                    "url": "/studentApp/student",
+                    "url": "/student",
                     "icon": "fi-tr-cubes"
                 }, 
                 {
                     "name": "Events",
-                    "url": "/studentApp/events",
+                    "url": "/events",
                     "icon": "fi-tr-diagram-sankey"
                 },
                 {
                     "name": "Map",
-                    "url": "/studentApp/map",
+                    "url": "/map",
                     "icon": "fi-tr-wheelchair-move"
                 }
-            ]
+            ],
         },
     ];
+    return {
+        body: pageGroups,
+        appName: 'adminApp'
+    }
     
-</script>
-<div class="h-full">
-    {#each pages as page}
-    <h1 class="text-left">
-            {page.title}
-
-        </h1>
-        <div class="grid grid-cols-4 h-1/4">
-            {#each page.pages as item}
-            <a href={item.url} class="card variant-soft-surface text-center col-span-1 m-4 flex flex-col justify-center">
-                <i class="fi {item.icon}"></i>
-                {item.name}	
-            </a>
-        {/each}
-        </div>
-    {/each}
-</div>
+}
