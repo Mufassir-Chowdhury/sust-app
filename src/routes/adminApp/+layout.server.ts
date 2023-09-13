@@ -7,92 +7,42 @@ export function load() {
             "title": "Updates",
             "pages": [
                 {
-                    "name": "Class Routine",
-                    "url": "/routine",
+                    "name": "Departments",
+                    "url": "/departments",
                     "icon": "fi-tr-clock-one"
                 },
                 {
-                    "name": "Due Assignments",
-                    "url": "/assignments",
+                    "name": "Courses",
+                    "url": "/courses",
                     "icon": "fi-tr-betamax"
                 }, 
                 {
-                    "name": "Upcoming Exams",
-                    "url": "/exams",
+                    "name": "Offered Courses",
+                    "url": "/offeredCourses",
                     "icon": "fi-tr-border-all"
                 },
-                {
-                    "name": "Notices",
-                    "url": "/notices",
-                    "icon": "fi-tr-bring-front"
-                }
             ],
         },
         {
-            "title": "Course Information",
+            "title": "People",
             "pages": [
                 {
-                    "name": "Resources",
-                    "url": "/resources",
+                    "name": "Students",
+                    "url": "/students",
                     "icon": "fi-tr-head-vr"
                 },
                 {
-                    "name": "Result",
-                    "url": "/result",
+                    "name": "Teachers",
+                    "url": "/teachers",
                     "icon": "fi-tr-farm"
                 }, 
                 {
-                    "name": "Attendance",
-                    "url": "/attendance",
+                    "name": "Admins",
+                    "url": "/admins",
                     "icon": "fi-tr-fort"
                 }
             ],
-        },
-        {
-            "title": "Administration",
-            "pages": [
-                {
-                    "name": "Payment",
-                    "url": "/payment",
-                    "icon": "fi-tr-house-chimney-window"
-                },
-                {
-                    "name": "Course Registration",
-                    "url": "/registration",
-                    "icon": "fi-tr-people-carry-box"
-                }, 
-                {
-                    "name": "Important Links",
-                    "url": "/links",
-                    "icon": "fi-tr-plane-prop"
-                }
-            ],
-        },
-        {
-            "title": "Miscellaneous",
-            "pages": [
-                {
-                    "name": "Bus Schedule",
-                    "url": "/bus",
-                    "icon": "fi-tr-wine-glass-crack"
-                },
-                {
-                    "name": "Student Information",
-                    "url": "/student",
-                    "icon": "fi-tr-cubes"
-                }, 
-                {
-                    "name": "Events",
-                    "url": "/events",
-                    "icon": "fi-tr-diagram-sankey"
-                },
-                {
-                    "name": "Map",
-                    "url": "/map",
-                    "icon": "fi-tr-wheelchair-move"
-                }
-            ],
-        },
+        }
     ];
     return {
         body: pageGroups,

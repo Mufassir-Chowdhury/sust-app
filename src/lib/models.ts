@@ -17,3 +17,12 @@ export class Group {
     title: string;
     pages: NavItem[];
 }
+
+export class ListTile{
+    name: String;
+    id: String;
+    constructor(name: String, id: String){
+        this.name = name;
+        this.id = id;
+    }
+}
