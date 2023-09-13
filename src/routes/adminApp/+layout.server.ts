@@ -46,7 +46,8 @@ export function load() {
     ];
     return {
         body: pageGroups,
-        appName: 'adminApp'
+        appUrl: 'adminApp',
+        appName: 'Admin App'
     }
     
 }
