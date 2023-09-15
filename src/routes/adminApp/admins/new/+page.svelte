@@ -25,13 +25,11 @@
       <TextAreaFormField name="About" classValue="col-span-full"/>
     </svelte:fragment>
     <FormField name="Name" classValue="sm:col-span-3"/>   
-    <SelectField name="Department" options={departmentOptions} classValue="sm:col-span-3" />         
+    <SelectField name="Department" options={departmentOptions} classValue="sm:col-span-3" />  
+    <FormField name="Designation" classValue="sm:col-span-4 col-start-1"/>          
+    <SelectField name="Blood Group" options={departmentOptions} classValue="sm:col-span-2" />         
     <FormField name="Personal Email" type="email" classValue="sm:col-span-3"/>
     <FormField name="Academic Email" type="email" classValue="sm:col-span-3"/>
-    <FormField name="Session" type="number" classValue="sm:col-span-2"/>
-    <FormField name="Current Semester" type="number" classValue="sm:col-span-2"/>
-    <SelectField name="Blood Group" options={departmentOptions} classValue="sm:col-span-2" />         
-    <FormField name="Privilage" classValue="sm:col-span-full"/>
     <svelte:fragment slot="personal">
       <FormField name="Father's Name" classValue="sm:col-span-3"/>
       <FormField name="Mother's Name" classValue="sm:col-span-3"/>

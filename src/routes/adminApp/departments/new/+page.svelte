@@ -1,6 +1,6 @@
 <script>
-	import FormField from "$lib/FormField.svelte";
-	import AddForm from "$lib/AddForm.svelte";
+	import FormField from "$lib/Form/FormField.svelte";
+	import AddForm from "$lib/Form/AddForm.svelte";
     export let data;
 
 </script>    

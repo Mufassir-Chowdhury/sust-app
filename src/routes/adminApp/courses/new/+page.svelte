@@ -1,7 +1,7 @@
 <script lang="ts">
-	import FormField from "$lib/FormField.svelte";
-	import AddForm from "$lib/AddForm.svelte";
-	import SelectField from "$lib/SelectField.svelte";
+	import FormField from "$lib/Form/FormField.svelte";
+	import AddForm from "$lib/Form/AddForm.svelte";
+	import SelectField from "$lib/Form/SelectField.svelte";
     export let data;
 
     const departmentOptions = [

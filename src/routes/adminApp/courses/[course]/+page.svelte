@@ -4,27 +4,23 @@
     let details=[
         {
             'key':'Name',
-            'value':'Computer Science and Engineering'
+            'value':'Intro to Computer Science'
         },
         {
-            'key':'ID',
-            'value':'CSE'
+            'key': 'ID',
+            'value': 'CSE101'
         },
         {
-            'key': 'Building',
-            'value': 'IICT Building'
+            'key': 'Credit',
+            'value': '3'
         },
         {
-            'key': 'Floor',
-            'value': '3rd'
+            'key': 'Department',
+            'value': 'Computer Science and Engineering'
         },
         {
-            'key': 'Code',
-            'value': '331'
-        },
-        {
-            'key': 'Minor Course Code',
-            'value': 'D'
+            'key': 'Type',
+            'value': 'Theory'
         }
     ]
 </script>
@@ -33,5 +29,5 @@
         pageName={data.pageName} 
         url={data.url}
         appUrl={data.appUrl}
-        item="CSE"
+        item="CSE101"
         details={details}/>
