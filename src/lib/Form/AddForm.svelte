@@ -17,7 +17,7 @@
         <li>New</li>
     </ol>
 
-    <form class="col-start-2 col-span-4">
+    <form class="col-start-2 col-span-4" method="POST">
         <fieldset class="border-b border-gray-900/10 pb-12 col-span-full">
             <h2 class="text-base font-semibold leading-7 text-gray-900">{singularPageName}</h2>
             <FormField name="ID" leading={singularPageName.toLowerCase()} classValue="sm:col-span-4 mt-10"/>
@@ -41,7 +41,7 @@
         {/if}
         <fieldset class="mt-6 flex items-center justify-end gap-x-6">
             <a class="btn !bg-transparent" href="/{appUrl}/{url}">Cancel</a>
-            <a class="btn variant-filled-primary" href="/{appUrl}/{url}">Create</a>
+            <button type="submit" class="btn variant-filled-primary">Create</button>
         </fieldset>
     </form>
 </div>

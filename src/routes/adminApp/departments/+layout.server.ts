@@ -15,7 +15,7 @@ export async function load() {
     return {
         pageName: 'Departments',
         url: 'departments',
-        listItems: listItems
+        listItems: listItems,
     }
     
 }

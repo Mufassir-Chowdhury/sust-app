@@ -14,7 +14,7 @@
       {name: "Department 5", value: "5"},
   ]
 </script>    
-<!-- TODO : add patern and title attributes -->
+<!-- TODO : add pattern and title attributes -->
 <AddForm 
         appName={data.appName} 
         url={data.url} 
