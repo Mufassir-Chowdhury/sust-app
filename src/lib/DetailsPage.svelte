@@ -1,20 +1,11 @@
 <script lang="ts">
 	import { Avatar } from "@skeletonlabs/skeleton";
 
-    class Item{
-        key: string;
-        value: string;
-        constructor(key: string, value: string){
-            this.key = key;
-            this.value = value;
-        }
-    }
     export let appUrl: String;
     export let pageName: String;
     export let url: String;
     export let appName: String;
     export let item: string;
-    export let details: Item[];
     export let photo: string= "";
     export let name: string= "";
 </script>
@@ -35,14 +26,7 @@
             </div>
         {/if}
       <dl class="divide-y">
-
-        {#each details as detail}
-            <div class="py-4 grid grid-cols-3 gap-4 px-0">
-                <dt class="text-sm font-medium leading-6 text-gray-900">{detail.key}</dt>
-                <dd class="text-sm leading-6 text-gray-700 col-span-2 mt-0">{detail.value}</dd>
-            </div>
-        {/each}
-        
+        <slot/>
       </dl>
     </div>
   </div>

@@ -26,7 +26,7 @@
                     {listItem.name}
                 </h3>
                 <subtitle>
-                    {listItem.id}
+                    {listItem.id.split(':')[1]}
                 </subtitle>
             </div>
             <div>

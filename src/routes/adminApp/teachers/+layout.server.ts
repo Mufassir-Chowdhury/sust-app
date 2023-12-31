@@ -1,21 +1,16 @@
+import { db } from "$lib/Database/surreal";
 import type { ListTile } from "$lib/models.js";
 
-export function load() {
+export async function load() {
 
-    let listItems: ListTile[] = [
-        {
-            name: "Mufassir Ahmad Chowdhury",
-            id: "2019331073"
-        },
-        {
-            name: "Sajid Zakaria",
-            id: "2019331086"
-        },
-        {
-            name: "Asanul Haque Kiron",
-            id: "2019331013"
+    let admins = await db.select('teacher');
+
+    let listItems: ListTile[] = admins.map((admin: any) => {
+        return {
+            name: admin.name,
+            id: admin.id
         }
-    ]
+    });
     
     return {
         pageName: 'Teachers',

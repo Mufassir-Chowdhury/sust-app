@@ -1,37 +1,19 @@
 <script>
 	import DetailsPage from "$lib/DetailsPage.svelte";
+	import Detailsitem from "$lib/Detailsitem.svelte";
     export let data;
-    let details=[
-        {
-            'key':'Name',
-            'value':'Computer Science and Engineering'
-        },
-        {
-            'key':'ID',
-            'value':'CSE'
-        },
-        {
-            'key': 'Building',
-            'value': 'IICT Building'
-        },
-        {
-            'key': 'Floor',
-            'value': '3rd'
-        },
-        {
-            'key': 'Code',
-            'value': '331'
-        },
-        {
-            'key': 'Minor Course Code',
-            'value': 'D'
-        }
-    ]
+    
 </script>
 <DetailsPage 
         appName={data.appName} 
         pageName={data.pageName} 
         url={data.url}
         appUrl={data.appUrl}
-        item="CSE"
-        details={details}/>
+        item="CSE">
+    <Detailsitem key="Name" value="Computer Science and Engineering"/>
+    <Detailsitem key="ID" value="CSE"/>
+    <Detailsitem key="Building" value="IICT Building"/>
+    <Detailsitem key="Floor" value="3rd"/>
+    <Detailsitem key="Code" value="331"/>
+    <Detailsitem key="Minor Course Code" value="D"/>    
+</DetailsPage>
