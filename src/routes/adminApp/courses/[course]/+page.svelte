@@ -1,7 +1,10 @@
-<script>
+<script lang="ts">
 	import DetailsPage from "$lib/DetailsPage.svelte";
 	import Detailsitem from "$lib/Detailsitem.svelte";
+    import { getID } from "$lib/utils.js";
+
     export let data;
+    let details: any = data.details;
     
 </script>
 <DetailsPage 
@@ -9,10 +12,10 @@
         pageName={data.pageName} 
         url={data.url}
         appUrl={data.appUrl}
-        item="CSE101">
-    <Detailsitem key="Name" value="Intro to Computer Science"/>
-    <Detailsitem key="ID" value="CSE101"/>
-    <Detailsitem key="Credit" value="3"/>
-    <Detailsitem key="Department" value="Computer Science and Engineering"/>
-    <Detailsitem key="Type" value="Theory"/>
+        item={getID(details.id)}>
+    <Detailsitem key="Name" value={details.name}/>
+    <Detailsitem key="ID" value={getID(details.id)}/>
+    <Detailsitem key="Credit" value={details.credit}/>
+    <Detailsitem key="Department" value={data.department}/>
+    <Detailsitem key="Type" value={details.type}/>
 </DetailsPage>

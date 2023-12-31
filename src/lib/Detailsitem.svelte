@@ -3,7 +3,7 @@
     export let value: string;
 </script>
 
-<div class="py-4 grid grid-cols-3 gap-4 px-0">
+<div class="py-4 grid grid-cols-3 gap-4 px-4 odd:bg-gray-300 odd:bg-opacity-25">
     <dt class="text-sm font-medium leading-6 text-gray-900">{key}</dt>
     <dd class="text-sm leading-6 text-gray-700 col-span-2 mt-0">{value}</dd>
 </div>

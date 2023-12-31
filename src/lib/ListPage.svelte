@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ListTile } from "./models";
+    import { getID } from "$lib/utils";
 
     export let pageName: string;
     export let appName: string;
@@ -26,7 +27,7 @@
                     {listItem.name}
                 </h3>
                 <subtitle>
-                    {listItem.id.split(':')[1]}
+                    {getID(listItem.id)}
                 </subtitle>
             </div>
             <div>
