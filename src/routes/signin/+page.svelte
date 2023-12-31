@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { focusTrap } from "@skeletonlabs/skeleton";
-    let isFocused: boolean = true;
+  let isFocused: boolean = true;
 </script>
 
 <div class="h-full w-full flex justify-center items-center">

@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
+    "db": "surreal start --log debug --user root --pass root memory",
+    "load": "surreal import --conn http://localhost:8000 --user root --pass root --ns test --db test export.surql",
+    "save": "surreal export --conn http://localhost:8000 --user root --pass root --ns test --db test export.surql",
     "build": "vite build",
     "preview": "vite preview",
     "test": "npm run test:integration && npm run test:unit",
@@ -46,8 +49,13 @@
   },
   "type": "module",
   "dependencies": {
+    "@capacitor/android": "^5.4.1",
+    "@capacitor/cli": "^5.4.1",
+    "@capacitor/core": "^5.4.1",
+    "@capacitor/ios": "^5.4.1",
     "@floating-ui/dom": "1.5.1",
     "@popperjs/core": "^2.11.8",
+    "@sveltejs/adapter-static": "^2.0.3",
     "flowbite": "^1.8.1",
     "flowbite-svelte": "^0.44.8",
     "highlight.js": "11.8.0",

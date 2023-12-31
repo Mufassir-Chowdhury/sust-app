@@ -42,6 +42,16 @@ export function load() {
                     "icon": "fi-tr-fort"
                 }
             ],
+        },
+        {
+            "title": "Administration",
+            "pages": [
+                {
+                    "name": "Payments",
+                    "url": "/payments",
+                    "icon": "fi-tr-head-vr"
+                },
+            ],
         }
     ];
     return {
