@@ -1,10 +1,8 @@
 <script lang="ts">
 	import FormField from "$lib/Form/FormField.svelte";
 	import AddForm from "$lib/Form/AddForm.svelte";
-    import type { ActionData } from "./$types.js";
     export let data;
 
-    export let form: ActionData;
 </script>    
 <!-- TODO : add patern and title attributes -->
 <AddForm 
@@ -20,6 +18,3 @@
     <FormField name="Floor" type="number" classValue="sm:col-span-2"/>
     <FormField name="Minor Course Code" classValue="sm:col-span-2"/>
 </AddForm>
-{#if form?.body.message }
-    {form?.body.message}
-{/if}

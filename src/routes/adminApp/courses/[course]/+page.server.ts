@@ -11,5 +11,4 @@ export async function load({ params }) {
         details: course,
         department: result[0][0].name
     }
-    
 }

@@ -9,6 +9,7 @@ export async function load({ params }) {
     );
     console.log(student);
     return {
+        // TODO creating appropriate types
         details: student,
         department: result[0][0].name
     }

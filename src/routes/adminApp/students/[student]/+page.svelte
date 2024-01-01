@@ -4,7 +4,6 @@
 	import { getID } from "$lib/utils.js";
 
     export let data;
-    // TODO creating appropriate types
     let details: any = data.details;
 
     let photo = "https://i.pravatar.cc/";
