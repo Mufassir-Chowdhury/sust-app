@@ -13,6 +13,7 @@ export const actions = {
             letter_code: data.get('letter-code'),
             minor_course_code: data.get('minor-course-code'),
             name: data.get('name'),
+            syllabus: [],
         });
 
         // TODO handle failure

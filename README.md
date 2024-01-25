@@ -1,29 +1,49 @@
-# create-svelte
+# How to run the app
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This is the SUST APP. We use SvelteKit as the framework and surrealDB as the database.
 
-## Creating a project
-
-If you're seeing this, you've probably already done this step. Congrats!
+## Installing surrealDB
+We used surrealDB as the database. So, you must have it installed.
 
 ```bash
-# create a new project in the current directory
-npm create svelte@latest
-
-# create a new project in my-app
-npm create svelte@latest my-app
+iwr https://windows.surrealdb.com -useb | iex
 ```
 
 ## Developing
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+After every push and clone, you must install the dependencies.
 
+```bash
+npm install
+```
+Run the surrealDB server:
+```bash
+npm run db
+```
+
+We have some data loaded in a file. To import the data:
+```bash
+npm run load
+```
+
+Once you have installed the dependencies, you can start the development server:
 ```bash
 npm run dev
 
 # or start the server and open the app in a new browser tab
 npm run dev -- --open
 ```
+
+If you have changed the data, you can export it to the file:
+```bash
+npm run export
+```
+
+Remember to commit the changes to the file to Github.
+
+# Deployment
+
+If you are just working with it and testing, you don't have to use the following steps. But if you want to deploy it, you must follow the following steps.
 
 ## Building
 
