@@ -6,13 +6,6 @@
 	import PhotoPicker from "$lib/Form/PhotoPicker.svelte";
   export let data;
 
-  const departmentOptions = [
-      {name: "Department 1", value: "1"},
-      {name: "Department 2", value: "2"},
-      {name: "Department 3", value: "3"},
-      {name: "Department 4", value: "4"},
-      {name: "Department 5", value: "5"},
-  ]
 </script>    
 <!-- TODO : add patern and title attributes -->
 <AddForm 
@@ -20,14 +13,15 @@
         url={data.url} 
         pageName={data.pageName} 
         appUrl={data.appUrl}>
-    <svelte:fragment slot="profile">
+    <!-- <svelte:fragment slot="profile">
       <PhotoPicker/>
       <TextAreaFormField name="About" classValue="col-span-full"/>
-    </svelte:fragment>
+    </svelte:fragment> -->
     <FormField name="Name" classValue="sm:col-span-3"/>   
-    <SelectField name="Department" options={departmentOptions} classValue="sm:col-span-3" />  
+    <SelectField name="Department" options={data.departmentOptions} classValue="sm:col-span-3" />  
     <FormField name="Designation" classValue="sm:col-span-4 col-start-1"/>          
-    <SelectField name="Blood Group" options={departmentOptions} classValue="sm:col-span-2" />         
+    <SelectField name="Blood Group" options={data.bloodGroupOptions} classValue="sm:col-span-1" />         
+    <SelectField name="Gender" options={data.genderOptions} classValue="sm:col-span-1" />         
     <FormField name="Personal Email" type="email" classValue="sm:col-span-3"/>
     <FormField name="Academic Email" type="email" classValue="sm:col-span-3"/>
     <svelte:fragment slot="personal">
