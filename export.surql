@@ -48,11 +48,6 @@ DEFINE FIELD course_code ON course TYPE string VALUE meta::id(id) PERMISSIONS FU
 DEFINE FIELD credit ON course TYPE float ASSERT $value != NONE AND $value > 0 AND $value <= 4 PERMISSIONS FULL;
 DEFINE FIELD department ON course TYPE record<department> ASSERT $value != NONE PERMISSIONS FULL;
 DEFINE FIELD name ON course TYPE string ASSERT $value != NONE AND $value = /^[A-Za-z ]+$/ AND string::len($value) > 5 PERMISSIONS FULL;
-DEFINE FIELD syllabus ON course TYPE array PERMISSIONS FULL;
-DEFINE FIELD syllabus[*] ON course TYPE object PERMISSIONS FULL;
-DEFINE FIELD syllabus[*].title ON course TYPE string ASSERT $value != NONE AND $value = /^[A-Za-z ,&0-9]+$/ AND string::len($value) > 5 PERMISSIONS FULL;
-DEFINE FIELD syllabus[*].topics ON course TYPE array PERMISSIONS FULL;
-DEFINE FIELD syllabus[*].topics[*] ON course TYPE string ASSERT $value != NONE AND string::len($value) > 5 PERMISSIONS FULL;
 DEFINE FIELD type ON course TYPE string ASSERT $value INSIDE ['Lab', 'Theory', 'Thesis'] PERMISSIONS FULL;
 
 DEFINE INDEX name ON course FIELDS name UNIQUE;
@@ -250,8 +245,8 @@ UPDATE admin:2019331004 CONTENT { blood_group: 'B+', department: department:CSE,
 -- TABLE DATA: course
 -- ------------------------------
 
-UPDATE course:CSE222 CONTENT { course_code: 'CSE222', credit: 3, department: department:CSE, id: course:CSE222, name: 'Computer Science', syllabus: [{ title: 'Topic 1', topics: ['Discussion', 'Something other than that'] }, { title: 'Topic 2', topics: ['Discussion2', 'Something other than that'] }], type: 'Theory' };
-UPDATE course:CSE330 CONTENT { course_code: 'CSE330', credit: 2, department: department:CSE, id: course:CSE330, name: 'Web Tech', syllabus: [{ title: 'Topic 1', topics: ['Discussion', 'Something other than that'] }, { title: 'Topic 2', topics: ['Discussion2', 'Something other than that'] }], type: 'Lab' };
+UPDATE course:CSE222 CONTENT { course_code: 'CSE222', credit: 3, department: department:CSE, id: course:CSE222, name: 'Computer Science', type: 'Theory' };
+UPDATE course:CSE330 CONTENT { course_code: 'CSE330', credit: 2, department: department:CSE, id: course:CSE330, name: 'Web Tech', type: 'Lab' };
 
 -- ------------------------------
 -- TABLE DATA: dailyroutine
@@ -265,6 +260,7 @@ UPDATE dailyroutine:ndeb82uxfmwgybsuk2md CONTENT { building: 'IICT', date: '2023
 
 UPDATE department:CSE CONTENT { building: 'Dr. M. A. Wazed Miah IICT Building', code: 331, floor: 3, id: department:CSE, letter_code: 'CSE', minor_course_code: 'D', name: 'Computer Science and Engineering' };
 UPDATE department:ECO CONTENT { building: 'D', code: 330, floor: 3, id: department:ECO, letter_code: 'ECO', minor_course_code: 'B', name: 'Economics' };
+UPDATE department:EEE CONTENT { building: 'Dr. M. A. Wazed Miah IICT Building', code: 391, floor: 4, id: department:EEE, letter_code: 'EEE', minor_course_code: 'E', name: 'Electrical and Electronics Engineering' };
 UPDATE department:PHY CONTENT { building: 'A', code: 132, floor: 1, id: department:PHY, letter_code: 'PHY', minor_course_code: 'C', name: 'Physics' };
 UPDATE department:SWE CONTENT { building: 'Dr. M. A. Wazed Miah IICT Building', code: 123, floor: 1, id: department:SWE, letter_code: 'SWE', minor_course_code: 'A', name: 'Software Engineering' };
 

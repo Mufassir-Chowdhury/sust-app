@@ -67,7 +67,7 @@ export const actions = {
         console.log(record);
         // // TODO handle failure
         // if(record){
-        //     throw redirect(303, "/adminApp/students/" + "student:" + data.get('id'));
+        //     throw redirect(303, "/adminApp/students/" + "student:" + data.get('id') + "?showSuccess=true");
         // }
 
 	},

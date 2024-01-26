@@ -4,7 +4,7 @@
     export let data;
 
 </script>    
-<!-- TODO : add patern and title attributes -->
+<!-- TODO : add patern and title attributes to form fields -->
 <AddForm 
         appName={data.appName} 
         url={data.url} 

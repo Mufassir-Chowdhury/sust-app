@@ -36,7 +36,7 @@ export const actions = {
 
         // TODO handle failure
         if(record){
-            throw redirect(303, "/adminApp/courses/" + "course:" + data.get('id'));
+            throw redirect(303, "/adminApp/courses/" + "course:" + data.get('id') + "?showSuccess=true");
         }
 
 	},

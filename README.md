@@ -9,6 +9,8 @@ We used surrealDB as the database. So, you must have it installed.
 iwr https://windows.surrealdb.com -useb | iex
 ```
 
+Make sure you have NodeJS installed.
+
 ## Developing
 
 After every push and clone, you must install the dependencies.
@@ -21,12 +23,13 @@ Run the surrealDB server:
 npm run db
 ```
 
-We have some data loaded in a file. To import the data:
+We have some data loaded in a file. To import the data (In separate terminal):
 ```bash
 npm run load
 ```
 
-Once you have installed the dependencies, you can start the development server:
+Once you have installed the dependencies, you can start the development server (In separate terminal):
+
 ```bash
 npm run dev
 

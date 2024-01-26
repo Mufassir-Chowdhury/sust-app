@@ -13,7 +13,7 @@ export async function load() {
     });
     
     return {
-        pageName: 'Departments',
+        pageName: 'Department',
         url: 'departments',
         listItems: listItems,
     }

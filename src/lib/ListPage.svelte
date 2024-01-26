@@ -1,11 +1,15 @@
 <script lang="ts">
 	import type { ListTile } from "./models";
     import { getID } from "$lib/utils";
+	import { onDelete } from "./Modal/DeleteModal";
 
     export let pageName: string;
     export let appName: string;
     export let url: string;
     export let listItems: ListTile[];
+
+    
+
 </script>
 
 <div class="p-8">
@@ -20,21 +24,21 @@
         </a>
     </div>
     {#each listItems as listItem}
-    <a href="/{appName}/{url}/{listItem.id}">
-        <div class="p-4 card card-hover variant-soft-surface my-4 flex justify-between">
-            <div class="flex flex-col">
-                <h3>
-                    {listItem.name}
-                </h3>
-                <subtitle>
-                    {getID(listItem.id)}
-                </subtitle>
-            </div>
-            <div>
-                <button class="btn btn-primary"><i class="fi fi-tr-file-edit"></i></button>
-                <button class="btn btn-danger"><i class="fi fi-tr-delete-right"></i></button>
+    <div class="py-4 px-8 card card-hover variant-soft-surface my-4 grid grid-cols-12">
+            <a href="/{appName}/{url}/{listItem.id}" class="flex flex-col col-span-11">
+                <div>
+                    <h3>
+                        {listItem.name}
+                    </h3>
+                    <subtitle>
+                        {getID(listItem.id)}
+                    </subtitle>
+                </div>
+            </a>
+            <div class="col-span-1 flex">
+                <button type="button" on:click={() => console.log("clicked") } class="btn btn-primary"><i class="fi fi-tr-file-edit"></i></button>
+                <button type="button" on:click={() => onDelete(listItem.id) } class="btn btn-danger"><i class="fi fi-tr-delete-right"></i></button>            
             </div>
         </div>
-    </a>
     {/each}
 </div>

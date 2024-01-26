@@ -4,7 +4,7 @@
     export let pageName: String;
     export let url: String;
     export let appName: String;
-    let singularPageName = pageName.slice(0, -1);
+    
 </script>
 <div class="p-8 grid grid-cols-6">
 
@@ -19,8 +19,8 @@
 
     <form class="col-start-2 col-span-4" method="POST">
         <fieldset class="border-b border-gray-900/10 pb-12 col-span-full">
-            <h2 class="text-base font-semibold leading-7 text-gray-900">{singularPageName}</h2>
-            <FormField name="ID" leading={singularPageName.toLowerCase()} classValue="sm:col-span-4 mt-10"/>
+            <h2 class="text-base font-semibold leading-7 text-gray-900">{pageName}</h2>
+            <FormField name="ID" leading={pageName.toLowerCase()} classValue="sm:col-span-4 mt-10"/>
             <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                 <slot name="profile" />
             </div>
