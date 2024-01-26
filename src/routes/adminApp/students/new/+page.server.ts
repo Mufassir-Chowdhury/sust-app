@@ -42,9 +42,7 @@ export async function load() {
 export const actions = {
 	default: async ({ request }) => {
         const data = await request.formData();
-        console.log(data);
         const id = 'student:' + data.get('id');
-        console.log(id);
        
         const [record] = await db.create("student", {
             id: id,
@@ -67,7 +65,6 @@ export const actions = {
             },
             session: parseInt(data.get('session') as string),
         });
-        console.log("added: " + record);
         // TODO handle failure
         if(record){
             throw redirect(303, "/adminApp/students/" + "student:" + data.get('id') + "?showSuccess=true");
