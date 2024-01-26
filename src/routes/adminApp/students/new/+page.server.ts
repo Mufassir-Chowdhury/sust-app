@@ -43,8 +43,11 @@ export const actions = {
 	default: async ({ request }) => {
         const data = await request.formData();
         console.log(data);
+        const id = 'student:' + data.get('id');
+        console.log(id);
        
-        const [record] = await db.create("student:" + data.get('id'), {
+        const [record] = await db.create("student", {
+            id: id,
             blood_group: data.get('blood group'),
             department: data.get('department'),
             current_semester: parseInt(data.get('current-semester') as string),
@@ -64,11 +67,11 @@ export const actions = {
             },
             session: parseInt(data.get('session') as string),
         });
-        console.log(record);
-        // // TODO handle failure
-        // if(record){
-        //     throw redirect(303, "/adminApp/students/" + "student:" + data.get('id') + "?showSuccess=true");
-        // }
+        console.log("added: " + record);
+        // TODO handle failure
+        if(record){
+            throw redirect(303, "/adminApp/students/" + "student:" + data.get('id') + "?showSuccess=true");
+        }
 
 	},
 } satisfies Actions;

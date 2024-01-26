@@ -160,7 +160,6 @@ DEFINE FIELD email ON student TYPE object PERMISSIONS FULL;
 DEFINE FIELD email.academic ON student TYPE string ASSERT $value != NONE AND parse::email::host($value) = 'student.sust.edu' AND parse::email::user($value) >= 5 PERMISSIONS FULL;
 DEFINE FIELD email.personal ON student TYPE string ASSERT $value != NONE PERMISSIONS FULL;
 DEFINE FIELD gender ON student TYPE string ASSERT $value INSIDE ['male', 'female'] PERMISSIONS FULL;
-DEFINE FIELD id ON student TYPE string PERMISSIONS FULL;
 DEFINE FIELD name ON student TYPE string ASSERT $value != NONE AND $value = /^[A-Za-z. ]+$/ AND string::len($value) >= 3 PERMISSIONS FULL;
 DEFINE FIELD personal ON student TYPE object PERMISSIONS FULL;
 DEFINE FIELD personal.birthday ON student TYPE datetime ASSERT $value != NONE AND time::year($value) < time::year() - 15 PERMISSIONS FULL;
@@ -168,11 +167,7 @@ DEFINE FIELD personal.father ON student TYPE string ASSERT $value != NONE AND $v
 DEFINE FIELD personal.hometown ON student TYPE string ASSERT $value != NONE AND $value = /^[A-Za-z, ]+$/ AND string::len($value) >= 3 PERMISSIONS FULL;
 DEFINE FIELD personal.mother ON student TYPE string ASSERT $value != NONE AND $value = /^[A-Za-z. ]+$/ AND string::len($value) >= 3 PERMISSIONS FULL;
 DEFINE FIELD personal.phone ON student TYPE string PERMISSIONS FULL;
-DEFINE FIELD privilege ON student TYPE string ASSERT $value = NONE OR ($value = /^[A-Za-z. ]+$/ AND string::len($value) > 1) PERMISSIONS FULL;
-DEFINE FIELD result ON student TYPE object PERMISSIONS FULL;
-DEFINE FIELD result.cgpa ON student TYPE float ASSERT $value == NONE OR $value >= 0 AND $value <= 4 PERMISSIONS FULL;
-DEFINE FIELD result.grade ON student TYPE string ASSERT $value == NONE OR $value INSIDE ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'F'] PERMISSIONS FULL;
-DEFINE FIELD result.total_credit ON student TYPE float ASSERT $value == NONE OR $value >= 0 AND $value <= 160 PERMISSIONS FULL;
+DEFINE FIELD privilage ON student TYPE string ASSERT $value = NONE OR ($value = /^[A-Za-z. ]+$/ AND string::len($value) > 1) PERMISSIONS FULL;
 DEFINE FIELD session ON student TYPE number ASSERT $value != NONE AND $value >= 1980 AND $value <= time::year() AND math::round($value) = $value PERMISSIONS FULL;
 
 DEFINE INDEX academic_email ON student FIELDS email.academic UNIQUE;
@@ -238,7 +233,6 @@ BEGIN TRANSACTION;
 -- TABLE DATA: admin
 -- ------------------------------
 
-UPDATE admin:2019331002 CONTENT { blood_group: 'B+', department: department:CSE, designation: 'Assistant Something', email: { academic: 'mufassir@sust.edu', personal: 'mac2221@gmail.com' }, gender: 'male', id: admin:2019331002, name: 'Mr. Xx', personal: { birthday: '2001-07-10T07:18:52Z', father: 'Mr. X', hometown: 'Sylhet', mother: 'Mrs. Y', phone: '01771144309' } };
 UPDATE admin:2019331004 CONTENT { blood_group: 'B+', department: department:CSE, designation: 'Assistant Something', email: { academic: 'mrx@sust.edu', personal: 'mac22214u@gmail.com' }, gender: 'male', id: admin:2019331004, name: 'Mr. X', personal: { birthday: '2001-07-10T07:18:52Z', father: 'Mr. X', hometown: 'Sylhet', mother: 'Mrs. Y', phone: '01771144308' } };
 
 -- ------------------------------
@@ -295,15 +289,10 @@ RELATE user:emfrsjin5aql5nbu2cnz -> login:0rmjsdqk2j0v0qq2thwv -> student:202311
 RELATE user:ws6uynksgs1kdr07b3r8 -> login:1sjkmi7o2a9f98a978gi -> teacher:2019331073 CONTENT { __: true, id: login:1sjkmi7o2a9f98a978gi, in: user:ws6uynksgs1kdr07b3r8, out: teacher:2019331073 };
 RELATE user:xz5o4prrbak776nivu4a -> login:2or2pea30ymoa6ko5905 -> student:2019331013 CONTENT { __: true, id: login:2or2pea30ymoa6ko5905, in: user:xz5o4prrbak776nivu4a, out: student:2019331013 };
 RELATE user:4p3m8nugy0lspbz2mxr8 -> login:74aiw92bacx0k2zvodbu -> student:2022998101 CONTENT { __: true, id: login:74aiw92bacx0k2zvodbu, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
-RELATE user:aasa01kbaknch7ol17w7 -> login:a6j4uyrajbtxp64xegnp -> student:2019331073 CONTENT { __: true, id: login:a6j4uyrajbtxp64xegnp, in: user:aasa01kbaknch7ol17w7, out: student:2019331073 };
 RELATE user:pi75cobhfzu0xp5ex832 -> login:ad56liuqu1nfkj275cz5 -> student:2022887055 CONTENT { __: true, id: login:ad56liuqu1nfkj275cz5, in: user:pi75cobhfzu0xp5ex832, out: student:2022887055 };
-RELATE user:yycl51qmt5pz4gn798ct -> login:aqrods5pwrwjmz61kdq5 -> student:2022336011 CONTENT { __: true, id: login:aqrods5pwrwjmz61kdq5, in: user:yycl51qmt5pz4gn798ct, out: student:2022336011 };
 RELATE user:emfrsjin5aql5nbu2cnz -> login:fc5fhrxvg2lqqfouq513 -> student:2023119144 CONTENT { __: true, id: login:fc5fhrxvg2lqqfouq513, in: user:emfrsjin5aql5nbu2cnz, out: student:2023119144 };
-RELATE user:d9pu7wrq9qgg9ssojw78 -> login:jadeoaijybhx570kkrc3 -> admin:2019331002 CONTENT { __: true, id: login:jadeoaijybhx570kkrc3, in: user:d9pu7wrq9qgg9ssojw78, out: admin:2019331002 };
-RELATE user:3sx7fe9v6w58gag2b625 -> login:oh12q5ju4z4l60t2pn0a -> teacher:2016331033 CONTENT { __: true, id: login:oh12q5ju4z4l60t2pn0a, in: user:3sx7fe9v6w58gag2b625, out: teacher:2016331033 };
 RELATE user:4p3m8nugy0lspbz2mxr8 -> login:pupihh1qmjmigs8dcjky -> student:2022998101 CONTENT { __: true, id: login:pupihh1qmjmigs8dcjky, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
 RELATE user:hb4sfhwnejl13tkzhfpw -> login:s1ut92rd7ukzly37hbvr -> admin:2019331004 CONTENT { __: true, id: login:s1ut92rd7ukzly37hbvr, in: user:hb4sfhwnejl13tkzhfpw, out: admin:2019331004 };
-RELATE user:nbe5cbdnq5fke193hw67 -> login:t9s83uozefinf9kpxtl4 -> student:2022447122 CONTENT { __: true, id: login:t9s83uozefinf9kpxtl4, in: user:nbe5cbdnq5fke193hw67, out: student:2022447122 };
 
 -- ------------------------------
 -- TABLE DATA: offers
@@ -341,19 +330,16 @@ UPDATE routine:196j2rikt9dgikhpuelv CONTENT { building: 'IICT', duration: '1hr',
 -- TABLE DATA: student
 -- ------------------------------
 
-UPDATE student:2019331013 CONTENT { blood_group: 'A+', current_semester: 5, department: department:CSE, email: { academic: 'asanul13@student.sust.edu', personal: 'asanulhaquekiron@gmail.com' }, gender: 'male', id: student:2019331013, name: 'Asanul Haque Kiron', personal: { birthday: '2000-12-03T07:18:52Z', father: 'Md Mojammel Haque', hometown: 'Naogaon', mother: 'Most Ayasha Siddika', phone: '01771144309' }, result: { cgpa: 3.94f, grade: 'A', total_credit: 160 }, session: 2019 };
-UPDATE student:2019331073 CONTENT { blood_group: 'B+', current_semester: 5, department: department:CSE, email: { academic: 'mufassir73@student.sust.edu', personal: 'mac22214u@gmail.com' }, gender: 'male', id: student:2019331073, name: 'Mufassir Ahmad Chowdhury', personal: { birthday: '2001-07-10T07:18:52Z', father: 'Hafiz Md Mashhud Chowdhury', hometown: 'Sylhet', mother: 'Afsana Begum', phone: '01771144308' }, privilege: 'CR', result: { cgpa: 4, grade: 'A+', total_credit: 160 }, session: 2019 };
-UPDATE student:2022336011 CONTENT { blood_group: 'AB-', current_semester: 1, department: department:CSE, email: { academic: 'amelia01@student.sust.edu', personal: 'amelia.harris@example.com' }, gender: 'female', id: student:2022336011, name: 'Amelia Harris', personal: { birthday: '2002-03-20T09:45:00Z', father: 'Christopher Harris', hometown: 'Atlanta', mother: 'Jessica Harris', phone: '1743210987' }, privilege: 'Student', result: { cgpa: 3.6f, grade: 'A-', total_credit: 40 }, session: 2022 };
-UPDATE student:2022447122 CONTENT { blood_group: 'B+', current_semester: 3, department: department:PHY, email: { academic: 'ethan02@student.sust.edu', personal: 'ethan.rahman@example.com' }, gender: 'male', id: student:2022447122, name: 'Ethan Rahman', personal: { birthday: '2001-05-15T11:30:00Z', father: 'Ahmed Rahman', hometown: 'Dhaka', mother: 'Nadia Rahman', phone: '1732109876' }, result: { cgpa: 3.5f, grade: 'B+', total_credit: 75 }, session: 2022 };
-UPDATE student:2022887055 CONTENT { blood_group: 'A-', current_semester: 2, department: department:ECO, email: { academic: 'sophia03@student.sust.edu', personal: 'sophia.ahmed@example.com' }, gender: 'female', id: student:2022887055, name: 'Sophia Ahmed', personal: { birthday: '2001-09-10T14:00:00Z', father: 'Kamal Ahmed', hometown: 'Chittagong', mother: 'Sara Ahmed', phone: '1754321098' }, privilege: 'Student', result: { cgpa: 3.8000000000000003f, grade: 'A', total_credit: 60 }, session: 2022 };
-UPDATE student:2022998101 CONTENT { blood_group: 'B-', current_semester: 4, department: department:SWE, email: { academic: 'arjun04@student.sust.edu', personal: 'arjun.chowdhury@example.com' }, gender: 'male', id: student:2022998101, name: 'Arjun Chowdhury', personal: { birthday: '2001-07-12T09:15:00Z', father: 'Rahim Chowdhury', hometown: 'Rajshahi', mother: 'Nasreen Chowdhury', phone: '1743210989' }, privilege: 'Student', result: { cgpa: 3.2f, grade: 'B', total_credit: 100 }, session: 2022 };
-UPDATE student:2023119144 CONTENT { blood_group: 'O+', current_semester: 5, department: department:PHY, email: { academic: 'amina05@student.sust.edu', personal: 'amina.islam@example.com' }, gender: 'female', id: student:2023119144, name: 'Amina Islam', personal: { birthday: '2001-10-08T10:00:00Z', father: 'Mohammed Islam', hometown: 'Khulna', mother: 'Fatima Islam', phone: '1732109877' }, result: { cgpa: 3.9000000000000004f, grade: 'A', total_credit: 140 }, session: 2022 };
+UPDATE student:2019331013 CONTENT { blood_group: 'A+', current_semester: 5, department: department:CSE, email: { academic: 'asanul13@student.sust.edu', personal: 'asanulhaquekiron@gmail.com' }, gender: 'male', id: student:2019331013, name: 'Asanul Haque Kiron', personal: { birthday: '2000-12-03T07:18:52Z', father: 'Md Mojammel Haque', hometown: 'Naogaon', mother: 'Most Ayasha Siddika', phone: '01771144309' }, session: 2019 };
+UPDATE student:2019331073 CONTENT { blood_group: 'B+', current_semester: 7, department: department:CSE, email: { academic: 'mufassir73@student.sust.edu', personal: 'mac22214u@gmail.com' }, gender: 'male', id: student:2019331073, name: 'Mufassir Ahmad Chowdhury', personal: { birthday: '2001-07-09T18:00:00Z', father: 'Hafiz Md. Mashhud Chowdhury', hometown: 'Sylhet', mother: 'Afsana Begum', phone: '+8801771144308' }, privilage: 'Default', session: 2019 };
+UPDATE student:2022887055 CONTENT { blood_group: 'A-', current_semester: 2, department: department:ECO, email: { academic: 'sophia03@student.sust.edu', personal: 'sophia.ahmed@example.com' }, gender: 'female', id: student:2022887055, name: 'Sophia Ahmed', personal: { birthday: '2001-09-10T14:00:00Z', father: 'Kamal Ahmed', hometown: 'Chittagong', mother: 'Sara Ahmed', phone: '1754321098' }, session: 2022 };
+UPDATE student:2022998101 CONTENT { blood_group: 'B-', current_semester: 4, department: department:SWE, email: { academic: 'arjun04@student.sust.edu', personal: 'arjun.chowdhury@example.com' }, gender: 'male', id: student:2022998101, name: 'Arjun Chowdhury', personal: { birthday: '2001-07-12T09:15:00Z', father: 'Rahim Chowdhury', hometown: 'Rajshahi', mother: 'Nasreen Chowdhury', phone: '1743210989' }, session: 2022 };
+UPDATE student:2023119144 CONTENT { blood_group: 'O+', current_semester: 5, department: department:PHY, email: { academic: 'amina05@student.sust.edu', personal: 'amina.islam@example.com' }, gender: 'female', id: student:2023119144, name: 'Amina Islam', personal: { birthday: '2001-10-08T10:00:00Z', father: 'Mohammed Islam', hometown: 'Khulna', mother: 'Fatima Islam', phone: '1732109877' }, session: 2022 };
 
 -- ------------------------------
 -- TABLE DATA: takes
 -- ------------------------------
 
-RELATE student:2019331073 -> takes:2jepxv788in9t7t71q8g -> course:CSE330 CONTENT { __: true, id: takes:2jepxv788in9t7t71q8g, in: student:2019331073, out: course:CSE330, semester: 12, year: 2019 };
 RELATE student:2019331013 -> takes:4tnahxcwnlgpj6l634dl -> course:CSE222 CONTENT { __: true, id: takes:4tnahxcwnlgpj6l634dl, in: student:2019331013, out: course:CSE222, semester: 12, year: 2019 };
 RELATE student:2019331013 -> takes:cvq6uvnqf51c3vvuws97 -> course:CSE330 CONTENT { __: true, id: takes:cvq6uvnqf51c3vvuws97, in: student:2019331013, out: course:CSE330, semester: 12, year: 2019 };
 
@@ -361,15 +347,12 @@ RELATE student:2019331013 -> takes:cvq6uvnqf51c3vvuws97 -> course:CSE330 CONTENT
 -- TABLE DATA: teacher
 -- ------------------------------
 
-UPDATE teacher:2016331033 CONTENT { blood_group: 'B+', department: department:CSE, designation: 'Lecturer', email: { academic: 'xyz@sust.edu', personal: 'xyzz@gmail.com' }, gender: 'male', id: teacher:2016331033, name: 'Mr. X', personal: { birthday: '2001-07-10T07:18:52Z', father: 'Mr. Y', hometown: 'Khulna', mother: 'Mrs. Z', phone: '1771144309' } };
 UPDATE teacher:2019331073 CONTENT { blood_group: 'B+', department: department:CSE, designation: 'Lecturer', email: { academic: 'mufassir73@sust.edu', personal: 'mac22214u@gmail.com' }, gender: 'male', id: teacher:2019331073, name: 'Mufassir Ahmad Chowdhury', personal: { birthday: '2001-07-10T07:18:52Z', father: 'Hafiz Md Mashhud Chowdhury', hometown: 'Sylhet', mother: 'Afsana Begum', phone: '1771144308' } };
 
 -- ------------------------------
 -- TABLE DATA: teaches
 -- ------------------------------
 
-RELATE teacher:2016331033 -> teaches:j75b63mpllydx2sw17a1 -> offers:stkue740iyvgmrklrtq7 CONTENT { __: true, id: teaches:j75b63mpllydx2sw17a1, in: teacher:2016331033, out: offers:stkue740iyvgmrklrtq7 };
-RELATE teacher:2016331033 -> teaches:lssw1xn2l0yjq9ut7xid -> offers:8nxc8n4apw6oblyng901 CONTENT { __: true, id: teaches:lssw1xn2l0yjq9ut7xid, in: teacher:2016331033, out: offers:8nxc8n4apw6oblyng901 };
 RELATE teacher:2019331073 -> teaches:o94o6fvp390utzmery77 -> offers:1jfzfa9qu33174ouv5nt CONTENT { __: true, id: teaches:o94o6fvp390utzmery77, in: teacher:2019331073, out: offers:1jfzfa9qu33174ouv5nt };
 RELATE teacher:2019331073 -> teaches:x700jf9ofic4o8lkfxnv -> offers:t5hazd30yi26x82u5n2l CONTENT { __: true, id: teaches:x700jf9ofic4o8lkfxnv, in: teacher:2019331073, out: offers:t5hazd30yi26x82u5n2l };
 
