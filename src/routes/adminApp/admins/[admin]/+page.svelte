@@ -7,7 +7,14 @@
     let details: any = data.details;
 
     let photo = "https://i.pravatar.cc/";
-    
+    let dataPairs = [
+        {key: "ID", value: getID(details.id)},
+        {key: "Department", value: data.department},
+        {key: "Designation", value: details.designation},
+        {key: "Email", value: details.email.academic},
+        {key: "Gender", value: details.gender},
+        {key: "Blood Group", value: details.blood_group}
+    ]
 </script>
 <DetailsPage 
         appName={data.appName} 
@@ -16,11 +23,5 @@
         appUrl={data.appUrl}
         item={details.name}
         photo={photo}
-        name={details.name}>
-    <Detailsitem key="ID" value={getID(details.id)}/>
-    <Detailsitem key="Department" value={data.department}/>
-    <Detailsitem key="Designation" value={details.designation}/>
-    <Detailsitem key="Email" value={details.email.academic}/>
-    <Detailsitem key="Gender" value={details.gender}/>
-    <Detailsitem key="Blood Group" value={details.blood_group}/>
-</DetailsPage>
+        name={details.name}
+        dataPairs={dataPairs}/>

@@ -12,7 +12,7 @@ export async function load() {
     });
     
     return {
-        pageName: 'Admins',
+        pageName: 'Admin',
         url: 'admins',
         listItems: listItems
     }

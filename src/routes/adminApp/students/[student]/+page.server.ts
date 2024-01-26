@@ -7,7 +7,6 @@ export async function load({ params }) {
         'SELECT name from $dp',
         { "dp": student.department }
     );
-    console.log(student);
     return {
         // TODO creating appropriate types
         details: student,
