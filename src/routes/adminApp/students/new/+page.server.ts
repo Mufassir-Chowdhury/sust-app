@@ -3,15 +3,12 @@ import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import type { Department } from '$lib/models';
 import { DateTime } from "luxon";
+import { getDepartmentOptions } from '$lib/Database/department';
+import { getSelectOptions } from '$lib/utils';
 
 export async function load() {
-    let department = await db.select<any>("department");
-    const departmentOptions = department.map((item: Department) => {
-        return {
-            value: item.id,
-            name: item.name,
-        }
-    });
+
+    const departmentOptions = getSelectOptions(await getDepartmentOptions());
     const privilageOptions = [
         {name: "Default", value: "Default"},
         {name: "CR", value: "CR"},
