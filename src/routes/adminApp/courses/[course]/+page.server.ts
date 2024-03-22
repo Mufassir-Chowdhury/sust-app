@@ -1,14 +1,11 @@
-import { db } from "$lib/Database/surreal.js";
-import type { Course } from "$lib/models.js";
+import { getCourse } from "$lib/Database/course";
+import { getDepartmentName } from "$lib/Database/department";
 
 export async function load({ params }) {
-    let [course] = await db.select<Record<string, Course>>(params.course);
-    const result = await db.query<[[{name: string}]]>(
-        'SELECT name from $dp',
-        { "dp": course.department }
-    );
+    let course = await getCourse(params.course);
+    let departmentName = await getDepartmentName(course.department);
     return {
         details: course,
-        department: result[0][0].name
+        department: departmentName
     }
 }

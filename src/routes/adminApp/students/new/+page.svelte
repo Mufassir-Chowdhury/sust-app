@@ -4,6 +4,7 @@
 	import SelectField from "$lib/Form/SelectField.svelte";
 	import TextAreaFormField from "$lib/Form/TextAreaFormField.svelte";
 	import PhotoPicker from "$lib/Form/PhotoPicker.svelte";
+	import { bloodGroupOptions, genderOptions } from "$lib/utils.js";
   export let data;
 
 </script>    
@@ -23,8 +24,8 @@
     <FormField name="Academic Email" type="email" classValue="sm:col-span-3"/>
     <FormField name="Session" type="number" classValue="sm:col-span-2"/>
     <FormField name="Current Semester" type="number" classValue="sm:col-span-2"/>
-    <SelectField name="Blood Group" options={data.bloodGroupOptions} classValue="sm:col-span-2" />         
-    <SelectField name="Gender" options={data.genderOptions} classValue="sm:col-span-2" />         
+    <SelectField name="Blood Group" options={bloodGroupOptions} classValue="sm:col-span-2" />         
+    <SelectField name="Gender" options={genderOptions} classValue="sm:col-span-2" />         
     <SelectField name="Privilage" options={data.privilageOptions} classValue="sm:col-span-full"/>
     <svelte:fragment slot="personal">
       <FormField name="Father's Name" classValue="sm:col-span-3"/>

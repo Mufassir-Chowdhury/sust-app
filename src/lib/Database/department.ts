@@ -10,3 +10,8 @@ export async function getDepartmentName(id: string): Promise<any> {
     );
     return result[0][0].name;
 }
+
+export async function getDepartmentOptions(): Promise<any> {
+    if(!database) return [{ value: "cse", name: "Computer Science and Engineering" }];
+    return await db.select<any>("department");
+}

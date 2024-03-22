@@ -12,24 +12,8 @@ export async function load() {
             name: item.name,
         }
     });
-    const bloodGroupOptions = [
-        {name: "A+", value: "A+"},
-        {name: "A-", value: "A-"},
-        {name: "B+", value: "B+"},
-        {name: "B-", value: "B-"},
-        {name: "AB+", value: "AB+"},
-        {name: "AB-", value: "AB-"},
-        {name: "O+", value: "O+"},
-        {name: "O-", value: "O-"},
-    ]
-    const genderOptions = [
-        {name: "Male", value: "male"},
-        {name: "Female", value: "female"},
-    ]
     return {
-        departmentOptions: departmentOptions,
-        bloodGroupOptions: bloodGroupOptions,
-        genderOptions: genderOptions
+        departmentOptions: departmentOptions
     }
     
 }

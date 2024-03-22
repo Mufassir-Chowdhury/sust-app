@@ -1,21 +1,14 @@
-import { db } from "$lib/Database/surreal";
-import type { ListTile } from "$lib/models.js";
+import { getCourseList } from "$lib/Database/course";
+import { getListTile } from "$lib/utils";
 
 export async function load() {
 
-    let admins = await db.select('course');
-
-    let listItems: ListTile[] = admins.map((admin: any) => {
-        return {
-            name: admin.name,
-            id: admin.id
-        }
-    });
+    let admins = getListTile(await getCourseList());
     
     return {
         pageName: 'Course',
         url: 'courses',
-        listItems: listItems
+        listItems: admins
     }
     
 }

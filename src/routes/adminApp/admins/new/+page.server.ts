@@ -2,34 +2,14 @@ import { redirect } from '@sveltejs/kit';
 import type { Actions } from './$types';
 import { DateTime } from 'luxon';
 import { db } from '$lib/Database/surreal';
-import type { Department } from '$lib/models';
+import { getDepartmentOptions } from '$lib/Database/department';
+import { getSelectOptions } from '$lib/utils';
 
 export async function load() {
-    let department = await db.select<any>("department");
-    const departmentOptions = department.map((item: Department) => {
-        return {
-            value: item.id,
-            name: item.name,
-        }
-    });
-    const bloodGroupOptions = [
-        {name: "A+", value: "A+"},
-        {name: "A-", value: "A-"},
-        {name: "B+", value: "B+"},
-        {name: "B-", value: "B-"},
-        {name: "AB+", value: "AB+"},
-        {name: "AB-", value: "AB-"},
-        {name: "O+", value: "O+"},
-        {name: "O-", value: "O-"},
-    ]
-    const genderOptions = [
-        {name: "Male", value: "male"},
-        {name: "Female", value: "female"},
-    ]
+    let departmentOptions = getSelectOptions(await getDepartmentOptions());
+    
     return {
-        departmentOptions: departmentOptions,
-        bloodGroupOptions: bloodGroupOptions,
-        genderOptions: genderOptions
+        departmentOptions: departmentOptions
     }
     
 }
