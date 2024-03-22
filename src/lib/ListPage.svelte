@@ -6,6 +6,8 @@
     export let pageName: string;
     export let appName: string;
     export let url: string;
+
+    // THIS MUST BE IN table:id FORMAT
     export let listItems: ListTile[];
 
     

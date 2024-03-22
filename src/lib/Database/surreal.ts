@@ -1,8 +1,10 @@
 import { Surreal } from 'surrealdb.js';
 
 export const db = new Surreal();
+export const database = false;
 
 export async function connectToDb() {
+    if(!database) return;
     try {
         // Connect to the database
         await db.connect('http://127.0.0.1:8000/rpc', {

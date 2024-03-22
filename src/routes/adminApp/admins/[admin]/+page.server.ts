@@ -1,15 +1,13 @@
-import { db } from "$lib/Database/surreal.js";
-import type { Admin } from "$lib/models.js";
+import { getAdmin } from "$lib/Database/admin.js";
+import { getDepartmentName } from "$lib/Database/department";
 
 export async function load({ params }) {
-    let [admin] = await db.select<Record<string, Admin>>(params.admin);
-    const result = await db.query<[[{name: string}]]>(
-        'SELECT name from $dp',
-        { "dp": admin.department }
-    );
+    let admin = await getAdmin(params.admin);
+    let departmentName = await getDepartmentName(admin.department);
+    console.log(admin, departmentName)
     return {
         details: admin,
-        department: result[0][0].name
+        department: departmentName
     }
     
 }
