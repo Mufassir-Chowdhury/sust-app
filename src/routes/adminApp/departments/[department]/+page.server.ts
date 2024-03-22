@@ -1,8 +1,7 @@
-import { db } from "$lib/Database/surreal.js";
-import type { Department } from "$lib/models.js";
+import { getDepartment } from "$lib/Database/department.js";
 
 export async function load({ params }) {
-    let [department] = await db.select<Record<string, Department>>(params.department);
+    let department = await getDepartment(params.department);
     
     return {
         details: department,

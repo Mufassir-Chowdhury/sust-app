@@ -11,8 +11,9 @@ export function onDelete(id: string) {
         confirmButtonColor: "#3085d6",
         cancelButtonColor: "#d33",
         confirmButtonText: "Yes, delete it!"
-        }).then(async (result) => {
+    }).then(async (result) => {
         if (result.isConfirmed) {
+            // TODO THIS SHOULD NOT BE CALLED FROM CLIENT SIDE
             await deleteItemFromDatabase(id);
             Swal.fire({
                 title: "Deleted!",
