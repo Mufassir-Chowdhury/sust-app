@@ -4,7 +4,7 @@
 	import SelectField from "$lib/Form/SelectField.svelte";
 	import TextAreaFormField from "$lib/Form/TextAreaFormField.svelte";
 	import PhotoPicker from "$lib/Form/PhotoPicker.svelte";
-	import { bloodGroupOptions, genderOptions } from "$lib/utils.js";
+	import { bloodGroupOptions, genderOptions } from "$lib/utils";
   export let data;
 
 </script>    

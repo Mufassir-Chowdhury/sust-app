@@ -1,7 +1,6 @@
 import { db } from '$lib/Database/surreal';
 import { redirect, fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
-import type { Department } from '$lib/models';
 import { DateTime } from "luxon";
 import { getDepartmentOptions } from '$lib/Database/department';
 import { getSelectOptions } from '$lib/utils';
