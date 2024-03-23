@@ -96,7 +96,8 @@ export function load() {
     ];
     return {
         body: pageGroups,
-        appName: 'studentApp'
+        appName: 'Student App',
+        appUrl: 'studentApp',
     }
     
 }

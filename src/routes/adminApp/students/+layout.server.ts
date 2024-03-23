@@ -1,9 +1,9 @@
 import { getStudentList } from "$lib/Database/student";
-import { getListTile } from "$lib/utils";
+import { getSimpleListTile } from "$lib/utils";
 
 export async function load() {
 
-    let students = getListTile(await getStudentList());
+    let students = getSimpleListTile(await getStudentList());
     
     return {
         pageName: 'Students',

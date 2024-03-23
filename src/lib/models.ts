@@ -18,11 +18,27 @@ export class Group {
     pages: NavItem[];
 }
 
-export class ListTile{
+export class SimpleListTile{
     name: string;
     id: string;
     constructor(name: string, id: string){
         this.name = name;
+        this.id = id;
+    }
+}
+export class ListTile{
+    title: string;
+    subtitle: string;
+    status: string;
+    trailing: string;
+    status_color: string;
+    id: string;
+    constructor(title: string, subtitle: string, status: string, trailing: string, id: string, status_color: string){
+        this.title = title;
+        this.subtitle = subtitle;
+        this.status = status;
+        this.trailing = trailing;
+        this.status_color = status_color;
         this.id = id;
     }
 }

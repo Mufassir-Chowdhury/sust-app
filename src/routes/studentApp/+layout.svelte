@@ -4,6 +4,6 @@
 
 </script>
 
-<AppLayout appName="/{data.appName}" body={data.body}>
+<AppLayout appName="/{data.appUrl}" body={data.body}>
 	<slot/>
 </AppLayout>

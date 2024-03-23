@@ -26,6 +26,7 @@
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<LightSwitch />
+				<a href="/"><div class="btn variant-filled-primary">Logout</div></a>
 			</svelte:fragment>
 		</AppBar>
 	</svelte:fragment>

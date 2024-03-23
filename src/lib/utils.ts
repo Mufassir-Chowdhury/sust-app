@@ -1,4 +1,4 @@
-import type { ListTile } from "./models";
+import type { ListTile, SimpleListTile } from "./models";
 
 export function getID(id: string): string{
     return id.split(':')[1];
@@ -22,11 +22,24 @@ export const typeOptions = [
     {name: "Theory", value: "Theory"},
 ]
 
-export function getListTile(list: any): ListTile[] {
-    let listItems: ListTile[] = list.map((admin: any) => {
+export function getSimpleListTile(list: any): SimpleListTile[] {
+    let listItems: SimpleListTile[] = list.map((item: any) => {
         return {
-            name: admin.name,
-            id: admin.id
+            name: item.name,
+            id: item.id
+        }
+    });
+    return listItems;
+}
+export function getListTile(list: any): ListTile[] {
+    let listItems: ListTile[] = list.map((item: any) => {
+        return {
+            title: item.title,
+            subtitle: item.subtitle,
+            status: item.status,
+            status_color: item.status_color,
+            trailing: item.trailing,
+            id: item.id
         }
     });
     return listItems;

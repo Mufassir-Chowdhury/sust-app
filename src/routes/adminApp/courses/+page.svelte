@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ListPage from "$lib/ListPage.svelte";
+	import ListPage from "$lib/SimpleListPage.svelte";
     export let data;
 </script>
 <ListPage 
