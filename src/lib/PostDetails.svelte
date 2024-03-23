@@ -14,7 +14,7 @@
 </div>
 <div class="px-24 py-4 border-b-2">
     <div class="font-thin">
-        {details.course}   |   {details.creation_date}
+        {details.creator}   |   {details.creation_date}
     </div>
     {#if details.total_grade}
         <div class="flex justify-between font-semibold">

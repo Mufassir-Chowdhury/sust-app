@@ -27,7 +27,7 @@ export async function getExam(id: string): Promise<any> {
     if(!database) return {
         id: "exam:1",
         title: "Exam 1",
-        course: "Introduction to Computer Science",
+        creator: "Introduction to Computer Science",
         due_date: "2024-12-31",
         creation_date: "2024-12-01",
         total_grade: 100,
