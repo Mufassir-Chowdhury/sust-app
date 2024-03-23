@@ -32,8 +32,11 @@ export async function getAssignment(id: string): Promise<any> {
         due_date: "2024-12-31",
         creation_date: "2024-12-01",
         total_grade: 100,
+        status: "Not Submitted",
+        status_color: "black",
         description: "This is the first assignment of the course",
-        attachments: []
+        attachments: [],
+        submissions: true
     } ;
     // TODO connect with database
     return null;
