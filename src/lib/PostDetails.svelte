@@ -32,7 +32,7 @@
         <div>
             {details.description}
         </div>
-        <div class="input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token">
+        <div class="mt-24 input-group input-group-divider grid-cols-[auto_1fr_auto] rounded-container-token">
             <button class="input-group-shim">+</button>
             <textarea
                 bind:value={currentComment}
