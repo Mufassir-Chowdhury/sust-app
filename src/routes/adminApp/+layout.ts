@@ -6,58 +6,29 @@ export function load() {
         {
             "title": "Updates",
             "pages": [
-                {
-                    "name": "Departments",
-                    "url": "/departments",
-                    "icon": "fi-tr-clock-one"
-                },
-                {
-                    "name": "Courses",
-                    "url": "/courses",
-                    "icon": "fi-tr-betamax"
-                }, 
-                {
-                    "name": "Offered Courses",
-                    "url": "/offeredCourses",
-                    "icon": "fi-tr-border-all"
-                },
+                "departments",
+                "courses",
+                "offeredCourses",
             ],
         },
         {
             "title": "People",
             "pages": [
-                {
-                    "name": "Students",
-                    "url": "/students",
-                    "icon": "fi-tr-head-vr"
-                },
-                {
-                    "name": "Teachers",
-                    "url": "/teachers",
-                    "icon": "fi-tr-farm"
-                }, 
-                {
-                    "name": "Admins",
-                    "url": "/admins",
-                    "icon": "fi-tr-fort"
-                }
-            ],
+                "students",
+                "teachers",
+                "admins",
+            ],  
         },
         {
             "title": "Administration",
             "pages": [
-                {
-                    "name": "Payments",
-                    "url": "/payments",
-                    "icon": "fi-tr-head-vr"
-                },
+                "payment",
             ],
         }
     ];
     return {
         body: pageGroups,
         appUrl: 'adminApp',
-        appName: 'Admin App'
     }
     
 }

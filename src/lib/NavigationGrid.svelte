@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { routes } from './routes';
 	import type { Group } from '$lib/models.ts';
 
 	export let pages: Group[];
@@ -107,11 +108,11 @@
 			<div class="grid grid-cols-4 h-full">
 				{#each page.pages as item}
 					<a
-						href="\{app}{item.url}"
+						href="\{app}\{item}"
 						class="card variant-soft-surface text-center col-span-1 m-4 flex flex-col justify-center"
 					>
-						<i class="fi {item.icon}" />
-						{item.name}
+						<i class="fi {routes[item].icon}" />
+						{routes[item].title}
 					</a>
 				{/each}
 			</div>

@@ -10,12 +10,12 @@ export class NavItem {
     icon: string;
 }
 export class Group {
-    constructor(title: string, pages: NavItem[]) {
+    constructor(title: string, pages: string[]) {
         this.title = title;
         this.pages = pages;
     }
     title: string;
-    pages: NavItem[];
+    pages: string[];
 }
 
 export class SimpleListTile{

@@ -1,26 +1,25 @@
 <script lang="ts">
+	import { routes } from './../routes';
 	import FormField from "$lib/Form/FormField.svelte";
-    export let appUrl: String;
-    export let pageName: String;
-    export let url: String;
-    export let appName: String;
+    export let appUrl: string;
+    export let url: string;
     
 </script>
 <div class="p-8 grid grid-cols-6">
 
     <ol class="breadcrumb col-span-full mb-8">
             
-        <li class="crumb"><a class="anchor" href="/{appUrl}">{appName}</a></li>
+        <li class="crumb"><a class="anchor" href="/{appUrl}">{routes[appUrl].title}</a></li>
         <li class="crumb-separator" aria-hidden>/</li>
-        <li class="crumb"><a class="anchor" href="/{appUrl}/{url}">{pageName}</a></li>
+        <li class="crumb"><a class="anchor" href="/{appUrl}/{url}">{routes[url].title}</a></li>
         <li class="crumb-separator" aria-hidden>/</li>
         <li>New</li>
     </ol>
 
     <form class="col-start-2 col-span-4" method="POST">
         <fieldset class="border-b border-gray-900/10 pb-12 col-span-full">
-            <h2 class="text-base font-semibold leading-7 text-gray-900">{pageName}</h2>
-            <FormField name="ID" leading={pageName.toLowerCase()} classValue="sm:col-span-4 mt-10"/>
+            <h2 class="text-base font-semibold leading-7 text-gray-900">{routes[url].title}</h2>
+            <FormField name="ID" leading={routes[url].title.toLowerCase()} classValue="sm:col-span-4 mt-10"/>
             <div class="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                 <slot name="profile" />
             </div>
