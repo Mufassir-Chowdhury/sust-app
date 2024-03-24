@@ -200,3 +200,15 @@ export class Department{
         this.name = name;
     }
 }
+
+export class Attendance {
+    course_id: string;
+    date: string;
+    students: { [studentId: string]: boolean };
+
+    constructor(course_id: string, date: string, students: { [studentId: string]: boolean }) {
+        this.course_id = course_id;
+        this.date = date;
+        this.students = students;
+    }
+}

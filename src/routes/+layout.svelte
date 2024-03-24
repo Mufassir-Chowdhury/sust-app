@@ -40,7 +40,7 @@
 <!-- App Shell -->
 <!-- svelte-ignore missing-declaration -->
 <AppShell slotSidebarLeft="bg-surface-500/5 w-56  h-screen">
-	<div class=" invisible absolute">
+	<div class="absolute">
 		<LightSwitch />
 	</div>	
 	<!-- <svelte:fragment slot="header">
