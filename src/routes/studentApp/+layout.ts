@@ -77,8 +77,8 @@ export function load() {
                     "icon": "fi-tr-wine-glass-crack"
                 },
                 {
-                    "name": "Student Information",
-                    "url": "/student",
+                    "name": "People",
+                    "url": "/people",
                     "icon": "fi-tr-cubes"
                 }, 
                 {

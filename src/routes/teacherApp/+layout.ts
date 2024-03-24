@@ -10,6 +10,11 @@ export function load() {
                     url: '/attendance',
                     icon: 'fi-tr-clock-one',
                 },
+                {
+                    name: 'Assignments',
+                    url: '/assignments',
+                    icon: 'fi-tr-clipboard',
+                }
                 // Add other teaching-related pages
             ],
         },
