@@ -6,7 +6,7 @@
 </script>
 
 
-<div class="grid grid-cols-3 px-8 h-screen">
+<div class="grid grid-cols-3 px-8 h-full">
     <div class="col-span-2 h-full">
         <NavigationGrid pages={data.body} app='studentApp'/>
     </div>
