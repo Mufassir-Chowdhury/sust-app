@@ -40,8 +40,7 @@
 <!-- App Shell -->
 <!-- svelte-ignore missing-declaration -->
 <AppShell slotSidebarLeft="bg-surface-500/5 w-56 p-4 h-screen">
-	<svelte:fragment slot="header">
-				<!-- App Bar -->
+	<!-- <svelte:fragment slot="header">
 		<AppBar>
 			<svelte:fragment slot="lead">
 				<button class="text-xl uppercase font-medium" on:click={hanndleHome} on:keydown={hanndleHome}>SUST APP</button>
@@ -53,7 +52,7 @@
 				{/if}
 			</svelte:fragment>
 		</AppBar>
-	</svelte:fragment>
+	</svelte:fragment> -->
 
 	<!-- Page Route Content -->
 	<slot />
