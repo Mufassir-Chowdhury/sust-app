@@ -4,7 +4,6 @@
     import { onMount } from 'svelte';
 
     onMount(() => {
-        courseStore.set(mockCourses);
     });
 </script>
 
