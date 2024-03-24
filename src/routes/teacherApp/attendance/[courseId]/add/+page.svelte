@@ -18,6 +18,9 @@
         course = $courseStore.find(
             (c) => c.id.toString() == $page.params.courseId
         );
+        students.forEach(student => {
+            attendanceMap[student.id] = false;
+        });
     });
 
     function toggleAttendance(studentId: string) {
