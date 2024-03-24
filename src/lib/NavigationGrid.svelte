@@ -97,21 +97,24 @@
 	// ];
 </script>
 
-<div class="h-full">
+<div class="h-screen grid grid-rows-4 gap-4 p-4">
+	
 	{#each pages as page}
-		<h1 class="text-left">
-			{page.title}
-		</h1>
-		<div class="grid grid-cols-4 h-1/4">
-			{#each page.pages as item}
-				<a
-					href="\{app}{item.url}"
-					class="card variant-soft-surface text-center col-span-1 m-4 flex flex-col justify-center"
-				>
-					<i class="fi {item.icon}" />
-					{item.name}
-				</a>
-			{/each}
+		<div class="">
+			<h1 class="text-left">
+				{page.title}
+			</h1>
+			<div class="grid grid-cols-4 h-full">
+				{#each page.pages as item}
+					<a
+						href="\{app}{item.url}"
+						class="card variant-soft-surface text-center col-span-1 m-4 flex flex-col justify-center"
+					>
+						<i class="fi {item.icon}" />
+						{item.name}
+					</a>
+				{/each}
+			</div>
 		</div>
 	{/each}
 </div>

@@ -1,6 +1,6 @@
 
 
-<div class="container flex justify-center min-h-full items-center mx-auto">
+<div class="container flex justify-center min-h-screen items-center mx-auto">
 	<!-- <Avatar src="https://i.pravatar.cc/" /> -->
 	<!-- <h1 class="h1">Hello Skeleton</h1> -->
 	<!-- <p>Lorem ipsum dolor sit amet consectetur adipisicing elit.</p> -->

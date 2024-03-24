@@ -11,9 +11,7 @@
 {#if $page.route.id !== appName}
 <AppShell slotSidebarLeft="bg-surface-500/5 w-64 p-4">	
 	
-	<div class=" invisible">
-		<LightSwitch />
-	</div>	
+	
 		<svelte:fragment slot="sidebarLeft">
 			<!-- Navigation list: -->
 			<nav class="list-nav" >
