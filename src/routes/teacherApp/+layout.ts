@@ -5,11 +5,8 @@ export function load() {
         {
             title: 'Teaching',
             pages: [
-                {
-                    name: 'Attendance',
-                    url: '/attendance',
-                    icon: 'fi-tr-clock-one',
-                },
+                "attendance",
+                "assignments",
                 // Add other teaching-related pages
             ],
         },
@@ -18,7 +15,6 @@ export function load() {
 
     return {
         body: pageGroups,
-        appName: 'Teacher App',
         appUrl: 'teacherApp',
     };
 }

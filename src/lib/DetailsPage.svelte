@@ -1,18 +1,17 @@
 <script lang="ts">
+	import { routes } from './routes';
 	import { onMount } from "svelte";
 	import Swal from "sweetalert2";
 
-  export let appUrl: String;
-  export let pageName: String;
-  export let url: String;
-  export let appName: String;
+  export let appUrl: string;
+  export let url: string;
   export let item: string;
   export let title: string;
   onMount(() => {
       if (new URL(window.location.href).searchParams.get('showSuccess') === 'true') {
           Swal.fire({
               title: "Successful!",
-              text: `New ${pageName} is registered!`,
+              text: `New ${routes[url].title} is registered!`,
               icon: "success"
           });
       }
@@ -21,9 +20,9 @@
 
 <div class="p-8">
     <ol class="breadcrumb col-span-full mb-8">
-        <li class="crumb"><a class="anchor" href="/{appUrl}">{appName}</a></li>
+        <li class="crumb"><a class="anchor" href="/{appUrl}">{routes[appUrl].title}</a></li>
         <li class="crumb-separator" aria-hidden>/</li>
-        <li class="crumb"><a class="anchor" href="/{appUrl}/{url}">{pageName}</a></li>
+        <li class="crumb"><a class="anchor" href="/{appUrl}/{url}">{routes[url].title}</a></li>
         <li class="crumb-separator" aria-hidden>/</li>
         <li>{item}</li>
     </ol>

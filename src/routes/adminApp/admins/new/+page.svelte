@@ -10,9 +10,7 @@
 </script>    
 <!-- TODO : add pattern and title attributes -->
 <AddForm 
-        appName={data.appName} 
         url={data.url} 
-        pageName={data.pageName} 
         appUrl={data.appUrl}>
     <!-- <svelte:fragment slot="profile">
       <PhotoPicker/>

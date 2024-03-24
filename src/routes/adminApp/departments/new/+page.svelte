@@ -6,9 +6,7 @@
 </script>    
 <!-- TODO : add patern and title attributes to form fields -->
 <AddForm 
-        appName={data.appName} 
         url={data.url} 
-        pageName={data.pageName} 
         appUrl={data.appUrl}>
         
     <FormField name="Name" classValue="sm:col-span-3"/>            

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { routes } from './routes';
 	import { AppShell, LightSwitch, ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
 	import { page } from '$app/stores';
 	import type { Group } from "$lib/models";
@@ -42,10 +43,10 @@
 					</div>
 					{#each body as pageGroups}
 						{#each pageGroups.pages as page}
-							<ListBoxItem class="block min-w-full"   padding="p-0" bind:group={appName} name="nav" value={page.url}>
-								<svelte:fragment slot="lead"><i class="fi {page.icon} pl-4"></i></svelte:fragment>
-									<a href='{appName}{page.url}'>
-										{page.name}
+							<ListBoxItem class="block min-w-full"   padding="p-0" bind:group={appName} name="nav" value={page}>
+								<svelte:fragment slot="lead"><i class="fi {routes[page].icon} pl-4"></i></svelte:fragment>
+									<a href='{appName}/{page}'>
+										{routes[page].title}
 									</a>
 							</ListBoxItem>
 						{/each}

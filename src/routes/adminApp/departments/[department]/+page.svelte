@@ -7,8 +7,6 @@
     let details: any = data.details;
 </script>
 <DetailsPage 
-        appName={data.appName} 
-        pageName={data.pageName} 
         url={data.url}
         appUrl={data.appUrl}
         item={getID(details.id)}
