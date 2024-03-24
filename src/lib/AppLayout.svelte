@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { AppShell, ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
+	import { AppShell, LightSwitch, ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
 	import { page } from '$app/stores';
 	import type { Group } from "$lib/models";
 
@@ -9,7 +9,11 @@
 
 </script>
 {#if $page.route.id !== appName}
-<AppShell slotSidebarLeft="bg-surface-500/5 w-64 p-4">		
+<AppShell slotSidebarLeft="bg-surface-500/5 w-64 p-4">	
+	
+	<div class=" invisible">
+		<LightSwitch />
+	</div>	
 		<svelte:fragment slot="sidebarLeft">
 			<!-- Navigation list: -->
 			<nav class="list-nav" >
@@ -34,6 +38,7 @@
 							<a href='/'>
 								Logout
 							</a>
+
 								
 						</ListBoxItem>
 					</div>
