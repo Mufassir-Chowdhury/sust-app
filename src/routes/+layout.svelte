@@ -14,19 +14,43 @@
 	storePopup.set({ computePosition, autoUpdate, flip, shift, offset, arrow });
 
 	import { LightSwitch } from '@skeletonlabs/skeleton';
+
+	
+	import { page } from '$app/stores';
+	let currentRoute = '';
+	$: currentRoute = $page.route?.id ?? ''
+
+	const hanndleHome = () => {
+		//if the url contains adminApp then redirect to adminApp
+		if (currentRoute.includes('adminApp')) {
+			window.location.href = '/adminApp';
+		}
+		//if the url contains studentApp then redirect to studentApp
+		else if (currentRoute.includes('studentApp')) {
+			window.location.href = '/studentApp';
+		}
+		//if the url contains teacherApp then redirect to teacherApp
+		else if (currentRoute.includes('teacherApp')) {
+			window.location.href = '/teacherApp';
+		}
+
+	}
 </script>
 
 <!-- App Shell -->
+<!-- svelte-ignore missing-declaration -->
 <AppShell slotSidebarLeft="bg-surface-500/5 w-56 p-4 h-screen">
 	<svelte:fragment slot="header">
 				<!-- App Bar -->
 		<AppBar>
 			<svelte:fragment slot="lead">
-				<strong class="text-xl uppercase">SUST APP</strong>
+				<button class="text-xl uppercase font-medium" on:click={hanndleHome} on:keydown={hanndleHome}>SUST APP</button>
 			</svelte:fragment>
 			<svelte:fragment slot="trail">
 				<LightSwitch />
+				{#if currentRoute !== '/'}
 				<a href="/"><div class="btn variant-filled-primary">Logout</div></a>
+				{/if}
 			</svelte:fragment>
 		</AppBar>
 	</svelte:fragment>
