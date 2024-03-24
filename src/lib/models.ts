@@ -202,13 +202,26 @@ export class Department{
 }
 
 export class Attendance {
+    id: string;
     course_id: string;
     date: string;
     students: { [studentId: string]: boolean };
 
-    constructor(course_id: string, date: string, students: { [studentId: string]: boolean }) {
+    constructor(id: string, course_id: string, date: string, students: { [studentId: string]: boolean }) {
+        this.id = id;
         this.course_id = course_id;
         this.date = date;
         this.students = students;
     }
 }
+
+export class CourseEnrollment {
+    course_id: string;
+    studentsIds: string[];
+
+    constructor(course_id: string, studentsIds: string[]) {
+        this.course_id = course_id;
+        this.studentsIds = studentsIds;
+    }
+}
+

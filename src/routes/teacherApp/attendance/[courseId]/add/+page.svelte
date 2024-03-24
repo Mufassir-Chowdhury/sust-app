@@ -1,17 +1,20 @@
 <script lang="ts">
-    import { attendanceStore, studentStore, courseStore } from '$lib/store';
-    import { mockStudents } from '$lib/mock-data';
+    import { goto } from '$app/navigation';
+    import { attendanceStore, studentStore, courseStore, courseEnrollmentStore } from '$lib/store';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
     import type { Student, Attendance, Course } from '$lib/models';
 
+    let studentIds: string[] | undefined = undefined;
     let students: Student[] = [];
     let attendanceMap: { [key: string]: boolean } = {};
     let course: Course | undefined = undefined;
 
     onMount(() => {
-        studentStore.set(mockStudents);
-        students = $studentStore;
+        studentIds = $courseEnrollmentStore.find(
+            (c) => c.course_id.toString() == $page.params.courseId
+        )?.studentsIds;
+        students = $studentStore.filter((s) => studentIds?.includes(s.id));
         course = $courseStore.find(
             (c) => c.id.toString() == $page.params.courseId
         );
@@ -23,6 +26,7 @@
 
     async function submitAttendance() {
         const newAttendance = {
+            id: Math.random().toString(36).substr(2, 9),
             course_id: $page.params.courseId,
             date: new Date().toISOString().slice(0, 10),
             students: attendanceMap,
@@ -30,6 +34,7 @@
         attendanceStore.update((attendances) => [...attendances, newAttendance]);
         // Reset the attendance map
         attendanceMap = {};
+        goto(`/teacherApp/attendance/${$page.params.courseId}`);
     }
 </script>
 

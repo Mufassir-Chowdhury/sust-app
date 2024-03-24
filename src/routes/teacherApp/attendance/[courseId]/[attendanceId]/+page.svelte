@@ -10,17 +10,13 @@
     let course: Course | undefined = undefined;
 
     onMount(() => {
-        studentStore.set(mockStudents);
         attendance = $attendanceStore.find(
             (a) =>
-                a.course_id === $page.params.courseId &&
-                a.date === $page.params.attendanceId
+                a.id == $page.params.attendanceId
         );
         course = $courseStore.find(
             (c) => c.id == $page.params.courseId
         );
-        console.log("HERE")
-        console.log(course)
         if (attendance) {
             students = $studentStore.filter(
                 (s) => attendance && attendance.students[s.id] !== undefined
@@ -30,7 +26,7 @@
 </script>
 
 <div class="p-8">
-    <h2 class="h2">Attendance for {course ? course.course_code : $page.params.courseId} on {$page.params.attendanceId}</h2>
+    <h2 class="h2">Attendance for {course ? course.course_code : $page.params.courseId} on {attendance?.date}</h2>
     <div class="grid grid-cols-1 gap-4 mt-8">
         <table class="table-auto w-full">
             <thead>

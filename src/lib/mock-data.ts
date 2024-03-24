@@ -1,4 +1,4 @@
-import type { Attendance, Course, Student } from './models';
+import type { Attendance, Course, Student, CourseEnrollment } from './models';
 
 export const mockCourses: Course[] = [
     {
@@ -45,16 +45,40 @@ export const mockStudents: Student[] = [
             cgpa: 3.5,
             grade: 'B+',
             total_credit: 60,
-        },
+        }
     },
+    // Add more mock students as needed
 ];
 
 export const mockAttendance: Attendance[] = [
     {
+        id: '1',
         course_id: '1',
         date: '2023-04-01',
         students: {
             '2019331073': true,
+            // Add more student IDs with attendance status
         },
     },
+    {
+        id: '2',
+        course_id: '2',
+        date: '2023-04-02',
+        students: {
+            '2019331073': true,
+            // Add more student IDs with attendance status
+        },
+    },
+    // Add more mock attendance records as needed
+];
+
+export const mockCourseEnrollments: CourseEnrollment[] = [
+    {
+        "course_id": "1",
+        "studentsIds": ["2019331073"]
+    },
+    {
+        "course_id": "2",
+        "studentsIds": ["2019331073"]
+    }
 ];
