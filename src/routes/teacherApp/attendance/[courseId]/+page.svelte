@@ -1,7 +1,4 @@
 <script lang="ts">
-    import type { Attendance, Course } from '$lib/models';
-    import { attendanceStore, courseStore } from '$lib/stores';
-    import { mockAttendance, mockCourses } from '$lib/mock-data';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
 

@@ -75,10 +75,14 @@ export const mockAttendance: Attendance[] = [
 export const mockCourseEnrollments: CourseEnrollment[] = [
     {
         "course_id": "1",
+        "semester": "1/1",
+        "session": "2019",
         "studentsIds": ["2019331073"]
     },
     {
         "course_id": "2",
+        "semester": "1/2",
+        "session": "2019",
         "studentsIds": ["2019331073"]
     }
 ];
