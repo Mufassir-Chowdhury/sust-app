@@ -1,22 +1,17 @@
 <script lang="ts">
     import type { Attendance, Course } from '$lib/models';
-    import { attendanceStore, courseStore } from '$lib/store';
+    import { attendanceStore, courseStore } from '$lib/stores';
     import { mockAttendance, mockCourses } from '$lib/mock-data';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
 
-    let course: Course | undefined = undefined;
-    onMount(() => {
-        course = $courseStore.find(
-            (c) => c.id.toString() == $page.params.courseId
-        );
-    });
+    export let data;
 </script>
 
 <div class="p-8">
-    <h2 class="h2">Attendance for {course ? course.course_code : $page.params.courseId}</h2>
+    <h2 class="h2">Attendance for {data.course ? data.course.course_code : $page.params.courseId}</h2>
     <div class="grid grid-cols-1 gap-4 mt-8">
-        {#each $attendanceStore as attendance}
+        {#each data.attendances as attendance}
             {#if attendance.course_id.toString() === $page.params.courseId.toString()}
                 <a
                     href="/teacherApp/attendance/{$page.params.courseId}/{attendance.id}"
