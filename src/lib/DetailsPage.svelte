@@ -18,21 +18,11 @@
   });
 </script>
 
-<div class="p-8">
-    <ol class="breadcrumb col-span-full mb-8">
-        <li class="crumb"><a class="anchor" href="/{appUrl}">{routes[appUrl].title}</a></li>
-        <li class="crumb-separator" aria-hidden>/</li>
-        <li class="crumb"><a class="anchor" href="/{appUrl}/{url}">{routes[url].title}</a></li>
-        <li class="crumb-separator" aria-hidden>/</li>
-        <li>{item}</li>
-    </ol>
-    <div class="mt-6 border-t border-gray-100">
-      <div class="flex flex-col items-center">
-          <dd class="text-xl font-semibold leading-6 text-gray-700 mt-0 mb-8">{title}</dd>
-      </div>
-      <dl class="divide-y">
-        <slot/>
-      </dl>
-    </div>
+<div class="mt-6 border-t border-gray-100">
+  <div class="flex flex-col items-center">
+      <dd class="text-xl font-semibold leading-6 text-gray-700 mt-0 mb-8">{title}</dd>
   </div>
-  
+  <dl class="divide-y">
+    <slot/>
+  </dl>
+</div>

@@ -6,8 +6,11 @@
 
     export let appName: string;
 	export let body: Group[];
-
-
+	let url: string[];
+	$: url = $page.url.pathname.split('/')
+								.filter((path: string) => {return path != ""})
+								.slice(0, -1);
+							
 </script>
 {#if $page.route.id !== appName}
 <AppShell slotSidebarLeft="bg-surface-500/5 w-64 p-4">	
@@ -57,7 +60,20 @@
 		</svelte:fragment>
 		
 		<!-- Page Route Content -->
-		<slot />
+		<div class="p-8">
+		{#if url.length > 1}
+				<ol class="breadcrumb mb-8">
+					{#each url as urlItem, index}
+						<li class="crumb"><a class="anchor" href="/{url.slice(0, index+1).join("/")}">{routes[urlItem]?.title || urlItem}</a></li>
+						<li class="crumb-separator" aria-hidden>/</li>
+						
+					{/each}
+
+					<li>{$page.url.pathname.split('/').at(-1)}</li>
+				</ol>
+				{/if}
+				<slot />
+		</div>
 </AppShell>
 {:else}
 	<AppShell>

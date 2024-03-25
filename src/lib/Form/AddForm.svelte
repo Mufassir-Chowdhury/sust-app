@@ -5,16 +5,7 @@
     export let url: string;
     
 </script>
-<div class="p-8 grid grid-cols-6">
-
-    <ol class="breadcrumb col-span-full mb-8">
-            
-        <li class="crumb"><a class="anchor" href="/{appUrl}">{routes[appUrl].title}</a></li>
-        <li class="crumb-separator" aria-hidden>/</li>
-        <li class="crumb"><a class="anchor" href="/{appUrl}/{url}">{routes[url].title}</a></li>
-        <li class="crumb-separator" aria-hidden>/</li>
-        <li>New</li>
-    </ol>
+<div class="grid grid-cols-6">
 
     <form class="col-start-2 col-span-4" method="POST">
         <fieldset class="border-b border-gray-900/10 pb-12 col-span-full">

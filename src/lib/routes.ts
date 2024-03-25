@@ -49,7 +49,7 @@ export const routes: Record<string, any> = {
     },
     "exams": {
         "title": "Exams",
-        "icon": "fi-tr-exam"
+        "icon": "fi-tr-border-all"
     },
     "notices": {
         "title": "Notices",
@@ -73,11 +73,11 @@ export const routes: Record<string, any> = {
     },
     "events": {
         "title": "Events",
-        "icon": "fi-tr-event"
+        "icon": "fi-tr-diagram-sankey"
     },
     "map": {
         "title": "Map",
-        "icon": "fi-tr-map"
+        "icon": "fi-tr-wheelchair-move"
     },
     "routine": {
         "title": "Routine",
@@ -89,6 +89,6 @@ export const routes: Record<string, any> = {
     },
     "links": {
         "title": "Links",
-        "icon": "fi-tr-link"
+        "icon": "fi-tr-plane-prop"
     }
 }
