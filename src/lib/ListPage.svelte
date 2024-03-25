@@ -1,9 +1,13 @@
 <script lang="ts">
+	import { routes } from './routes';
+	import { page } from "$app/stores";
 	import type { ListTile } from "./models";
 
-    export let pageName: string;
-    export let appName: string;
-    export let url: string;
+    let appName: string;
+    let url: string;
+
+    $: appName = $page.url.pathname.split('/')[1];
+    $: url = $page.url.pathname.split('/')[2];
 
     // THIS MUST BE IN table:id FORMAT
     export let listItems: ListTile[];
@@ -21,7 +25,7 @@
 <div class="p-8">
     <div class="flex justify-between">
         <h2 class="h2">
-            {pageName}
+            {routes[url].title}
         </h2>
     </div>
     {#each listItems as listItem}

@@ -6,8 +6,6 @@ export async function load() {
     let students = getSimpleListTile(await getStudentList());
     
     return {
-        pageName: 'Students',
-        url: 'students',
         listItems: students
     }
     

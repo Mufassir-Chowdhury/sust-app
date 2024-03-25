@@ -6,8 +6,6 @@ export async function load() {
     let admins = getSimpleListTile(await getCourseList());
     
     return {
-        pageName: 'Course',
-        url: 'courses',
         listItems: admins
     }
     

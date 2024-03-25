@@ -9,9 +9,7 @@
 
 </script>    
 <!-- TODO : add pattern and title attributes -->
-<AddForm 
-        url={data.url} 
-        appUrl={data.appUrl}>
+<AddForm >
     <!-- <svelte:fragment slot="profile">
       <PhotoPicker/>
       <TextAreaFormField name="About" classValue="col-span-full"/>

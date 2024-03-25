@@ -1,18 +1,20 @@
 <script lang="ts">
 	import { routes } from './routes';
-	import { AppShell, LightSwitch, ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
+	import { AppShell, ListBox, ListBoxItem } from "@skeletonlabs/skeleton";
 	import { page } from '$app/stores';
 	import type { Group } from "$lib/models";
-
-    export let appName: string;
+	
 	export let body: Group[];
+
+    let appName: string;
+	$: appName = $page.url.pathname.split('/')[1];
 	let url: string[];
 	$: url = $page.url.pathname.split('/')
 								.filter((path: string) => {return path != ""})
 								.slice(0, -1);
 							
 </script>
-{#if $page.route.id !== appName}
+{#if $page.url.pathname.split('/').length !== 2}
 <AppShell slotSidebarLeft="bg-surface-500/5 w-64 p-4">	
 	
 	
@@ -25,7 +27,7 @@
 						<ListBoxItem class="block min-w-full"   padding="p-0" bind:group={appName} name="nav" value='home'>
 							<svelte:fragment slot="lead"><i class="fi fi-tr-house-chimney pl-4"></i></svelte:fragment>
 								<div class="flex justify-between w-full">		
-									<a href='{appName}'>
+									<a href='/{appName}'>
 										Home
 									</a>
 								</div>	
@@ -48,7 +50,7 @@
 						{#each pageGroups.pages as page}
 							<ListBoxItem class="block min-w-full"   padding="p-0" bind:group={appName} name="nav" value={page}>
 								<svelte:fragment slot="lead"><i class="fi {routes[page].icon} pl-4"></i></svelte:fragment>
-									<a href='{appName}/{page}'>
+									<a href='/{appName}/{page}'>
 										{routes[page].title}
 									</a>
 							</ListBoxItem>

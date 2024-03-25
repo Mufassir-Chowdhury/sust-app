@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { routes } from './routes';
 	import type { SimpleListTile } from "./models";
     import { getID } from "$lib/utils";
 	import { onDelete } from "./Modal/DeleteModal";
+	import { page } from '$app/stores';
 
-    export let pageName: string;
-    export let appName: string;
-    export let url: string;
+    let appName: string;
+    let url: string;
+
+    $: appName = $page.url.pathname.split('/')[1];
+    $: url = $page.url.pathname.split('/')[2];
 
     // THIS MUST BE IN table:id FORMAT
     export let listItems: SimpleListTile[];
@@ -17,7 +21,7 @@
 <div class="p-8">
     <div class="flex justify-between">
         <h2 class="h2">
-            {pageName}
+            {routes[url].title}
         </h2>
         <a href="/{appName}/{url}/new">
             <button class="btn btn-primary">

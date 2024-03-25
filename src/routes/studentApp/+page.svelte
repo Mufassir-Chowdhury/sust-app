@@ -8,7 +8,7 @@
 
 <div class="grid grid-cols-3 px-8 h-screen ">
     <div class="col-span-2 h-full">
-        <NavigationGrid pages={data.body} app='studentApp'/>
+        <NavigationGrid pages={data.body}/>
     </div>
     <div class="col-span-1">
         <Dashboard/>

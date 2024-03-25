@@ -3,9 +3,7 @@
 	import { onMount } from "svelte";
 	import Swal from "sweetalert2";
 
-  export let appUrl: string;
   export let url: string;
-  export let item: string;
   export let title: string;
   onMount(() => {
       if (new URL(window.location.href).searchParams.get('showSuccess') === 'true') {

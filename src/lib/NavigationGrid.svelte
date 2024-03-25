@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { routes } from './routes';
 	import type { Group } from '$lib/models.ts';
+	import { page } from '$app/stores';
 
 	export let pages: Group[];
-	export let app: String;
+	let app: String;
+	$: app = $page.url.pathname.split('/')[1];
 </script>
 
 <div class="h-screen grid grid-rows-4 gap-4 p-4">

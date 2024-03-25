@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { routes } from './../routes';
 	import FormField from "$lib/Form/FormField.svelte";
-    export let appUrl: string;
-    export let url: string;
+	import { page } from '$app/stores';
+    let appUrl: string;
+    $: appUrl = $page.url.pathname.split('/')[1];
+    let url: string;
+    $: url = $page.url.pathname.split('/')[2];
     
 </script>
 <div class="grid grid-cols-6">

@@ -1,13 +1,10 @@
 <script lang="ts">
 	import FormField from "$lib/Form/FormField.svelte";
 	import AddForm from "$lib/Form/AddForm.svelte";
-    export let data;
 
 </script>    
 <!-- TODO : add patern and title attributes to form fields -->
-<AddForm 
-        url={data.url} 
-        appUrl={data.appUrl}>
+<AddForm >
         
     <FormField name="Name" classValue="sm:col-span-3"/>            
     <FormField name="Building" classValue="sm:col-span-3"/>

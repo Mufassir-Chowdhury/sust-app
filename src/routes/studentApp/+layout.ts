@@ -40,7 +40,6 @@ export function load() {
     ];
     return {
         body: pageGroups,
-        appUrl: 'studentApp',
     }
     
 }
