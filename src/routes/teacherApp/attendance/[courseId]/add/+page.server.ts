@@ -1,5 +1,5 @@
 import { getCourseById, getStudentsByCourseId, addAttendance } from "$lib/Database/sajiddb";
-import type { Actions, RequestEvent } from '@sveltejs/kit';
+import type { Actions } from '@sveltejs/kit';
 
 export const actions: Actions = {
     formAction: async ({ request }) => {

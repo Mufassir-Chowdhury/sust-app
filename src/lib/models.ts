@@ -217,11 +217,14 @@ export class Attendance {
 
 export class CourseEnrollment {
     course_id: string;
+    semester: string;
+    session: string;
     studentsIds: string[];
 
-    constructor(course_id: string, studentsIds: string[]) {
+    constructor(course_id: string, semester: string, sessions: string, studentsIds: string[]) {
         this.course_id = course_id;
         this.studentsIds = studentsIds;
+        this.semester = semester;
+        this.session = sessions;
     }
 }
-
