@@ -18,14 +18,6 @@ export class Group {
     pages: string[];
 }
 
-export class SimpleListTile{
-    name: string;
-    id: string;
-    constructor(name: string, id: string){
-        this.name = name;
-        this.id = id;
-    }
-}
 export class ListTile{
     title: string;
     subtitle: string;

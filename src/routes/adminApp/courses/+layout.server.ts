@@ -1,9 +1,9 @@
 import { getCourseList } from "$lib/Database/course";
-import { getSimpleListTile } from "$lib/utils";
+import { getListTile } from "$lib/utils";
 
 export async function load() {
 
-    let admins = getSimpleListTile(await getCourseList());
+    let admins = getListTile(await getCourseList());
     
     return {
         listItems: admins

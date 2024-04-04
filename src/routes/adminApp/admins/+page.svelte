@@ -8,5 +8,5 @@
     <svelte:fragment slot="command">
         <NewButton href="/adminApp/admins/new"/> 
     </svelte:fragment>
-    <List listItems={data.listItems}/>
+    <List listItems={data.listItems} deletable={true} editable={true}/>
 </TitlePage>

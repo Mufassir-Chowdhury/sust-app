@@ -1,9 +1,9 @@
 import { getDepartmentList } from "$lib/Database/department";
-import { getSimpleListTile } from "$lib/utils";
+import { getListTile } from "$lib/utils";
 
 export async function load() {
 
-    let departments = getSimpleListTile(await getDepartmentList());
+    let departments = getListTile(await getDepartmentList());
     
     return {
         listItems: departments,
