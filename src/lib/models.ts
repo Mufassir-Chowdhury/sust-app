@@ -29,9 +29,9 @@ export class SimpleListTile{
 export class ListTile{
     title: string;
     subtitle: string;
-    status: string;
-    trailing: string;
-    status_color: string;
+    status: string | undefined;
+    trailing: string | undefined;
+    status_color: string | undefined;
     id: string;
     constructor(title: string, subtitle: string, status: string, trailing: string, id: string, status_color: string){
         this.title = title;

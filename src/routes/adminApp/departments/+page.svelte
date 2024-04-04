@@ -1,6 +1,12 @@
 <script lang="ts">
-	import ListPage from "$lib/SimpleListPage.svelte";
+	import TitlePage from '$lib/Page/TitlePage.svelte';
+	import List from '$lib/Components/List.svelte';
+	import NewButton from '$lib/Components/NewButton.svelte';
     export let data;
 </script>
-<ListPage 
-        listItems={data.listItems}/>
+<TitlePage title="Departments">
+    <svelte:fragment slot="command">
+        <NewButton href="/adminApp/departments/new"/> 
+    </svelte:fragment>
+    <List listItems={data.listItems}/>
+</TitlePage>

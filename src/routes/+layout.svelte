@@ -17,6 +17,9 @@
 
 	
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
+	import Swal from 'sweetalert2';
+	import { routes } from '$lib/routes';
 	let currentRoute = '';
 	$: currentRoute = $page.route?.id ?? ''
 
@@ -35,6 +38,16 @@
 		}
 
 	}
+
+	onMount(() => {
+      if (new URL(window.location.href).searchParams.get('showSuccess') === 'true') {
+          Swal.fire({
+              title: "Successful!",
+              text: `New ${routes[$page.url.pathname.split('/')[2]].title} is registered!`,
+              icon: "success"
+          });
+      }
+  });
 </script>
 
 <!-- App Shell -->

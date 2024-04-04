@@ -5,12 +5,12 @@ export async function getCourseList(){
     if(!database) return [
         {
             id: "course:CSE101",
-            name: "Introduction to Computer Science",
+            title: "Introduction to Computer Science",
             department: "CSE",
         },
         {
             id: "course:CSE102",
-            name: "Programming Language",
+            title: "Programming Language",
             department: "CSE",
         }
     ];
@@ -20,7 +20,7 @@ export async function getCourseList(){
 export async function getCourse(id: string): Promise<any> {
     if(!database) return {
         id: "course:CSE101",
-        name: "Introduction to Computer Science",
+        title: "Introduction to Computer Science",
         department: "CSE",
         type: "lab",
         credit: 3,

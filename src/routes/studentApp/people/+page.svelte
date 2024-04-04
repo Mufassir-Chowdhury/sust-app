@@ -1,6 +1,8 @@
 <script lang="ts">
-	import ListPage from "$lib/SimpleListPage.svelte";
+	import TitlePage from '$lib/Page/TitlePage.svelte';
+	import List from '$lib/Components/List.svelte';
     export let data;
 </script>
-<ListPage 
-        listItems={data.listItems}/>
+<TitlePage title="People">
+    <List listItems={data.listItems}/>
+</TitlePage>

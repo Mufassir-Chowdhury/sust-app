@@ -4,7 +4,7 @@ import type { Admin } from "$lib/models";
 export async function getAdminList(){
     if(!database) return [
         {
-            name: "Admin",
+            title: "Admin",
             id: "admin:2019331004",
             department: "CSE",
         }
@@ -15,7 +15,7 @@ export async function getAdminList(){
 export async function getAdmin(id: string): Promise<any> {
     if(!database) return {
         id: id,
-        name: "Admin",
+        title: "Admin",
         department: "CSE",
         email: {
             academic: "mrx@sust.edu",

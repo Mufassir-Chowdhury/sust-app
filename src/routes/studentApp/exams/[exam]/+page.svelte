@@ -1,11 +1,8 @@
 <script lang="ts">
-	import DetailsPage from "$lib/DetailsPage.svelte";
-	import PostDetails from "$lib/PostDetails.svelte";
+	import PostDetails from "$lib/Page/PostDetails.svelte";
     
     export let data;
     let details: any = data.details;
 </script>
-<DetailsPage 
-        title={details.title}>
-    <PostDetails {details}/>
-</DetailsPage>  
+<h3 class="title">{details.title}</h3>
+<PostDetails {details}/>

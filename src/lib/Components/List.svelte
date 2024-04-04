@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { routes } from './routes';
-	import type { SimpleListTile } from "./models";
+	import type { SimpleListTile } from "../models";
     import { getID } from "$lib/utils";
-	import { onDelete } from "./Modal/DeleteModal";
+	import { onDelete } from "../Modal/DeleteModal";
 	import { page } from '$app/stores';
 
     let appName: string;
@@ -18,20 +17,9 @@
 
 </script>
 
-<div class="p-8">
-    <div class="flex justify-between">
-        <h2 class="h2">
-            {routes[url].title}
-        </h2>
-        <a href="/{appName}/{url}/new">
-            <button class="btn btn-primary">
-                <i class="fi fi-tr-square-plus"></i>
-            </button>
-        </a>
-    </div>
-    {#each listItems as listItem}
+{#each listItems as listItem}
     <div class="py-4 px-8 card card-hover variant-soft-surface my-4 grid grid-cols-12">
-            <a href="/{appName}/{url}/{listItem.id}" class="flex flex-col col-span-11">
+            <a href="/{appName}/{url}/{listItem.id}" class="flex flex-col col-span-9">
                 <div>
                     <h3>
                         {listItem.name}
@@ -41,10 +29,9 @@
                     </subtitle>
                 </div>
             </a>
-            <div class="col-span-1 flex">
+            <div class="col-span-3 flex justify-end gap-8">
                 <button type="button" on:click={() => console.log("clicked") } class="btn btn-primary"><i class="fi fi-tr-file-edit"></i></button>
                 <button type="button" on:click={() => onDelete(listItem.id) } class="btn btn-danger"><i class="fi fi-tr-delete-right"></i></button>            
             </div>
         </div>
-    {/each}
-</div>
+{/each}
