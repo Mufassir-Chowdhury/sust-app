@@ -12,4 +12,7 @@
     <FormField name="Credit" type="float" classValue="sm:col-span-3"/>
     <SelectField name="Department" classValue="sm:col-span-4" options={data.departmentOptions}/>
     <SelectField name="Type" classValue="sm:col-span-2" options={typeOptions}/>
+    <FormField name="Year" type="number" classValue="sm:col-span-3"/>
+    <FormField name="Semester" type="number" classValue="sm:col-span-3"/>
+
 </AddForm>

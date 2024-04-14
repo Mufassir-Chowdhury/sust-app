@@ -23,6 +23,8 @@ export const actions = {
             department: data.get('department'),
             course_code: data.get('id'),
             type: data.get('type'),
+            semester: parseInt(data.get('semester') as string),
+            year: parseInt(data.get('year') as string),
         });
 
         // TODO handle failure
