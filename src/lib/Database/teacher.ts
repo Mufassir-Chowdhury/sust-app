@@ -12,6 +12,13 @@ export async function getTeacherList(){
     return await db.select('teacher')
 }
 
+export async function assignTeacherToCourse(teacher: string, course: string){
+    const result = await db.query<any>(
+        'RELATE $teacher->teaches->$course',
+        { "teacher": teacher, "course": course }
+    );
+}
+
 export async function getTeacher(id: string): Promise<any> {
     if(!database) return {
         id: "teacher:1",

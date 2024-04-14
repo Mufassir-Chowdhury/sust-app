@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.postcss';
-	import { AppShell, AppBar } from '@skeletonlabs/skeleton';
+	import { AppShell, AppBar, type ModalComponent } from '@skeletonlabs/skeleton';
 
 	// Highlight JS
 	import hljs from 'highlight.js';
@@ -48,8 +48,18 @@
           });
       }
   });
-</script>
+	import { Modal } from '@skeletonlabs/skeleton';
+	import { initializeStores } from '@skeletonlabs/skeleton';
 
+	initializeStores();
+	import TeacherModal from '$lib/Modal/TeacherModal.svelte';
+	const modalRegistry: Record<string, ModalComponent> = {
+		// Set a unique modal ID, then pass the component reference
+		teacherModal: { ref: TeacherModal },
+		// ...
+	};
+</script>
+<Modal components={modalRegistry}/>
 <!-- App Shell -->
 <!-- svelte-ignore missing-declaration -->
 <AppShell slotSidebarLeft="bg-surface-500/5 w-56  h-screen">

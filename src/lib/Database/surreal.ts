@@ -1,7 +1,7 @@
 import { Surreal } from 'surrealdb.js';
 
 export const db = new Surreal();
-export const database = true;
+export const database = false;
 
 export async function connectToDb() {
     if(!database) return;

@@ -400,6 +400,7 @@ UPDATE teacher:2026331012 CONTENT { blood_group: 'O+', department: department:EC
 -- ------------------------------
 
 RELATE teacher:2022331008 -> teaches:0v7a5zv3dybf0dtpw69x -> course:ECO252 CONTENT { __: true, id: teaches:0v7a5zv3dybf0dtpw69x, in: teacher:2022331008, out: course:ECO252 };
+RELATE teacher:2017331003 -> teaches:0vou1lddl8xpgckom2ew -> course:CSE222 CONTENT { __: true, id: teaches:0vou1lddl8xpgckom2ew, in: teacher:2017331003, out: course:CSE222 };
 RELATE teacher:2018331005 -> teaches:1lw5u2ene1vmmyp0noj6 -> course:CSE222 CONTENT { __: true, id: teaches:1lw5u2ene1vmmyp0noj6, in: teacher:2018331005, out: course:CSE222 };
 RELATE teacher:2019331073 -> teaches:1t8a2k9lz8q7c1mc4p6u -> course:CSE222 CONTENT { __: true, id: teaches:1t8a2k9lz8q7c1mc4p6u, in: teacher:2019331073, out: course:CSE222 };
 RELATE teacher:2019331073 -> teaches:3dhcx2nkh6ocyz5pkr5w -> course:CSE330 CONTENT { __: true, id: teaches:3dhcx2nkh6ocyz5pkr5w, in: teacher:2019331073, out: course:CSE330 };
@@ -421,6 +422,7 @@ RELATE teacher:2019331009 -> teaches:h1l7ovyre4egbpxzaisi -> course:PHY254 CONTE
 RELATE teacher:2019331009 -> teaches:hn8i7h33hc7ynx9nh9wm -> course:PHY251 CONTENT { __: true, id: teaches:hn8i7h33hc7ynx9nh9wm, in: teacher:2019331009, out: course:PHY251 };
 RELATE teacher:2019331009 -> teaches:i5m3vpnogvjzi9u4wyla -> course:PHY255 CONTENT { __: true, id: teaches:i5m3vpnogvjzi9u4wyla, in: teacher:2019331009, out: course:PHY255 };
 RELATE teacher:2020331006 -> teaches:j2q4ckl1jsjiletcgqmf -> course:CSE435 CONTENT { __: true, id: teaches:j2q4ckl1jsjiletcgqmf, in: teacher:2020331006, out: course:CSE435 };
+RELATE teacher:2020331006 -> teaches:jf05462za7r10ge1pocp -> course:CSE222 CONTENT { __: true, id: teaches:jf05462za7r10ge1pocp, in: teacher:2020331006, out: course:CSE222 };
 RELATE teacher:2020331006 -> teaches:k8p6w7gu3dv43bv2h6b3 -> course:CSE436 CONTENT { __: true, id: teaches:k8p6w7gu3dv43bv2h6b3, in: teacher:2020331006, out: course:CSE436 };
 RELATE teacher:2020331006 -> teaches:l4f9mvrz5pia7gzzmfjy -> course:CSE437 CONTENT { __: true, id: teaches:l4f9mvrz5pia7gzzmfjy, in: teacher:2020331006, out: course:CSE437 };
 RELATE teacher:2020331006 -> teaches:m7u2b9djlzkgcyxp9rvq -> course:CSE438 CONTENT { __: true, id: teaches:m7u2b9djlzkgcyxp9rvq, in: teacher:2020331006, out: course:CSE438 };
