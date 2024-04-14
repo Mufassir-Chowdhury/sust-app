@@ -252,6 +252,7 @@ UPDATE admin:2031331011 CONTENT { blood_group: 'AB+', department: department:EEE
 UPDATE course:CSE222 CONTENT { course_code: 'CSE222', credit: 3f, department: department:CSE, id: course:CSE222, name: 'Computer Science', semester: 7, type: 'Theory', year: 2019 };
 UPDATE course:CSE330 CONTENT { course_code: 'CSE330', credit: 2f, department: department:CSE, id: course:CSE330, name: 'Web Tech', semester: 7, type: 'Lab', year: 2019 };
 UPDATE course:CSE333 CONTENT { course_code: 'CSE333', credit: 3f, department: department:CSE, id: course:CSE333, name: 'Software Engineering', semester: 7, type: 'Theory', year: 2019 };
+UPDATE course:CSE350 CONTENT { course_code: 'CSE350', credit: 3f, department: department:CSE, id: course:CSE350, name: 'Project Work III', semester: 7, type: 'Lab', year: 2019 };
 UPDATE course:CSE431 CONTENT { course_code: 'CSE431', credit: 3f, department: department:CSE, id: course:CSE431, name: 'Computer Networks', semester: 7, type: 'Theory', year: 2019 };
 UPDATE course:CSE432 CONTENT { course_code: 'CSE432', credit: 1f, department: department:CSE, id: course:CSE432, name: 'Computer Networks Lab', semester: 7, type: 'Lab', year: 2019 };
 UPDATE course:CSE433 CONTENT { course_code: 'CSE433', credit: 3f, department: department:CSE, id: course:CSE433, name: 'Artificial Intelligence', semester: 7, type: 'Theory', year: 2019 };
@@ -328,10 +329,6 @@ RELATE user:hb4sfhwnejl13tkzhfpw -> login:s1ut92rd7ukzly37hbvr -> admin:20193310
 -- TABLE DATA: offers
 -- ------------------------------
 
-RELATE department:ECO -> offers:1jfzfa9qu33174ouv5nt -> course:CSE222 CONTENT { __: true, id: offers:1jfzfa9qu33174ouv5nt, in: department:ECO, out: course:CSE222, semester: 3, year: 2019 };
-RELATE department:CSE -> offers:8nxc8n4apw6oblyng901 -> course:CSE330 CONTENT { __: true, id: offers:8nxc8n4apw6oblyng901, in: department:CSE, out: course:CSE330, semester: 12, year: 2019 };
-RELATE department:CSE -> offers:stkue740iyvgmrklrtq7 -> course:CSE330 CONTENT { __: true, id: offers:stkue740iyvgmrklrtq7, in: department:CSE, out: course:CSE330, semester: 12, year: 2023 };
-RELATE department:CSE -> offers:t5hazd30yi26x82u5n2l -> course:CSE222 CONTENT { __: true, id: offers:t5hazd30yi26x82u5n2l, in: department:CSE, out: course:CSE222, semester: 12, year: 2019 };
 
 -- ------------------------------
 -- TABLE DATA: post
@@ -402,8 +399,35 @@ UPDATE teacher:2026331012 CONTENT { blood_group: 'O+', department: department:EC
 -- TABLE DATA: teaches
 -- ------------------------------
 
-RELATE teacher:2019331073 -> teaches:o94o6fvp390utzmery77 -> offers:1jfzfa9qu33174ouv5nt CONTENT { __: true, id: teaches:o94o6fvp390utzmery77, in: teacher:2019331073, out: offers:1jfzfa9qu33174ouv5nt };
-RELATE teacher:2019331073 -> teaches:x700jf9ofic4o8lkfxnv -> offers:t5hazd30yi26x82u5n2l CONTENT { __: true, id: teaches:x700jf9ofic4o8lkfxnv, in: teacher:2019331073, out: offers:t5hazd30yi26x82u5n2l };
+RELATE teacher:2022331008 -> teaches:0v7a5zv3dybf0dtpw69x -> course:ECO252 CONTENT { __: true, id: teaches:0v7a5zv3dybf0dtpw69x, in: teacher:2022331008, out: course:ECO252 };
+RELATE teacher:2018331005 -> teaches:1lw5u2ene1vmmyp0noj6 -> course:CSE222 CONTENT { __: true, id: teaches:1lw5u2ene1vmmyp0noj6, in: teacher:2018331005, out: course:CSE222 };
+RELATE teacher:2019331073 -> teaches:1t8a2k9lz8q7c1mc4p6u -> course:CSE222 CONTENT { __: true, id: teaches:1t8a2k9lz8q7c1mc4p6u, in: teacher:2019331073, out: course:CSE222 };
+RELATE teacher:2019331073 -> teaches:3dhcx2nkh6ocyz5pkr5w -> course:CSE330 CONTENT { __: true, id: teaches:3dhcx2nkh6ocyz5pkr5w, in: teacher:2019331073, out: course:CSE330 };
+RELATE teacher:2018331005 -> teaches:6hxr3zsw37m5a1tz0lc8 -> course:CSE330 CONTENT { __: true, id: teaches:6hxr3zsw37m5a1tz0lc8, in: teacher:2018331005, out: course:CSE330 };
+RELATE teacher:2018331005 -> teaches:6v0a9l3dw8x3r4ipc38r -> course:CSE333 CONTENT { __: true, id: teaches:6v0a9l3dw8x3r4ipc38r, in: teacher:2018331005, out: course:CSE333 };
+RELATE teacher:2018331005 -> teaches:7siepe09oqrrgb8wnvz5 -> course:CSE431 CONTENT { __: true, id: teaches:7siepe09oqrrgb8wnvz5, in: teacher:2018331005, out: course:CSE431 };
+RELATE teacher:2018331005 -> teaches:8q0hwv9zczfkb8ejtghs -> course:CSE432 CONTENT { __: true, id: teaches:8q0hwv9zczfkb8ejtghs, in: teacher:2018331005, out: course:CSE432 };
+RELATE teacher:2018331005 -> teaches:9hwlckzbv2sibe2uwsh8 -> course:CSE433 CONTENT { __: true, id: teaches:9hwlckzbv2sibe2uwsh8, in: teacher:2018331005, out: course:CSE433 };
+RELATE teacher:2018331005 -> teaches:a010xoije8xyuc1i5ioc -> course:CSE434 CONTENT { __: true, id: teaches:a010xoije8xyuc1i5ioc, in: teacher:2018331005, out: course:CSE434 };
+RELATE teacher:2019331005 -> teaches:b29499oza8hdiq2hfnkz -> course:ECO251 CONTENT { __: true, id: teaches:b29499oza8hdiq2hfnkz, in: teacher:2019331005, out: course:ECO251 };
+RELATE teacher:2019331005 -> teaches:b5cn6z7e2xwg8wy9um11 -> course:ECO253 CONTENT { __: true, id: teaches:b5cn6z7e2xwg8wy9um11, in: teacher:2019331005, out: course:ECO253 };
+RELATE teacher:2017331003 -> teaches:b7qxwmykcm2to0jz7i7a -> course:EEE341 CONTENT { __: true, id: teaches:b7qxwmykcm2to0jz7i7a, in: teacher:2017331003, out: course:EEE341 };
+RELATE teacher:2019331005 -> teaches:c0jco9nl1lkydev0z45v -> course:ECO254 CONTENT { __: true, id: teaches:c0jco9nl1lkydev0z45v, in: teacher:2019331005, out: course:ECO254 };
+RELATE teacher:2019331005 -> teaches:cty2rh3gfzu9rqfaplus -> course:ECO255 CONTENT { __: true, id: teaches:cty2rh3gfzu9rqfaplus, in: teacher:2019331005, out: course:ECO255 };
+RELATE teacher:2017331003 -> teaches:e4b59334gfepxfvojvzy -> course:EEE343 CONTENT { __: true, id: teaches:e4b59334gfepxfvojvzy, in: teacher:2017331003, out: course:EEE343 };
+RELATE teacher:2017331003 -> teaches:f3j8ghoe3i7zxrxjb35e -> course:EEE344 CONTENT { __: true, id: teaches:f3j8ghoe3i7zxrxjb35e, in: teacher:2017331003, out: course:EEE344 };
+RELATE teacher:2019331009 -> teaches:g2b8jq5pn8w11l98nh49 -> course:PHY253 CONTENT { __: true, id: teaches:g2b8jq5pn8w11l98nh49, in: teacher:2019331009, out: course:PHY253 };
+RELATE teacher:2019331009 -> teaches:h1l7ovyre4egbpxzaisi -> course:PHY254 CONTENT { __: true, id: teaches:h1l7ovyre4egbpxzaisi, in: teacher:2019331009, out: course:PHY254 };
+RELATE teacher:2019331009 -> teaches:hn8i7h33hc7ynx9nh9wm -> course:PHY251 CONTENT { __: true, id: teaches:hn8i7h33hc7ynx9nh9wm, in: teacher:2019331009, out: course:PHY251 };
+RELATE teacher:2019331009 -> teaches:i5m3vpnogvjzi9u4wyla -> course:PHY255 CONTENT { __: true, id: teaches:i5m3vpnogvjzi9u4wyla, in: teacher:2019331009, out: course:PHY255 };
+RELATE teacher:2020331006 -> teaches:j2q4ckl1jsjiletcgqmf -> course:CSE435 CONTENT { __: true, id: teaches:j2q4ckl1jsjiletcgqmf, in: teacher:2020331006, out: course:CSE435 };
+RELATE teacher:2020331006 -> teaches:k8p6w7gu3dv43bv2h6b3 -> course:CSE436 CONTENT { __: true, id: teaches:k8p6w7gu3dv43bv2h6b3, in: teacher:2020331006, out: course:CSE436 };
+RELATE teacher:2020331006 -> teaches:l4f9mvrz5pia7gzzmfjy -> course:CSE437 CONTENT { __: true, id: teaches:l4f9mvrz5pia7gzzmfjy, in: teacher:2020331006, out: course:CSE437 };
+RELATE teacher:2020331006 -> teaches:m7u2b9djlzkgcyxp9rvq -> course:CSE438 CONTENT { __: true, id: teaches:m7u2b9djlzkgcyxp9rvq, in: teacher:2020331006, out: course:CSE438 };
+RELATE teacher:2020331006 -> teaches:n3b7s6wnv8mxl9p1e0kk -> course:CSE439 CONTENT { __: true, id: teaches:n3b7s6wnv8mxl9p1e0kk, in: teacher:2020331006, out: course:CSE439 };
+RELATE teacher:2019331009 -> teaches:n3btkzd8yy9dpam4a6j5 -> course:PHY252 CONTENT { __: true, id: teaches:n3btkzd8yy9dpam4a6j5, in: teacher:2019331009, out: course:PHY252 };
+RELATE teacher:2020331006 -> teaches:p1t3g4qd0ej8s8ziqdxu -> course:CSE440 CONTENT { __: true, id: teaches:p1t3g4qd0ej8s8ziqdxu, in: teacher:2020331006, out: course:CSE440 };
+RELATE teacher:2017331003 -> teaches:r7k29uqwvigk5r70pc3q -> course:EEE342 CONTENT { __: true, id: teaches:r7k29uqwvigk5r70pc3q, in: teacher:2017331003, out: course:EEE342 };
 
 -- ------------------------------
 -- TABLE DATA: user
