@@ -14,3 +14,12 @@
 <Detailsitem key="Type" value={details.type}/>
 <Detailsitem key="Year" value={details.year}/>
 <Detailsitem key="Semester" value={details.semester}/>
+<h2>Instructors:</h2>
+{#if data.instructors.length == 0}
+    <p>No instructors assigned</p>
+{/if}
+{#each data.instructors as instructor}
+    <a href="/adminApp/teachers/{instructor.id}">
+        <Detailsitem key={instructor.id} value={instructor.name}/>
+    </a>
+{/each}
