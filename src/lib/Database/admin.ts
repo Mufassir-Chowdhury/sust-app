@@ -15,7 +15,7 @@ export async function getAdminList(){
 export async function getAdmin(id: string): Promise<any> {
     if(!database) return {
         id: id,
-        title: "Admin",
+        name: "Admin",
         department: "CSE",
         email: {
             academic: "mrx@sust.edu",

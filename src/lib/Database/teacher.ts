@@ -5,7 +5,7 @@ export async function getTeacherList(){
     if(!database) return [
         {
             id: "teacher:1",
-            name: "John Doe",
+            title: "John Doe",
             department: "CSE",
         }
     ];

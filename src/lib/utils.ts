@@ -30,7 +30,8 @@ export function getListTile(list: any): ListTile[] {
             status: item.status,
             status_color: item.status_color,
             trailing: item.trailing,
-            id: item.id
+            id: item.id,
+            name: item.name
         }
     });
     return listItems;

@@ -5,8 +5,8 @@
     export let data;
     let details: any = data.details;
 </script>
-<h3 class="title">{details.name}</h3>
-<Detailsitem key="Name" value={details.name}/>
+<h3 class="title">{details.title ?? details.name}</h3>
+<Detailsitem key="Name" value={details.title ?? details.name}/>
 <Detailsitem key="ID" value={getID(details.id)}/>
 <Detailsitem key="Building" value={details.building}/>
 <Detailsitem key="Floor" value={details.floor}/>

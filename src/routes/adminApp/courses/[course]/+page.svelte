@@ -6,9 +6,11 @@
     let details: any = data.details;
     
 </script>
-<h3 class="title">{details.name}</h3>
-<Detailsitem key="Name" value={details.name}/>
+<h3 class="title">{details.title ?? details.name}</h3>
+<Detailsitem key="Name" value={details.title ?? details.name}/>
 <Detailsitem key="ID" value={getID(details.id)}/>
 <Detailsitem key="Credit" value={details.credit}/>
 <Detailsitem key="Department" value={data.department}/>
 <Detailsitem key="Type" value={details.type}/>
+<Detailsitem key="Year" value={details.year}/>
+<Detailsitem key="Semester" value={details.semester}/>

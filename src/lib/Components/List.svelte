@@ -31,7 +31,7 @@
             <a href="/{appName}/{url}/{listItem.id}" class="flex flex-col col-span-9">
                 <div>
                     <h3>
-                        {listItem.title}
+                        {listItem.title ?? listItem.name}
                     </h3>
                     <subtitle>
                         {getID(listItem.id)}

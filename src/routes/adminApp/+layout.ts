@@ -8,7 +8,6 @@ export function load() {
             "pages": [
                 "departments",
                 "courses",
-                "offeredCourses",
             ],
         },
         {

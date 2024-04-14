@@ -5,7 +5,7 @@ export async function getStudentList(){
     if(!database) return [
         {
             id: "student:2019331073",
-            name: "John Doe",
+            title: "John Doe",
             department: "CSE",
         }
     ];

@@ -19,19 +19,21 @@ export class Group {
 }
 
 export class ListTile{
-    title: string;
+    title: string | undefined;
     subtitle: string;
     status: string | undefined;
     trailing: string | undefined;
     status_color: string | undefined;
     id: string;
-    constructor(title: string, subtitle: string, status: string, trailing: string, id: string, status_color: string){
+    name: string;
+    constructor(name: string, title: string, subtitle: string, status: string, trailing: string, id: string, status_color: string){
         this.title = title;
         this.subtitle = subtitle;
         this.status = status;
         this.trailing = trailing;
         this.status_color = status_color;
         this.id = id;
+        this.name = name;
     }
 }
 
@@ -163,7 +165,9 @@ export class Course{
     name: string;
     syllabus: Syllabus[];
     type: string;
-    constructor(course_code: string, credit: number, department: string, id: string, name: string, syllabus: Syllabus[], type: string){
+    year: number;
+    semester: number;
+    constructor(year: number, semester: number, course_code: string, credit: number, department: string, id: string, name: string, syllabus: Syllabus[], type: string){
         this.course_code = course_code;
         this.credit = credit;
         this.department = department;
@@ -171,6 +175,8 @@ export class Course{
         this.name = name;
         this.syllabus = syllabus;
         this.type = type;
+        this.year = year;
+        this.semester = semester;
     }
 }
 
