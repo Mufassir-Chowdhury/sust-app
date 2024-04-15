@@ -1,12 +1,12 @@
 import { connectToDb, db } from '$lib/Database/surreal';
+import type { Handle } from '@sveltejs/kit';
 
-export async function load() {
-    try {
-        await connectToDb();
-    } catch (e) {
-        console.error('ERROR', e);
-    }
-}
+
+export const handle: Handle = async ({ event, resolve }) => {
+  await connectToDb();
+  const response = await resolve(event);
+	return response;
+};
 
 import { setContext } from 'svelte';
 export async function authenticate(email: string, password: string, scope: string) {
