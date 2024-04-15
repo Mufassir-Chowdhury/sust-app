@@ -9,8 +9,6 @@ export async function getAdminList(){
             department: "CSE",
         }
     ];
-    const admins = await db.query('SELECT * from admin');
-    console.log(admins)
     return await db.select('admin');
 }
 

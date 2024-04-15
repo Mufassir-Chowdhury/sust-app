@@ -8,9 +8,9 @@ OPTION IMPORT;
 -- SCOPES
 -- ------------------------------
 
-DEFINE SCOPE admin SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT ->login->admin.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
-DEFINE SCOPE student SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT ->login->student.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
-DEFINE SCOPE teacher SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT ->login->teacher.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
+DEFINE SCOPE admin SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT <-login<-admin.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
+DEFINE SCOPE student SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT <-login<-student.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
+DEFINE SCOPE teacher SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT <-login<-teacher.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
 
 -- ------------------------------
 -- TABLE: admin
@@ -316,25 +316,25 @@ RELATE course:CSE330 -> having:syn88tvte55ce3zxzvv8 -> dailyroutine:ndeb82uxfmwg
 -- TABLE DATA: login
 -- ------------------------------
 
-RELATE user:emfrsjin5aql5nbu2cnz -> login:0rmjsdqk2j0v0qq2thwv -> student:2023119144 CONTENT { __: true, id: login:0rmjsdqk2j0v0qq2thwv, in: user:emfrsjin5aql5nbu2cnz, out: student:2023119144 };
-RELATE user:ws6uynksgs1kdr07b3r8 -> login:1sjkmi7o2a9f98a978gi -> teacher:2019331073 CONTENT { __: true, id: login:1sjkmi7o2a9f98a978gi, in: user:ws6uynksgs1kdr07b3r8, out: teacher:2019331073 };
+RELATE student:2023119144 -> login:0rmjsdqk2j0v0qq2thwv -> user:emfrsjin5aql5nbu2cnz CONTENT { __: true, id: login:0rmjsdqk2j0v0qq2thwv, in: student:2023119144, out: user:emfrsjin5aql5nbu2cnz };
+RELATE teacher:2019331073 -> login:1sjkmi7o2a9f98a978gi -> user:ws6uynksgs1kdr07b3r8 CONTENT { __: true, id: login:1sjkmi7o2a9f98a978gi, in: teacher:2019331073, out: user:ws6uynksgs1kdr07b3r8 };
 RELATE admin:2022331001 -> login:2j7g07vcx7eznorpz4ue -> user:h5qjh4wllongbemlw42x CONTENT { __: true, id: login:2j7g07vcx7eznorpz4ue, in: admin:2022331001, out: user:h5qjh4wllongbemlw42x };
-RELATE user:xz5o4prrbak776nivu4a -> login:2or2pea30ymoa6ko5905 -> student:2019331013 CONTENT { __: true, id: login:2or2pea30ymoa6ko5905, in: user:xz5o4prrbak776nivu4a, out: student:2019331013 };
+RELATE student:2019331013 -> login:2or2pea30ymoa6ko5905 -> user:xz5o4prrbak776nivu4a CONTENT { __: true, id: login:2or2pea30ymoa6ko5905, in: student:2019331013, out: user:xz5o4prrbak776nivu4a };
+RELATE student:2019331073 -> login:34sbarqyky02ph54s3dg -> user:aasa01kbaknch7ol17w7 CONTENT { __: true, id: login:34sbarqyky02ph54s3dg, in: student:2019331073, out: user:aasa01kbaknch7ol17w7 };
 RELATE teacher:2023331009 -> login:39xhoz0lvl1rf4np4vn6 -> user:e5o3mivkkcvdrv1jaazl CONTENT { __: true, id: login:39xhoz0lvl1rf4np4vn6, in: teacher:2023331009, out: user:e5o3mivkkcvdrv1jaazl };
 RELATE admin:2026331006 -> login:4fnpnlbzkvp97ec3ovnr -> user:fw16ceg0wvr699m5bi5g CONTENT { __: true, id: login:4fnpnlbzkvp97ec3ovnr, in: admin:2026331006, out: user:fw16ceg0wvr699m5bi5g };
 RELATE admin:2029331009 -> login:5cjw39ul5v036gnagjx8 -> user:s87eei68m6ieqggafm04 CONTENT { __: true, id: login:5cjw39ul5v036gnagjx8, in: admin:2029331009, out: user:s87eei68m6ieqggafm04 };
 RELATE admin:2028331008 -> login:5kmyonq6ygeky9e3vk68 -> user:acpfio57duapbp19w16f CONTENT { __: true, id: login:5kmyonq6ygeky9e3vk68, in: admin:2028331008, out: user:acpfio57duapbp19w16f };
-RELATE user:4p3m8nugy0lspbz2mxr8 -> login:74aiw92bacx0k2zvodbu -> student:2022998101 CONTENT { __: true, id: login:74aiw92bacx0k2zvodbu, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
+RELATE student:2022998101 -> login:74aiw92bacx0k2zvodbu -> user:4p3m8nugy0lspbz2mxr8 CONTENT { __: true, id: login:74aiw92bacx0k2zvodbu, in: student:2022998101, out: user:4p3m8nugy0lspbz2mxr8 };
 RELATE teacher:2020331006 -> login:85r3fh6pem3ykbo6l46q -> user:dix9jmk14tjw3mr13r8r CONTENT { __: true, id: login:85r3fh6pem3ykbo6l46q, in: teacher:2020331006, out: user:dix9jmk14tjw3mr13r8r };
-RELATE user:pi75cobhfzu0xp5ex832 -> login:ad56liuqu1nfkj275cz5 -> student:2022887055 CONTENT { __: true, id: login:ad56liuqu1nfkj275cz5, in: user:pi75cobhfzu0xp5ex832, out: student:2022887055 };
+RELATE student:2022887055 -> login:ad56liuqu1nfkj275cz5 -> user:pi75cobhfzu0xp5ex832 CONTENT { __: true, id: login:ad56liuqu1nfkj275cz5, in: student:2022887055, out: user:pi75cobhfzu0xp5ex832 };
 RELATE student:2019331073 -> login:blpeo81xgqwqadat5o9y -> user:ws6uynksgs1kdr07b3r8 CONTENT { __: true, id: login:blpeo81xgqwqadat5o9y, in: student:2019331073, out: user:ws6uynksgs1kdr07b3r8 };
 RELATE admin:2031331011 -> login:br8ptlnmxuw6wf6lxqwq -> user:y067zen20ochl6m2mopw CONTENT { __: true, id: login:br8ptlnmxuw6wf6lxqwq, in: admin:2031331011, out: user:y067zen20ochl6m2mopw };
 RELATE admin:2024331004 -> login:d420zp4cflazxp3cfmdi -> user:rxwaj49bgjqwkvjzcjz5 CONTENT { __: true, id: login:d420zp4cflazxp3cfmdi, in: admin:2024331004, out: user:rxwaj49bgjqwkvjzcjz5 };
 RELATE teacher:2018331005 -> login:dn9dnbgirwmubp1rci24 -> user:d6m4gk2kinumvumj8mp2 CONTENT { __: true, id: login:dn9dnbgirwmubp1rci24, in: teacher:2018331005, out: user:d6m4gk2kinumvumj8mp2 };
 RELATE admin:2030331010 -> login:e4v6pj64o1po3a84qhyk -> user:ecfcoo0pvjhel2kww7k0 CONTENT { __: true, id: login:e4v6pj64o1po3a84qhyk, in: admin:2030331010, out: user:ecfcoo0pvjhel2kww7k0 };
 RELATE student:2026331007 -> login:e8qpkjqlbhqdjemtp83e -> user:63vn5cttf0wvbsendum5 CONTENT { __: true, id: login:e8qpkjqlbhqdjemtp83e, in: student:2026331007, out: user:63vn5cttf0wvbsendum5 };
-RELATE user:emfrsjin5aql5nbu2cnz -> login:fc5fhrxvg2lqqfouq513 -> student:2023119144 CONTENT { __: true, id: login:fc5fhrxvg2lqqfouq513, in: user:emfrsjin5aql5nbu2cnz, out: student:2023119144 };
-RELATE user:h5qjh4wllongbemlw42x -> login:g03s81x5ha6m7l8f89t8 -> admin:2022331001 CONTENT { __: true, id: login:g03s81x5ha6m7l8f89t8, in: user:h5qjh4wllongbemlw42x, out: admin:2022331001 };
+RELATE student:2023119144 -> login:fc5fhrxvg2lqqfouq513 -> user:emfrsjin5aql5nbu2cnz CONTENT { __: true, id: login:fc5fhrxvg2lqqfouq513, in: student:2023119144, out: user:emfrsjin5aql5nbu2cnz };
 RELATE teacher:2018331004 -> login:hiuw4om5k2rriobsjt7s -> user:2c5i0340e1ufa6runlqa CONTENT { __: true, id: login:hiuw4om5k2rriobsjt7s, in: teacher:2018331004, out: user:2c5i0340e1ufa6runlqa };
 RELATE student:2022331003 -> login:hwenvcwvtn4xltauuyci -> user:fayghqmh7rba674ae68q CONTENT { __: true, id: login:hwenvcwvtn4xltauuyci, in: student:2022331003, out: user:fayghqmh7rba674ae68q };
 RELATE admin:2027331007 -> login:ijjetsfwods5a50f6oed -> user:e2yh9xar0v5yr3lcuthl CONTENT { __: true, id: login:ijjetsfwods5a50f6oed, in: admin:2027331007, out: user:e2yh9xar0v5yr3lcuthl };
@@ -348,9 +348,9 @@ RELATE student:2028331009 -> login:otgwpvk0yhitsbzhmwt3 -> user:tl9wvmebiqz34cca
 RELATE teacher:2026331012 -> login:oztuub3vu7pm28yztmfd -> user:ly0cwtsrc9jjcraufey5 CONTENT { __: true, id: login:oztuub3vu7pm28yztmfd, in: teacher:2026331012, out: user:ly0cwtsrc9jjcraufey5 };
 RELATE student:2021331002 -> login:p966mx3kfplfhvr1h8bd -> user:qo9qify1bi2fux92hfi3 CONTENT { __: true, id: login:p966mx3kfplfhvr1h8bd, in: student:2021331002, out: user:qo9qify1bi2fux92hfi3 };
 RELATE student:2019331013 -> login:pmkrvgbua8wxafmad527 -> user:xz5o4prrbak776nivu4a CONTENT { __: true, id: login:pmkrvgbua8wxafmad527, in: student:2019331013, out: user:xz5o4prrbak776nivu4a };
-RELATE user:4p3m8nugy0lspbz2mxr8 -> login:pupihh1qmjmigs8dcjky -> student:2022998101 CONTENT { __: true, id: login:pupihh1qmjmigs8dcjky, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
+RELATE student:2022998101 -> login:pupihh1qmjmigs8dcjky -> user:4p3m8nugy0lspbz2mxr8 CONTENT { __: true, id: login:pupihh1qmjmigs8dcjky, in: student:2022998101, out: user:4p3m8nugy0lspbz2mxr8 };
 RELATE student:2023119144 -> login:qj5r8skr91sou3r18d1n -> user:emfrsjin5aql5nbu2cnz CONTENT { __: true, id: login:qj5r8skr91sou3r18d1n, in: student:2023119144, out: user:emfrsjin5aql5nbu2cnz };
-RELATE user:hb4sfhwnejl13tkzhfpw -> login:s1ut92rd7ukzly37hbvr -> admin:2019331004 CONTENT { __: true, id: login:s1ut92rd7ukzly37hbvr, in: user:hb4sfhwnejl13tkzhfpw, out: admin:2019331004 };
+RELATE admin:2019331004 -> login:s1ut92rd7ukzly37hbvr -> user:hb4sfhwnejl13tkzhfpw CONTENT { __: true, id: login:s1ut92rd7ukzly37hbvr, in: admin:2019331004, out: user:hb4sfhwnejl13tkzhfpw };
 RELATE teacher:2017331003 -> login:s4ktmc5yzwlie89gedoz -> user:3bzbitac31n2x5azkogd CONTENT { __: true, id: login:s4ktmc5yzwlie89gedoz, in: teacher:2017331003, out: user:3bzbitac31n2x5azkogd };
 RELATE admin:2019331004 -> login:v1n9llzjn1d1dpohwhza -> user:hb4sfhwnejl13tkzhfpw CONTENT { __: true, id: login:v1n9llzjn1d1dpohwhza, in: admin:2019331004, out: user:hb4sfhwnejl13tkzhfpw };
 RELATE student:2027331008 -> login:w7bxir8r8vwmrz0hs3va -> user:7gko5yns2t2lm6ld8hb7 CONTENT { __: true, id: login:w7bxir8r8vwmrz0hs3va, in: student:2027331008, out: user:7gko5yns2t2lm6ld8hb7 };
@@ -462,6 +462,7 @@ RELATE teacher:2020331006 -> teaches:j2q4ckl1jsjiletcgqmf -> course:CSE435 CONTE
 RELATE teacher:2020331006 -> teaches:jf05462za7r10ge1pocp -> course:CSE222 CONTENT { __: true, id: teaches:jf05462za7r10ge1pocp, in: teacher:2020331006, out: course:CSE222 };
 RELATE teacher:2020331006 -> teaches:k8p6w7gu3dv43bv2h6b3 -> course:CSE436 CONTENT { __: true, id: teaches:k8p6w7gu3dv43bv2h6b3, in: teacher:2020331006, out: course:CSE436 };
 RELATE teacher:2020331006 -> teaches:l4f9mvrz5pia7gzzmfjy -> course:CSE437 CONTENT { __: true, id: teaches:l4f9mvrz5pia7gzzmfjy, in: teacher:2020331006, out: course:CSE437 };
+RELATE teacher:2019331073 -> teaches:m7e03je0qtchcoiy0n1b -> course:CSE350 CONTENT { __: true, id: teaches:m7e03je0qtchcoiy0n1b, in: teacher:2019331073, out: course:CSE350 };
 RELATE teacher:2020331006 -> teaches:m7u2b9djlzkgcyxp9rvq -> course:CSE438 CONTENT { __: true, id: teaches:m7u2b9djlzkgcyxp9rvq, in: teacher:2020331006, out: course:CSE438 };
 RELATE teacher:2020331006 -> teaches:n3b7s6wnv8mxl9p1e0kk -> course:CSE439 CONTENT { __: true, id: teaches:n3b7s6wnv8mxl9p1e0kk, in: teacher:2020331006, out: course:CSE439 };
 RELATE teacher:2019331009 -> teaches:n3btkzd8yy9dpam4a6j5 -> course:PHY252 CONTENT { __: true, id: teaches:n3btkzd8yy9dpam4a6j5, in: teacher:2019331009, out: course:PHY252 };

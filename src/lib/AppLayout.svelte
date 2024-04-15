@@ -42,9 +42,6 @@
 							<form method="POST" action="/?/logout">
 								<button type='submit' class="btn">Log out</button>
 							</form>
-							<!-- <a href='/'>
-								Logout
-							</a> -->
 
 								
 						</ListBoxItem>
