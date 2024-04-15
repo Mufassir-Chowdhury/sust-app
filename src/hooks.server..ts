@@ -1,9 +1,8 @@
-import { connectToDb, db } from '$lib/Database/surreal';
+import { db } from '$lib/Database/surreal';
 import type { Handle } from '@sveltejs/kit';
 
 
 export const handle: Handle = async ({ event, resolve }) => {
-  await connectToDb();
   const response = await resolve(event);
 	return response;
 };

@@ -1,8 +1,9 @@
-import { connectToDb } from '$lib/Database/surreal';
+// import { connectToDb } from '$lib/Database/surreal';
+
 
 export async function load() {
     try {
-        await connectToDb();
+        // await connectToDb();
     } catch (e) {
         console.error('ERROR', e);
     }
