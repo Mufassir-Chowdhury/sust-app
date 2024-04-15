@@ -45,6 +45,13 @@ export const actions = {
             },
             session: parseInt(data.get('session') as string),
         });
+        const [user] = await db.create("user", {
+            email: data.get('academic-email'),
+            password: 'password',
+            scope: 'student',
+        });
+        console.log(user)
+        await db.query(`RELATE ${record.id} -> login -> ${user.id}`)
         // TODO handle failure
         if(record){
             throw redirect(303, "/adminApp/students/" + "student:" + data.get('id') + "?showSuccess=true");

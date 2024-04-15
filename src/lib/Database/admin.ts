@@ -1,4 +1,4 @@
-import { database, db } from "$lib/Database/surreal.js";
+import { database, db } from "$lib/Database/surreal";
 import type { Admin } from "$lib/models";
 
 export async function getAdminList(){
@@ -9,7 +9,9 @@ export async function getAdminList(){
             department: "CSE",
         }
     ];
-    return await db.select('admin')
+    const admins = await db.query('SELECT * from admin');
+    console.log(admins)
+    return await db.select('admin');
 }
 
 export async function getAdmin(id: string): Promise<any> {

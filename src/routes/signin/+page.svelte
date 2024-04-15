@@ -4,7 +4,7 @@
 </script>
 
 <div class="h-full w-full flex justify-center items-center">
-    <form use:focusTrap={isFocused} class="card card-hover px-8 py-6 space-y-6" method="POST">
+    <form use:focusTrap={isFocused} class="card card-hover px-8 py-6 space-y-6" method="POST" action="?/login">
         <header class="card-header h2 bg-gradient-to-br from-blue-500 to-cyan-300 bg-clip-text text-transparent box-decoration-clone">
             <div class="sm:mx-auto sm:w-full sm:max-w-sm">
                 <img class="mx-auto h-10 w-auto" src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company">
@@ -14,13 +14,21 @@
         </header>
         <section class="p-4 space-y-6 w-full mx-auto text-sm">
             <label class="label">
-                <span>ID</span>
-                <input class="input py-1.5 shadow-sm" type="text" placeholder="ID" />
+                <span>Email</span>
+                <input class="input py-1.5 shadow-sm" id="email" name="email" type="email" placeholder="Email" />
             </label>
             <label class="label">
                 <span>Password</span>
-                <input class="input py-1.5 shadow-sm" type="password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" />
+                <input class="input py-1.5 shadow-sm" id="password" name="password" type="password" placeholder="&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;&#9679;" />
             </label>
+            <label class="label">
+              <span>Scope</span>
+              <select class="input py-1.5 shadow-sm" id="scope" name="scope">
+                <option value="admin">Admin</option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
+              </select>
+          </label>
         </section>
     	<footer class="card-footer">
             <button class="btn variant-filled-primary py-1.5 w-full">Sign In</button>

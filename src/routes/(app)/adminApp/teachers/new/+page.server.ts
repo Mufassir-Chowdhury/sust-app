@@ -37,6 +37,12 @@ export const actions = {
                 hometown: data.get('hometown'),
             },
         });
+        const [user] = await db.create("user", {
+            email: data.get('academic-email'),
+            password: 'password',
+            scope: 'teacher',
+        });
+        await db.query(`RELATE ${record.id} -> login -> ${user.id}`)
         // TODO handle failure
         if(record){
             throw redirect(303, "/adminApp/teachers/" + "teacher:" + data.get('id') + "?showSuccess=true");

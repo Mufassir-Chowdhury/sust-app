@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Avatar } from '@skeletonlabs/skeleton';
+    export let user: any;
 </script>
 <section class="p-4 my-4 flex flex-col gap-8">
     <div class="p-4 shadow-xl">
@@ -7,10 +8,15 @@
         <div class=" flex flex-row justify-between items-center ">
             <Avatar src="https://something.com/invalid-image.jpg" initials="AB" />
             <div class="text-right">
-                <h1>Mufassir Ahmad Chowdhury</h1>
-                <p class="text-sm font-light">Student</p>
-                <p class="text-sm font-light">Computer Science and Engineering</p>
-                <p class="text-sm font-light">Third Year Second Semester</p>
+                <h1>{user.name}</h1>
+                <p class="text-sm font-light">{user.id.split(':')[0][0].toUpperCase() + user.id.split(':')[0].slice(1)}</p>
+                <p class="text-sm font-light">{user.departmentName}</p>
+                {#if user.designation}
+                    <p class="text-sm font-light">{user.designation}</p>
+                {/if}
+                {#if user.semester}
+                    <p class="text-sm font-light">{user.semester} semester</p>
+                {/if}
             </div>
         </div>
         <a href="/" >

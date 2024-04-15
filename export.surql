@@ -8,45 +8,15 @@ OPTION IMPORT;
 -- SCOPES
 -- ------------------------------
 
-DEFINE SCOPE admin SESSION 1d
-	SIGNIN (
-		SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password)
-	)
-	SIGNUP (
-		CREATE user CONTENT {
-			name: $name,
-			email: $email,
-			password: crypto::argon2::generate($password)
-		}
-	);
-DEFINE SCOPE student SESSION 1d
-	SIGNIN (
-		SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password)
-	)
-	SIGNUP (
-		CREATE user CONTENT {
-			name: $name,
-			email: $email,
-			password: crypto::argon2::generate($password)
-		}
-	);
-DEFINE SCOPE taecher SESSION 1d
-	SIGNIN (
-		SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password)
-	)
-	SIGNUP (
-		CREATE user CONTENT {
-			name: $name,
-			email: $email,
-			password: crypto::argon2::generate($password)
-		}
-	);
+DEFINE SCOPE admin SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT ->login->admin.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
+DEFINE SCOPE student SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT ->login->student.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
+DEFINE SCOPE teacher SESSION 1d SIGNUP (CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }) SIGNIN (SELECT ->login->teacher.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
 
 -- ------------------------------
 -- TABLE: admin
 -- ------------------------------
 
-DEFINE TABLE admin SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE admin SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD blood_group ON admin TYPE string ASSERT $value INSIDE ['A+', 'B+', 'AB+', 'O+', 'A-', 'B-', 'AB-', 'O-'] PERMISSIONS FULL;
 DEFINE FIELD department ON admin TYPE record<department> ASSERT $value != NONE PERMISSIONS FULL;
@@ -71,7 +41,7 @@ DEFINE INDEX phone ON admin FIELDS personal.phone UNIQUE;
 -- TABLE: course
 -- ------------------------------
 
-DEFINE TABLE course SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE course SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD course_code ON course TYPE string VALUE meta::id(id) PERMISSIONS FULL;
 DEFINE FIELD credit ON course TYPE float ASSERT $value != NONE AND $value > 0 AND $value <= 4 PERMISSIONS FULL;
@@ -87,7 +57,7 @@ DEFINE INDEX name ON course FIELDS name UNIQUE;
 -- TABLE: dailyroutine
 -- ------------------------------
 
-DEFINE TABLE dailyroutine SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE dailyroutine SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD building ON dailyroutine TYPE string ASSERT $value != NONE PERMISSIONS FULL;
 DEFINE FIELD date ON dailyroutine TYPE datetime ASSERT $value != NONE PERMISSIONS FULL;
@@ -99,7 +69,7 @@ DEFINE FIELD time ON dailyroutine TYPE number ASSERT $value != NONE AND $value >
 -- TABLE: department
 -- ------------------------------
 
-DEFINE TABLE department SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE department SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD building ON department TYPE string ASSERT $value != NONE AND string::len($value) > 0 PERMISSIONS FULL;
 DEFINE FIELD code ON department TYPE number ASSERT $value != NONE AND $value >= 100 AND $value <= 999 AND math::round($value) = $value PERMISSIONS FULL;
@@ -117,37 +87,37 @@ DEFINE INDEX name ON department FIELDS name UNIQUE;
 -- TABLE: follows
 -- ------------------------------
 
-DEFINE TABLE follows SCHEMALESS PERMISSIONS NONE;
+DEFINE TABLE follows SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
 -- TABLE: has
 -- ------------------------------
 
-DEFINE TABLE has SCHEMALESS PERMISSIONS NONE;
+DEFINE TABLE has SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
 -- TABLE: having
 -- ------------------------------
 
-DEFINE TABLE having SCHEMALESS PERMISSIONS NONE;
+DEFINE TABLE having SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
 -- TABLE: login
 -- ------------------------------
 
-DEFINE TABLE login SCHEMALESS PERMISSIONS NONE;
+DEFINE TABLE login SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
 -- TABLE: offers
 -- ------------------------------
 
-DEFINE TABLE offers SCHEMALESS PERMISSIONS NONE;
+DEFINE TABLE offers SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
 -- TABLE: post
 -- ------------------------------
 
-DEFINE TABLE post SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE post SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD description ON post TYPE string ASSERT $value != NONE PERMISSIONS FULL;
 DEFINE FIELD info ON post TYPE object PERMISSIONS FULL;
@@ -160,7 +130,7 @@ DEFINE FIELD pdf ON post TYPE string PERMISSIONS FULL;
 -- TABLE: resource
 -- ------------------------------
 
-DEFINE TABLE resource SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE resource SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD date ON resource TYPE datetime ASSERT $value != NONE PERMISSIONS FULL;
 DEFINE FIELD link ON resource TYPE string ASSERT $value != NONE PERMISSIONS FULL;
@@ -171,7 +141,7 @@ DEFINE FIELD title ON resource TYPE string ASSERT $value != NONE PERMISSIONS FUL
 -- TABLE: routine
 -- ------------------------------
 
-DEFINE TABLE routine SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE routine SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD building ON routine TYPE string ASSERT $value != NONE PERMISSIONS FULL;
 DEFINE FIELD duration ON routine TYPE string ASSERT $value INSIDE ['1hr', '2hr', 3hr] PERMISSIONS FULL;
@@ -182,7 +152,7 @@ DEFINE FIELD time ON routine TYPE number ASSERT $value != NONE AND $value >= 8 A
 -- TABLE: student
 -- ------------------------------
 
-DEFINE TABLE student SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE student SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD blood_group ON student TYPE string ASSERT $value INSIDE ['A+', 'B+', 'AB+', 'O+', 'A-', 'B-', 'AB-', 'O-'] PERMISSIONS FULL;
 DEFINE FIELD current_semester ON student TYPE number ASSERT $value != NONE AND $value >= 1 AND $value <= 8 AND math::round($value) = $value PERMISSIONS FULL;
@@ -209,13 +179,13 @@ DEFINE INDEX phone ON student FIELDS personal.phone UNIQUE;
 -- TABLE: takes
 -- ------------------------------
 
-DEFINE TABLE takes SCHEMALESS PERMISSIONS NONE;
+DEFINE TABLE takes SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
 -- TABLE: teacher
 -- ------------------------------
 
-DEFINE TABLE teacher SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE teacher SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD blood_group ON teacher TYPE string ASSERT $value INSIDE ['A+', 'B+', 'AB+', 'O+', 'A-', 'B-', 'AB-', 'O-'] PERMISSIONS FULL;
 DEFINE FIELD department ON teacher TYPE record<department> ASSERT $value != NONE PERMISSIONS FULL;
@@ -240,16 +210,16 @@ DEFINE INDEX phone ON teacher FIELDS personal.phone UNIQUE;
 -- TABLE: teaches
 -- ------------------------------
 
-DEFINE TABLE teaches SCHEMALESS PERMISSIONS NONE;
+DEFINE TABLE teaches SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
 -- TABLE: user
 -- ------------------------------
 
-DEFINE TABLE user SCHEMAFULL PERMISSIONS FOR select, update, delete WHERE id = $auth.id;
+DEFINE TABLE user SCHEMAFULL PERMISSIONS FOR select, update, delete WHERE id = $auth.id, FOR create NONE;
 
-DEFINE FIELD email ON user TYPE string ASSERT $value != NONE;
-DEFINE FIELD password ON user TYPE string ASSERT $value != NONE;
+DEFINE FIELD email ON user TYPE string ASSERT $value != NONE PERMISSIONS FULL;
+DEFINE FIELD password ON user TYPE string ASSERT $value != NONE PERMISSIONS FULL;
 
 DEFINE INDEX email ON user FIELDS email UNIQUE;
 
@@ -348,13 +318,49 @@ RELATE course:CSE330 -> having:syn88tvte55ce3zxzvv8 -> dailyroutine:ndeb82uxfmwg
 
 RELATE user:emfrsjin5aql5nbu2cnz -> login:0rmjsdqk2j0v0qq2thwv -> student:2023119144 CONTENT { __: true, id: login:0rmjsdqk2j0v0qq2thwv, in: user:emfrsjin5aql5nbu2cnz, out: student:2023119144 };
 RELATE user:ws6uynksgs1kdr07b3r8 -> login:1sjkmi7o2a9f98a978gi -> teacher:2019331073 CONTENT { __: true, id: login:1sjkmi7o2a9f98a978gi, in: user:ws6uynksgs1kdr07b3r8, out: teacher:2019331073 };
+RELATE admin:2022331001 -> login:2j7g07vcx7eznorpz4ue -> user:h5qjh4wllongbemlw42x CONTENT { __: true, id: login:2j7g07vcx7eznorpz4ue, in: admin:2022331001, out: user:h5qjh4wllongbemlw42x };
 RELATE user:xz5o4prrbak776nivu4a -> login:2or2pea30ymoa6ko5905 -> student:2019331013 CONTENT { __: true, id: login:2or2pea30ymoa6ko5905, in: user:xz5o4prrbak776nivu4a, out: student:2019331013 };
+RELATE teacher:2023331009 -> login:39xhoz0lvl1rf4np4vn6 -> user:e5o3mivkkcvdrv1jaazl CONTENT { __: true, id: login:39xhoz0lvl1rf4np4vn6, in: teacher:2023331009, out: user:e5o3mivkkcvdrv1jaazl };
+RELATE admin:2026331006 -> login:4fnpnlbzkvp97ec3ovnr -> user:fw16ceg0wvr699m5bi5g CONTENT { __: true, id: login:4fnpnlbzkvp97ec3ovnr, in: admin:2026331006, out: user:fw16ceg0wvr699m5bi5g };
+RELATE admin:2029331009 -> login:5cjw39ul5v036gnagjx8 -> user:s87eei68m6ieqggafm04 CONTENT { __: true, id: login:5cjw39ul5v036gnagjx8, in: admin:2029331009, out: user:s87eei68m6ieqggafm04 };
+RELATE admin:2028331008 -> login:5kmyonq6ygeky9e3vk68 -> user:acpfio57duapbp19w16f CONTENT { __: true, id: login:5kmyonq6ygeky9e3vk68, in: admin:2028331008, out: user:acpfio57duapbp19w16f };
 RELATE user:4p3m8nugy0lspbz2mxr8 -> login:74aiw92bacx0k2zvodbu -> student:2022998101 CONTENT { __: true, id: login:74aiw92bacx0k2zvodbu, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
+RELATE teacher:2020331006 -> login:85r3fh6pem3ykbo6l46q -> user:dix9jmk14tjw3mr13r8r CONTENT { __: true, id: login:85r3fh6pem3ykbo6l46q, in: teacher:2020331006, out: user:dix9jmk14tjw3mr13r8r };
 RELATE user:pi75cobhfzu0xp5ex832 -> login:ad56liuqu1nfkj275cz5 -> student:2022887055 CONTENT { __: true, id: login:ad56liuqu1nfkj275cz5, in: user:pi75cobhfzu0xp5ex832, out: student:2022887055 };
+RELATE student:2019331073 -> login:blpeo81xgqwqadat5o9y -> user:ws6uynksgs1kdr07b3r8 CONTENT { __: true, id: login:blpeo81xgqwqadat5o9y, in: student:2019331073, out: user:ws6uynksgs1kdr07b3r8 };
+RELATE admin:2031331011 -> login:br8ptlnmxuw6wf6lxqwq -> user:y067zen20ochl6m2mopw CONTENT { __: true, id: login:br8ptlnmxuw6wf6lxqwq, in: admin:2031331011, out: user:y067zen20ochl6m2mopw };
+RELATE admin:2024331004 -> login:d420zp4cflazxp3cfmdi -> user:rxwaj49bgjqwkvjzcjz5 CONTENT { __: true, id: login:d420zp4cflazxp3cfmdi, in: admin:2024331004, out: user:rxwaj49bgjqwkvjzcjz5 };
+RELATE teacher:2018331005 -> login:dn9dnbgirwmubp1rci24 -> user:d6m4gk2kinumvumj8mp2 CONTENT { __: true, id: login:dn9dnbgirwmubp1rci24, in: teacher:2018331005, out: user:d6m4gk2kinumvumj8mp2 };
+RELATE admin:2030331010 -> login:e4v6pj64o1po3a84qhyk -> user:ecfcoo0pvjhel2kww7k0 CONTENT { __: true, id: login:e4v6pj64o1po3a84qhyk, in: admin:2030331010, out: user:ecfcoo0pvjhel2kww7k0 };
+RELATE student:2026331007 -> login:e8qpkjqlbhqdjemtp83e -> user:63vn5cttf0wvbsendum5 CONTENT { __: true, id: login:e8qpkjqlbhqdjemtp83e, in: student:2026331007, out: user:63vn5cttf0wvbsendum5 };
 RELATE user:emfrsjin5aql5nbu2cnz -> login:fc5fhrxvg2lqqfouq513 -> student:2023119144 CONTENT { __: true, id: login:fc5fhrxvg2lqqfouq513, in: user:emfrsjin5aql5nbu2cnz, out: student:2023119144 };
 RELATE user:h5qjh4wllongbemlw42x -> login:g03s81x5ha6m7l8f89t8 -> admin:2022331001 CONTENT { __: true, id: login:g03s81x5ha6m7l8f89t8, in: user:h5qjh4wllongbemlw42x, out: admin:2022331001 };
+RELATE teacher:2018331004 -> login:hiuw4om5k2rriobsjt7s -> user:2c5i0340e1ufa6runlqa CONTENT { __: true, id: login:hiuw4om5k2rriobsjt7s, in: teacher:2018331004, out: user:2c5i0340e1ufa6runlqa };
+RELATE student:2022331003 -> login:hwenvcwvtn4xltauuyci -> user:fayghqmh7rba674ae68q CONTENT { __: true, id: login:hwenvcwvtn4xltauuyci, in: student:2022331003, out: user:fayghqmh7rba674ae68q };
+RELATE admin:2027331007 -> login:ijjetsfwods5a50f6oed -> user:e2yh9xar0v5yr3lcuthl CONTENT { __: true, id: login:ijjetsfwods5a50f6oed, in: admin:2027331007, out: user:e2yh9xar0v5yr3lcuthl };
+RELATE admin:2023331003 -> login:izzg9ad5is1f77d9hxjg -> user:diz0chynhwclbnjlxnau CONTENT { __: true, id: login:izzg9ad5is1f77d9hxjg, in: admin:2023331003, out: user:diz0chynhwclbnjlxnau };
+RELATE student:2022887055 -> login:j4akp91jlue4wp0w8as7 -> user:pi75cobhfzu0xp5ex832 CONTENT { __: true, id: login:j4akp91jlue4wp0w8as7, in: student:2022887055, out: user:pi75cobhfzu0xp5ex832 };
+RELATE teacher:2024331010 -> login:jbrxazo1ggkc02ab07l1 -> user:oultft0c1la1eyesl836 CONTENT { __: true, id: login:jbrxazo1ggkc02ab07l1, in: teacher:2024331010, out: user:oultft0c1la1eyesl836 };
+RELATE student:2022998101 -> login:je99cbt2l41mku1oniug -> user:4p3m8nugy0lspbz2mxr8 CONTENT { __: true, id: login:je99cbt2l41mku1oniug, in: student:2022998101, out: user:4p3m8nugy0lspbz2mxr8 };
+RELATE student:2023331004 -> login:jj09juftwg2ghkj44h49 -> user:wtl0pb9d8fg47m5dzb7u CONTENT { __: true, id: login:jj09juftwg2ghkj44h49, in: student:2023331004, out: user:wtl0pb9d8fg47m5dzb7u };
+RELATE teacher:2019331073 -> login:mxfmvd6g8spqrhptat6b -> user:aasa01kbaknch7ol17w7 CONTENT { __: true, id: login:mxfmvd6g8spqrhptat6b, in: teacher:2019331073, out: user:aasa01kbaknch7ol17w7 };
+RELATE student:2028331009 -> login:otgwpvk0yhitsbzhmwt3 -> user:tl9wvmebiqz34ccalyao CONTENT { __: true, id: login:otgwpvk0yhitsbzhmwt3, in: student:2028331009, out: user:tl9wvmebiqz34ccalyao };
+RELATE teacher:2026331012 -> login:oztuub3vu7pm28yztmfd -> user:ly0cwtsrc9jjcraufey5 CONTENT { __: true, id: login:oztuub3vu7pm28yztmfd, in: teacher:2026331012, out: user:ly0cwtsrc9jjcraufey5 };
+RELATE student:2021331002 -> login:p966mx3kfplfhvr1h8bd -> user:qo9qify1bi2fux92hfi3 CONTENT { __: true, id: login:p966mx3kfplfhvr1h8bd, in: student:2021331002, out: user:qo9qify1bi2fux92hfi3 };
+RELATE student:2019331013 -> login:pmkrvgbua8wxafmad527 -> user:xz5o4prrbak776nivu4a CONTENT { __: true, id: login:pmkrvgbua8wxafmad527, in: student:2019331013, out: user:xz5o4prrbak776nivu4a };
 RELATE user:4p3m8nugy0lspbz2mxr8 -> login:pupihh1qmjmigs8dcjky -> student:2022998101 CONTENT { __: true, id: login:pupihh1qmjmigs8dcjky, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
+RELATE student:2023119144 -> login:qj5r8skr91sou3r18d1n -> user:emfrsjin5aql5nbu2cnz CONTENT { __: true, id: login:qj5r8skr91sou3r18d1n, in: student:2023119144, out: user:emfrsjin5aql5nbu2cnz };
 RELATE user:hb4sfhwnejl13tkzhfpw -> login:s1ut92rd7ukzly37hbvr -> admin:2019331004 CONTENT { __: true, id: login:s1ut92rd7ukzly37hbvr, in: user:hb4sfhwnejl13tkzhfpw, out: admin:2019331004 };
+RELATE teacher:2017331003 -> login:s4ktmc5yzwlie89gedoz -> user:3bzbitac31n2x5azkogd CONTENT { __: true, id: login:s4ktmc5yzwlie89gedoz, in: teacher:2017331003, out: user:3bzbitac31n2x5azkogd };
+RELATE admin:2019331004 -> login:v1n9llzjn1d1dpohwhza -> user:hb4sfhwnejl13tkzhfpw CONTENT { __: true, id: login:v1n9llzjn1d1dpohwhza, in: admin:2019331004, out: user:hb4sfhwnejl13tkzhfpw };
+RELATE student:2027331008 -> login:w7bxir8r8vwmrz0hs3va -> user:7gko5yns2t2lm6ld8hb7 CONTENT { __: true, id: login:w7bxir8r8vwmrz0hs3va, in: student:2027331008, out: user:7gko5yns2t2lm6ld8hb7 };
+RELATE student:2029331010 -> login:whpdfrylnlh53h66e0x7 -> user:qaqsmecwjcuesyrxz6c0 CONTENT { __: true, id: login:whpdfrylnlh53h66e0x7, in: student:2029331010, out: user:qaqsmecwjcuesyrxz6c0 };
+RELATE teacher:2022331008 -> login:wxuf1fzb4juko4wpv4v7 -> user:786385avszz3sji0e0sq CONTENT { __: true, id: login:wxuf1fzb4juko4wpv4v7, in: teacher:2022331008, out: user:786385avszz3sji0e0sq };
+RELATE student:2025331006 -> login:xfehupcy11ivsqvcqhym -> user:r04ju7d82ojwwpwbxzzv CONTENT { __: true, id: login:xfehupcy11ivsqvcqhym, in: student:2025331006, out: user:r04ju7d82ojwwpwbxzzv };
+RELATE teacher:2019331005 -> login:y7dpfqcgydwee8cwwwkd -> user:g72wh4uz3j2bvo350nqa CONTENT { __: true, id: login:y7dpfqcgydwee8cwwwkd, in: teacher:2019331005, out: user:g72wh4uz3j2bvo350nqa };
+RELATE student:2024331005 -> login:yhca7vlwdyfyvd0t9j8m -> user:hn41yodgfd5rad996qui CONTENT { __: true, id: login:yhca7vlwdyfyvd0t9j8m, in: student:2024331005, out: user:hn41yodgfd5rad996qui };
+RELATE student:2020331001 -> login:yz1jm6flvp4smztwrxxw -> user:yqjhe8r14hmnobsqgaci CONTENT { __: true, id: login:yz1jm6flvp4smztwrxxw, in: student:2020331001, out: user:yqjhe8r14hmnobsqgaci };
+RELATE admin:2025331005 -> login:zyafjnsxdml1l40davei -> user:3x7xfzq2uzita4xydaj2 CONTENT { __: true, id: login:zyafjnsxdml1l40davei, in: admin:2025331005, out: user:3x7xfzq2uzita4xydaj2 };
 
 -- ------------------------------
 -- TABLE DATA: offers

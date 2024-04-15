@@ -21,12 +21,14 @@ const databaseInstance = {
 					_db = new Surreal();
 
 					if (!DB_URL) return null;
-					await _db.connect(DB_URL, { namespace: 'surreal', database: 'sveltekit', auth: {
+					await _db.connect(DB_URL, { namespace: 'surreal', database: 'sveltekit'
+					, auth: {
                                         namespace: 'test',
                                         database: 'test',
                                         username: 'root',
                                         password: 'root',
-                                    }, });
+                                    },
+								 });
 				} catch (error) {
 					if (retries < MAX_RETRIES) {
 						retries++;

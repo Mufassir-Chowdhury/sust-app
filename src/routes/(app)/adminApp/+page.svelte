@@ -11,6 +11,6 @@
         <NavigationGrid pages={data.body}/>
     </div>
     <div class="col-span-1">
-        <Dashboard/>
+        <Dashboard user={data.locals.user}/>
     </div>
 </div>
