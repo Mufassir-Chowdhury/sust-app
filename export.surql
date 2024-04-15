@@ -8,9 +8,39 @@ OPTION IMPORT;
 -- SCOPES
 -- ------------------------------
 
-DEFINE SCOPE admin SESSION 1d SIGNIN (SELECT ->login->admin.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
-DEFINE SCOPE student SESSION 1d SIGNIN (SELECT ->login->student.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
-DEFINE SCOPE teacher SESSION 1d SIGNIN (SELECT ->login->teacher.id AS id FROM user WHERE email = $email AND crypto::argon2::compare(password, $password) SPLIT ON id);
+DEFINE SCOPE admin SESSION 1d
+	SIGNIN (
+		SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password)
+	)
+	SIGNUP (
+		CREATE user CONTENT {
+			name: $name,
+			email: $email,
+			password: crypto::argon2::generate($password)
+		}
+	);
+DEFINE SCOPE student SESSION 1d
+	SIGNIN (
+		SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password)
+	)
+	SIGNUP (
+		CREATE user CONTENT {
+			name: $name,
+			email: $email,
+			password: crypto::argon2::generate($password)
+		}
+	);
+DEFINE SCOPE taecher SESSION 1d
+	SIGNIN (
+		SELECT * FROM user WHERE email = $email AND crypto::argon2::compare(password, $password)
+	)
+	SIGNUP (
+		CREATE user CONTENT {
+			name: $name,
+			email: $email,
+			password: crypto::argon2::generate($password)
+		}
+	);
 
 -- ------------------------------
 -- TABLE: admin
@@ -216,10 +246,10 @@ DEFINE TABLE teaches SCHEMALESS PERMISSIONS NONE;
 -- TABLE: user
 -- ------------------------------
 
-DEFINE TABLE user SCHEMAFULL PERMISSIONS NONE;
+DEFINE TABLE user SCHEMAFULL PERMISSIONS FOR select, update, delete WHERE id = $auth.id;
 
-DEFINE FIELD email ON user TYPE string ASSERT $value != NONE PERMISSIONS FULL;
-DEFINE FIELD password ON user TYPE string ASSERT $value != NONE PERMISSIONS FULL;
+DEFINE FIELD email ON user TYPE string ASSERT $value != NONE;
+DEFINE FIELD password ON user TYPE string ASSERT $value != NONE;
 
 DEFINE INDEX email ON user FIELDS email UNIQUE;
 
@@ -322,6 +352,7 @@ RELATE user:xz5o4prrbak776nivu4a -> login:2or2pea30ymoa6ko5905 -> student:201933
 RELATE user:4p3m8nugy0lspbz2mxr8 -> login:74aiw92bacx0k2zvodbu -> student:2022998101 CONTENT { __: true, id: login:74aiw92bacx0k2zvodbu, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
 RELATE user:pi75cobhfzu0xp5ex832 -> login:ad56liuqu1nfkj275cz5 -> student:2022887055 CONTENT { __: true, id: login:ad56liuqu1nfkj275cz5, in: user:pi75cobhfzu0xp5ex832, out: student:2022887055 };
 RELATE user:emfrsjin5aql5nbu2cnz -> login:fc5fhrxvg2lqqfouq513 -> student:2023119144 CONTENT { __: true, id: login:fc5fhrxvg2lqqfouq513, in: user:emfrsjin5aql5nbu2cnz, out: student:2023119144 };
+RELATE user:h5qjh4wllongbemlw42x -> login:g03s81x5ha6m7l8f89t8 -> admin:2022331001 CONTENT { __: true, id: login:g03s81x5ha6m7l8f89t8, in: user:h5qjh4wllongbemlw42x, out: admin:2022331001 };
 RELATE user:4p3m8nugy0lspbz2mxr8 -> login:pupihh1qmjmigs8dcjky -> student:2022998101 CONTENT { __: true, id: login:pupihh1qmjmigs8dcjky, in: user:4p3m8nugy0lspbz2mxr8, out: student:2022998101 };
 RELATE user:hb4sfhwnejl13tkzhfpw -> login:s1ut92rd7ukzly37hbvr -> admin:2019331004 CONTENT { __: true, id: login:s1ut92rd7ukzly37hbvr, in: user:hb4sfhwnejl13tkzhfpw, out: admin:2019331004 };
 
@@ -435,16 +466,45 @@ RELATE teacher:2017331003 -> teaches:r7k29uqwvigk5r70pc3q -> course:EEE342 CONTE
 -- TABLE DATA: user
 -- ------------------------------
 
+UPDATE user:2c5i0340e1ufa6runlqa CONTENT { email: 'teacher4@sust.edu', id: user:2c5i0340e1ufa6runlqa, password: '$argon2id$v=19$m=19456,t=2,p=1$caNQIqrWoP7ZxHOVkxUeiw$7WRMsvP5jBQj+DZ9pZ6zHXFSG1JWnleyuz3SgKyqJ7I' };
+UPDATE user:3bzbitac31n2x5azkogd CONTENT { email: 'teacher3@sust.edu', id: user:3bzbitac31n2x5azkogd, password: '$argon2id$v=19$m=19456,t=2,p=1$ZodfmC+hMu38lnAjjciOiw$p0cYKS225IMKeUCI7jUmGO6avGVBzAV444O28dOHILo' };
 UPDATE user:3sx7fe9v6w58gag2b625 CONTENT { email: 'xyz@sust.edu', id: user:3sx7fe9v6w58gag2b625, password: '$argon2id$v=19$m=19456,t=2,p=1$7JLreAVwXh73ALGEEjjtXw$DwpTTl/o2TwlZoooQ+9AC8MqwFCmpiIeGt7T54HU3Jc' };
+UPDATE user:3x7xfzq2uzita4xydaj2 CONTENT { email: 'admin5@sust.edu', id: user:3x7xfzq2uzita4xydaj2, password: '$argon2id$v=19$m=19456,t=2,p=1$hIJ+VlQ2P0tf1hKs/m90/A$gjYVZcOaYguDuGVN7P8kGz7lT0IPSHavMkHzhQhdNH8' };
 UPDATE user:4p3m8nugy0lspbz2mxr8 CONTENT { email: 'arjun04@student.sust.edu', id: user:4p3m8nugy0lspbz2mxr8, password: '$argon2id$v=19$m=19456,t=2,p=1$W1PLzntnQnQvHVBESwaonw$mqCDsNwfPF/A7Z0WjbkOUmObpzj6kb+QWQyAtoPi/cI' };
+UPDATE user:63vn5cttf0wvbsendum5 CONTENT { email: 'student7@student.sust.edu', id: user:63vn5cttf0wvbsendum5, password: '$argon2id$v=19$m=19456,t=2,p=1$aWl9B292fJAA+vjxtkyQkg$truMjLxpBmPk8LT8RfimsFaRmbZ3eg4i+INklqXq5W4' };
+UPDATE user:786385avszz3sji0e0sq CONTENT { email: 'teacher8@sust.edu', id: user:786385avszz3sji0e0sq, password: '$argon2id$v=19$m=19456,t=2,p=1$AGrVzkjirba/paMEENSz4A$1kCeizJGKhJsm8IWIDnPs/BAt5iGUP+ijZIWQ6Sm/A4' };
+UPDATE user:7gko5yns2t2lm6ld8hb7 CONTENT { email: 'student8@student.sust.edu', id: user:7gko5yns2t2lm6ld8hb7, password: '$argon2id$v=19$m=19456,t=2,p=1$OSClfh5D5UroQRvA0l5IcA$QTqiDKpwwKYDRNh2krKTXvsWKaqk8uSHWX/Yvahvoaw' };
 UPDATE user:aasa01kbaknch7ol17w7 CONTENT { email: 'mufassir73@student.sust.edu', id: user:aasa01kbaknch7ol17w7, password: '$argon2id$v=19$m=19456,t=2,p=1$c1fIG/sv0IV5k1UFScZVZg$92aoHf8Y/2wUWTBccYvJ1OmtbwkIAwCkaCksS3+w/b8' };
+UPDATE user:acpfio57duapbp19w16f CONTENT { email: 'admin8@sust.edu', id: user:acpfio57duapbp19w16f, password: '$argon2id$v=19$m=19456,t=2,p=1$a846pLfTVR4GAHP0QCP8fw$ZnQRA8XCfMcLZ0+OfqEOuhHhSe52j4CQ7aw6JZOgAsU' };
+UPDATE user:d6m4gk2kinumvumj8mp2 CONTENT { email: 'teacher1@sust.edu', id: user:d6m4gk2kinumvumj8mp2, password: '$argon2id$v=19$m=19456,t=2,p=1$+qcChF1l4vzXtow2fSwyAA$dM8MD+IkSC9eRb7XrROqWiw0qTwTee6S/IvRMLc58b0' };
 UPDATE user:d9pu7wrq9qgg9ssojw78 CONTENT { email: 'mufassir@sust.edu', id: user:d9pu7wrq9qgg9ssojw78, password: '$argon2id$v=19$m=19456,t=2,p=1$z9bb3s0hsj/Y4eFgiOYeDw$FvNIPOqc39RLOnm1tf3/oALeopjHBh5u8+kDi/BEuWI' };
+UPDATE user:dix9jmk14tjw3mr13r8r CONTENT { email: 'teacher6@sust.edu', id: user:dix9jmk14tjw3mr13r8r, password: '$argon2id$v=19$m=19456,t=2,p=1$UFj065EudgEqetJ5kz0PVQ$xu14vJNJokt/gPv3nDKdu07sFZy2OZs8puvvSneZQvU' };
+UPDATE user:diz0chynhwclbnjlxnau CONTENT { email: 'admin3@sust.edu', id: user:diz0chynhwclbnjlxnau, password: '$argon2id$v=19$m=19456,t=2,p=1$olW38MDUflglC8ty4vQhZg$6fBhamPikDKhXKRxryuK2EGu/d5aL6oU17nC7SNKnko' };
+UPDATE user:e2yh9xar0v5yr3lcuthl CONTENT { email: 'admin7@sust.edu', id: user:e2yh9xar0v5yr3lcuthl, password: '$argon2id$v=19$m=19456,t=2,p=1$DSH0yalnd1TX3pVb/dAcPQ$aeTUlGHrquB79qb306wUuNV/rYcWnjhpYWRssPLAuZI' };
+UPDATE user:e5o3mivkkcvdrv1jaazl CONTENT { email: 'teacher9@sust.edu', id: user:e5o3mivkkcvdrv1jaazl, password: '$argon2id$v=19$m=19456,t=2,p=1$otVglKfDOxF/5mtYy86MGA$ue+shNq0sMRfqjXILRYdkWy3mO165mKtvk7PgGsOOEc' };
+UPDATE user:ecfcoo0pvjhel2kww7k0 CONTENT { email: 'admin10@sust.edu', id: user:ecfcoo0pvjhel2kww7k0, password: '$argon2id$v=19$m=19456,t=2,p=1$swxekl3uYTpy2FJvL68/aQ$/I6TUwLitvhnNMGaToOYyBpKtpBHCMdmhnsEiOk/dwc' };
 UPDATE user:emfrsjin5aql5nbu2cnz CONTENT { email: 'amina05@student.sust.edu', id: user:emfrsjin5aql5nbu2cnz, password: '$argon2id$v=19$m=19456,t=2,p=1$YCAS684IJvTsmkv1vH2CjQ$orcHFgHMZnXhtA8mSKGAGZGEqN4vIN+ynAvvSYFtKWA' };
+UPDATE user:fayghqmh7rba674ae68q CONTENT { email: 'student3@student.sust.edu', id: user:fayghqmh7rba674ae68q, password: '$argon2id$v=19$m=19456,t=2,p=1$pWRemoDGLn+Nxh6Ox2FuEg$eYmcv99VP6HNLImI916zLHU/Q1ZunwagVnNbqHX6Zy8' };
+UPDATE user:fw16ceg0wvr699m5bi5g CONTENT { email: 'admin6@sust.edu', id: user:fw16ceg0wvr699m5bi5g, password: '$argon2id$v=19$m=19456,t=2,p=1$YpVdCAlP2eXaRVfENHbNaw$39os7dP9Ll8qtjv7c97B4+qQQaVWU6XweZ0EwYQME3g' };
+UPDATE user:g72wh4uz3j2bvo350nqa CONTENT { email: 'teacher5@sust.edu', id: user:g72wh4uz3j2bvo350nqa, password: '$argon2id$v=19$m=19456,t=2,p=1$le0XWrDVTuowAfk5tf6bDw$Dy8+MQ4WMZHTyvNOJX5/oKJqWG2vvkNcK3mllmu2Ogg' };
+UPDATE user:h5qjh4wllongbemlw42x CONTENT { email: 'admin1@sust.edu', id: user:h5qjh4wllongbemlw42x, password: '$argon2id$v=19$m=19456,t=2,p=1$F+U52uCieDyqIhPZBNVbvQ$lcUQKPyHAJeXNSfJogweiQC6wCPX7VehvuEwahTU9fs' };
 UPDATE user:hb4sfhwnejl13tkzhfpw CONTENT { email: 'mrx@sust.edu', id: user:hb4sfhwnejl13tkzhfpw, password: '$argon2id$v=19$m=19456,t=2,p=1$mzO2HyrwcGWzE9TxXkIwHA$UM3Ql1K5ekDY0/yVOC+eLMooNt+U1Oi/ULyI3jTVV8k' };
+UPDATE user:hn41yodgfd5rad996qui CONTENT { email: 'student5@student.sust.edu', id: user:hn41yodgfd5rad996qui, password: '$argon2id$v=19$m=19456,t=2,p=1$GczKs2owxEKik9iEfsc3GA$zrflySRqLPdCWQ735kRguY9s+xFXwgMsJ6SrL7rcryQ' };
+UPDATE user:ly0cwtsrc9jjcraufey5 CONTENT { email: 'teacher12@sust.edu', id: user:ly0cwtsrc9jjcraufey5, password: '$argon2id$v=19$m=19456,t=2,p=1$EMhuoxeRjSwKlAABa5zgAQ$W3e8WbjPcg7XfWXdFz1DbiXcI2sQQ+m7LITV5HfxiX4' };
 UPDATE user:nbe5cbdnq5fke193hw67 CONTENT { email: 'ethan02@student.sust.edu', id: user:nbe5cbdnq5fke193hw67, password: '$argon2id$v=19$m=19456,t=2,p=1$HkXP0cU6hzquhFhok8pdjg$4zkdcs9U/P36y14VFuIjBcHHZI/RVm/gvOi+J3GcdFQ' };
+UPDATE user:oultft0c1la1eyesl836 CONTENT { email: 'teacher10@sust.edu', id: user:oultft0c1la1eyesl836, password: '$argon2id$v=19$m=19456,t=2,p=1$RkkWwuD3rkV07Kg1XzmE+w$LmLNGcxmwAGYTj874Y6tRpfR2FuAshMRdIC4rvsXGro' };
 UPDATE user:pi75cobhfzu0xp5ex832 CONTENT { email: 'sophia03@student.sust.edu', id: user:pi75cobhfzu0xp5ex832, password: '$argon2id$v=19$m=19456,t=2,p=1$Vm/FqMc7u6x/PuctKb3Qmw$OaOC6GaD4LZu7+5x6163OOJ9jxNEo4y6DSSphcwioew' };
+UPDATE user:qaqsmecwjcuesyrxz6c0 CONTENT { email: 'student10@student.sust.edu', id: user:qaqsmecwjcuesyrxz6c0, password: '$argon2id$v=19$m=19456,t=2,p=1$haIcuWo5tgz2Rfo1brT/lQ$Ig0L0n+rTTmkdJdeEp3dCt75GjaQrJ11aQuKJ7f3c9M' };
+UPDATE user:qo9qify1bi2fux92hfi3 CONTENT { email: 'student2@student.sust.edu', id: user:qo9qify1bi2fux92hfi3, password: '$argon2id$v=19$m=19456,t=2,p=1$E3UCzeZBCBHmx3gRZdAw3Q$jtjWemYrH5pU+4yd0xCwbRDetYOr6N8WLWiAh3EyDxA' };
+UPDATE user:r04ju7d82ojwwpwbxzzv CONTENT { email: 'student6@student.sust.edu', id: user:r04ju7d82ojwwpwbxzzv, password: '$argon2id$v=19$m=19456,t=2,p=1$o9x7Q3SDTrpCJ+i0e2GIuw$Pot/OJkLg6gQRvJE+3a5sGxGVwDgQU117CL9bzioqPs' };
+UPDATE user:rxwaj49bgjqwkvjzcjz5 CONTENT { email: 'admin4@sust.edu', id: user:rxwaj49bgjqwkvjzcjz5, password: '$argon2id$v=19$m=19456,t=2,p=1$lR/pWeL3GrK6oA/sP/vS6Q$0bYZMwZr5GnwVgWjpGtTeKVIeMq4d/vMKqQwLzUnI1M' };
+UPDATE user:s87eei68m6ieqggafm04 CONTENT { email: 'admin9@sust.edu', id: user:s87eei68m6ieqggafm04, password: '$argon2id$v=19$m=19456,t=2,p=1$+DuZOmDjTdUza189H4Ce3g$5UV+E7JzsGCo9aO5cHYpV8M458Wur51fbym2kGxY3I0' };
+UPDATE user:tl9wvmebiqz34ccalyao CONTENT { email: 'student9@student.sust.edu', id: user:tl9wvmebiqz34ccalyao, password: '$argon2id$v=19$m=19456,t=2,p=1$VhsRLtSVlEKMhW4n3H4WBA$4If59Lu/KL30Dc4V8/zchtWzAW3dooqeDDkaI1RPLr0' };
 UPDATE user:ws6uynksgs1kdr07b3r8 CONTENT { email: 'mufassir73@sust.edu', id: user:ws6uynksgs1kdr07b3r8, password: '$argon2id$v=19$m=19456,t=2,p=1$mPBgfJGt3zXLfBgw7m4+4A$sG5wE599w7moglTaMHc5ERT8nJNg77mNhB61M91R1Qg' };
+UPDATE user:wtl0pb9d8fg47m5dzb7u CONTENT { email: 'student4@student.sust.edu', id: user:wtl0pb9d8fg47m5dzb7u, password: '$argon2id$v=19$m=19456,t=2,p=1$NzhBePzA7bwG2hs+e+5KGw$35xVUNN2nFAYrsyabc0dHXSZYJAaLGnP1zEwLhhQHqQ' };
 UPDATE user:xz5o4prrbak776nivu4a CONTENT { email: 'asanul13@student.sust.edu', id: user:xz5o4prrbak776nivu4a, password: '$argon2id$v=19$m=19456,t=2,p=1$bA8wPGQ2nVcvf29yRNdpVg$YlyMWq/crbG+rvpGk4IomFzYf2vnyDs0EtwFWlDXenQ' };
+UPDATE user:y067zen20ochl6m2mopw CONTENT { email: 'admin11@sust.edu', id: user:y067zen20ochl6m2mopw, password: '$argon2id$v=19$m=19456,t=2,p=1$gljrmXYpBDDbOnA+gmw7NQ$2dOCOyqBU+EAhp+1JHbh2pI9Os/QaSFSXKVPpmNbzds' };
+UPDATE user:yqjhe8r14hmnobsqgaci CONTENT { email: 'student1@student.sust.edu', id: user:yqjhe8r14hmnobsqgaci, password: '$argon2id$v=19$m=19456,t=2,p=1$8HsAe25TMokJCcSC+JWe/A$EYDlkALuunKiIEdz35Ti6UK2TG5hbYiHkzs9hcB0cf0' };
 UPDATE user:yycl51qmt5pz4gn798ct CONTENT { email: 'amelia01@student.sust.edu', id: user:yycl51qmt5pz4gn798ct, password: '$argon2id$v=19$m=19456,t=2,p=1$G7HE7CxuzYIEOM4tfTzozQ$syRVMt8PCP9TSC2Ab678gIz+HGs16Ease/YgZQ4Fo1M' };
 
 -- ------------------------------
