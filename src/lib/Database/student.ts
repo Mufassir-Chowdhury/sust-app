@@ -5,11 +5,21 @@ export async function getStudentList(){
     if(!database) return [
         {
             id: "student:2019331073",
-            title: "John Doe",
+            name: "John Doe",
             department: "CSE",
         }
     ];
     return await db.select('student')
+}
+export async function getStudentListByCourse(id: string){
+    if(!database) return [
+        {
+            id: "student:2019331073",
+            name: "John Doe",
+            department: "CSE",
+        }
+    ];
+    return await db.query<[[{students: Student[]}]]>('SELECT <-takes<-student as students FROM $id FETCH students;', { "id": id }).then((res) => res[0][0].students);
 }
 
 export async function getStudent(id: string): Promise<any> {

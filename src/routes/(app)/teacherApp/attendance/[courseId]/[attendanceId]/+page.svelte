@@ -5,7 +5,7 @@
 </script>
 
 <div class="p-8">
-    <h2 class="h2">Attendance for {data.course ? data.course.course_code : $page.params.courseId} on {data.attendance?.date}</h2>
+    <h2 class="h2">Attendance for {data.course ? data.course.course_code : $page.params.courseId} on {data.attendance.date}</h2>
     <div class="grid grid-cols-1 gap-4 mt-8">
         <table class="table-auto w-full">
             <thead>
@@ -21,7 +21,7 @@
                         <td class="border px-4 py-2 text-center">{student.id}</td>
                         <td class="border px-4 py-2 text-center">{student.name}</td>
                         <td class="border px-4 py-2 text-center">
-                            {#if data.attendance?.students[student.id]}
+                            {#if data.attendance.attendance[student.id]}
                                 <span class="text-green-500">Present</span>
                             {:else}
                                 <span class="text-red-500">Absent</span>

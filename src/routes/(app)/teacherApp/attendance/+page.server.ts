@@ -1,7 +1,7 @@
-import { getCourses } from "$lib/Database/sajiddb";
+import { getCourseList } from "$lib/Database/course";
 
-export async function load() {
-    let courses = await getCourses();
+export async function load({ locals }) {
+    let courses = await getCourseList(locals.user.id);
     return {
         courses: courses
     }

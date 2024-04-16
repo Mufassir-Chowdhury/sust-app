@@ -2,6 +2,7 @@
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
     import { page } from '$app/stores';
+	import { getID } from '$lib/utils.js';
 
     export let data;
     let attendanceMap: { [key: string]: boolean } = {};
@@ -59,7 +60,7 @@
                 <tbody>
                     {#each data.students as student}
                     <tr>
-                        <td class="border px-4 py-2 text-center">{student.id}</td>
+                        <td class="border px-4 py-2 text-center">{getID(student.id)}</td>
                         <td class="border px-4 py-2 text-center">{student.name}</td>
                         <td class="border px-4 py-2 text-center">
                             <input

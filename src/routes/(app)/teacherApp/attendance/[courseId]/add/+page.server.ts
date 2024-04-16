@@ -1,4 +1,5 @@
-import { getCourseById, getStudentsByCourseId, addAttendance } from "$lib/Database/sajiddb";
+import { addClass, getCourse } from "$lib/Database/course.js";
+import { getStudentListByCourse } from "$lib/Database/student.js";
 import type { Actions } from '@sveltejs/kit';
 
 export const actions: Actions = {
@@ -9,7 +10,7 @@ export const actions: Actions = {
       if (attendanceJson) {
         try {
           const attendance = JSON.parse(attendanceJson);
-          await addAttendance(attendance);
+          await addClass(attendance);
           return { success: true };
         } catch (error) {
           console.error('Error adding attendance:', error);
@@ -21,8 +22,8 @@ export const actions: Actions = {
     },
   };
 export async function load( { params } ) {
-    let course = await getCourseById(params.courseId);
-    let students = await getStudentsByCourseId(params.courseId);
+    let course = await getCourse(params.courseId);
+    let students = await getStudentListByCourse(params.courseId);
 
     return {
         course: course,
