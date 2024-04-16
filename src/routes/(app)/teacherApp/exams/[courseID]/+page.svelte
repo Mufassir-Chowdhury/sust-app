@@ -6,9 +6,9 @@
 	import NewButton from '$lib/Components/NewButton.svelte';
     export let data;
 </script>
-<TitlePage title="Assignments for {getID($page.params.courseID)}">
+<TitlePage title="Exams for {getID($page.params.courseID)}">
 	<svelte:fragment slot="command">
-        <NewButton href="/teacherApp/assignments/{$page.params.courseID}/new"/> 
+        <NewButton href="/teacherApp/exams/{$page.params.courseID}/new"/> 
     </svelte:fragment>
-    <List listItems={data.listItems} slug={`/teacherApp/assignments/${$page.params.courseID}`} deletable={true}/>
+    <List listItems={data.listItems} slug={`/teacherApp/exams/${$page.params.courseID}`} deletable={true}/>
 </TitlePage>

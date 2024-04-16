@@ -1,10 +1,10 @@
-import { getAssignmentListByCourse } from "$lib/Database/assignment.js";
+import { getExamListByCourse } from "$lib/Database/exam";
 import { getListTile } from "$lib/utils";
 
 export async function load({ params }) {
-    let assignmentList = getListTile(await getAssignmentListByCourse(params.courseID));
+    let examList = getListTile(await getExamListByCourse(params.courseID));
     return {
-        listItems: assignmentList
+        listItems: examList
     }
     
 }

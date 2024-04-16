@@ -5,5 +5,4 @@ export async function load({ params }) {
     return {
         details: assignment
     }
-    
 }

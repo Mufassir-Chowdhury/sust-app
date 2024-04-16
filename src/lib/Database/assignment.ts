@@ -41,7 +41,7 @@ export async function getAssignmentListByCourse(id: string) {
             trailing: "2024-12-31",
         }
     ];
-    const record = await db.query<[[assignments: any[]]]>('SELECT ->has->assignment as assignments FROM $id FETCH assignments', { id: id });
+    const record = await db.query<[[assignments: any]]>('SELECT ->has->assignment as assignments FROM $id FETCH assignments', { id: id });
     return record[0][0].assignments;
 }
 

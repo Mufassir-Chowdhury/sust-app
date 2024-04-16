@@ -7,7 +7,8 @@ export function load() {
             pages: [
                 "attendance",
                 "assignments",
-                "courses"
+                "courses",
+                "exams"
                 // Add other teaching-related pages
             ],
         },

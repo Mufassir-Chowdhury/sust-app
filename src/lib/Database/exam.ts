@@ -1,32 +1,54 @@
 import { database, db } from "$lib/Database/surreal.js";
 
-export async function getExamList(){
-    if(!database) return [
+export async function getExamListByStudent(id: string) {
+    if(database) return [
         {
             id: "exam:1",
-            title: "Exam 1",
+            title: "exam 1",
             subtitle: "Introduction to Computer Science",
-            trailing: "2024-12-31",
             status: "Not Submitted",
             status_color: "black",
+            trailing: "2024-12-31",
         },
         {
             id: "exam:2",
-            title: "Exam 2",
+            title: "exam 2",
             subtitle: "Introduction to Computer Science",
+            status: "Submitted",
+            status_color: "green",
             trailing: "2024-12-31",
-            status: "Not Submitted",
-            status_color: "black",
         }
     ];
-    // TODO connect with database
-    return null;
+    const [record] = await db.query('SELECT <-has<-exam FROM $id', { id: id });
+    return record;
+}
+export async function getExamListByCourse(id: string) {
+    if(!database) return [
+        {
+            id: "exam:1",
+            title: "exam 1",
+            subtitle: "Introduction to Computer Science",
+            status: "Not Submitted",
+            status_color: "black",
+            trailing: "2024-12-31",
+        },
+        {
+            id: "exam:2",
+            title: "exam 2",
+            subtitle: "Introduction to Computer Science",
+            status: "Submitted",
+            status_color: "green",
+            trailing: "2024-12-31",
+        }
+    ];
+    const record = await db.query<[[exams: any]]>('SELECT ->has->exam as exams FROM $id FETCH exams', { id: id });
+    return record[0][0].exams;
 }
 
 export async function getExam(id: string): Promise<any> {
     if(!database) return {
         id: "exam:1",
-        title: "Exam 1",
+        title: "exam 1",
         creator: "Introduction to Computer Science",
         due_date: "2024-12-31",
         creation_date: "2024-12-01",
@@ -35,8 +57,8 @@ export async function getExam(id: string): Promise<any> {
         status_color: "black",
         description: "This is the first exam of the course",
         attachments: [],
-        submissions: false
+        submissions: true
     } ;
-    // TODO connect with database
-    return null;
+    const [record] = await db.select(id);
+    return record;
 }

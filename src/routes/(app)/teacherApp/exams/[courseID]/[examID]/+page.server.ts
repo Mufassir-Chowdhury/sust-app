@@ -1,11 +1,11 @@
-import { getAssignment } from "$lib/Database/assignment.js";
 import { getCourse } from "$lib/Database/course";
+import { getExam } from "$lib/Database/exam.js";
 
 export async function load({ params }) {
-    let assignment = await getAssignment(params.assignmentID);
+    let exam = await getExam(params.examID);
     let course = await getCourse(params.courseID);
     return {
-        details: assignment,
+        details: exam,
         course: course
     }
     

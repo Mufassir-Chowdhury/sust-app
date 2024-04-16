@@ -26,7 +26,6 @@
     let path = slug ?? "";
     onMount(() => {
         if(!slug) path = `/${appName}/${url}`;
-
     })
 </script>
 

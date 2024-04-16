@@ -96,6 +96,12 @@ DEFINE INDEX minor_course_code ON department FIELDS minor_course_code UNIQUE;
 DEFINE INDEX name ON department FIELDS name UNIQUE;
 
 -- ------------------------------
+-- TABLE: exam
+-- ------------------------------
+
+DEFINE TABLE exam SCHEMALESS PERMISSIONS FULL;
+
+-- ------------------------------
 -- TABLE: follows
 -- ------------------------------
 
@@ -332,6 +338,12 @@ UPDATE department:PHY CONTENT { building: 'A', code: 132, floor: 1, id: departme
 UPDATE department:SWE CONTENT { building: 'Dr. M. A. Wazed Miah IICT Building', code: 123, floor: 1, id: department:SWE, letter_code: 'SWE', minor_course_code: 'A', name: 'Software Engineering' };
 
 -- ------------------------------
+-- TABLE DATA: exam
+-- ------------------------------
+
+UPDATE exam:y94xvbnh3mzv81pt0jco CONTENT { creation_date: '2024-04-16', details: 'exam announcements', due_date: '2024-01-01', id: exam:y94xvbnh3mzv81pt0jco, title: 'New Exam', total_grade: '25' };
+
+-- ------------------------------
 -- TABLE DATA: follows
 -- ------------------------------
 
@@ -344,6 +356,7 @@ RELATE course:CSE222 -> follows:5r64y6ulhrhdf8zapyax -> routine:0890gz6xvnjc5oc9
 -- ------------------------------
 
 RELATE course:CSE222 -> has:5gizd5fhz5e6786v615o -> assignment:yefg4300s6h353zi8e14 CONTENT { __: true, id: has:5gizd5fhz5e6786v615o, in: course:CSE222, out: assignment:yefg4300s6h353zi8e14 };
+RELATE course:CSE222 -> has:ee8j9b44rytcua6sq1bb -> exam:y94xvbnh3mzv81pt0jco CONTENT { __: true, id: has:ee8j9b44rytcua6sq1bb, in: course:CSE222, out: exam:y94xvbnh3mzv81pt0jco };
 RELATE course:CSE222 -> has:gdwh0a4n59m0wa8wukzk -> resource:a2lphbzcgp5ki4xe5jtv CONTENT { __: true, id: has:gdwh0a4n59m0wa8wukzk, in: course:CSE222, out: resource:a2lphbzcgp5ki4xe5jtv, type: 'Video', year: '2023' };
 RELATE course:CSE222 -> has:ivx3x5biqz2xoo003290 -> assignment:zdq3idbfjm9qaa0vrfrg CONTENT { __: true, id: has:ivx3x5biqz2xoo003290, in: course:CSE222, out: assignment:zdq3idbfjm9qaa0vrfrg };
 RELATE course:CSE222 -> has:rxpwnox0962wrglsgb3m -> resource:5072z1qsmtzt96uave4x CONTENT { __: true, id: has:rxpwnox0962wrglsgb3m, in: course:CSE222, out: resource:5072z1qsmtzt96uave4x, type: 'Video', year: '2023' };
