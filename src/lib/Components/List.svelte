@@ -3,6 +3,7 @@
     import { getID } from "$lib/utils";
 	import { onDelete } from "$lib/Modal/DeleteModal";
 	import { page } from '$app/stores';
+	import { onMount } from "svelte";
 
     let appName: string;
     let url: string;
@@ -14,7 +15,7 @@
     export let listItems: ListTile[];
     export let deletable: Boolean = false;
     export let editable: Boolean = false;
-    export let slug: string;
+    export let slug: string | undefined = undefined;
 
     const statusMap: Record<string, string> = {
         "green": "text-green-500",
@@ -22,8 +23,11 @@
         "yellow": "text-yellow-500",
         "black": "text-black",
     }
-    
-    const path = slug ?? `/${appName}/${url}`;
+    let path = slug ?? "";
+    onMount(() => {
+        if(!slug) path = `/${appName}/${url}`;
+
+    })
 </script>
 
 {#each listItems as listItem}

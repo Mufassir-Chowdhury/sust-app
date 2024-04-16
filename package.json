@@ -55,6 +55,7 @@
     "@capacitor/core": "^5.4.1",
     "@capacitor/ios": "^5.4.1",
     "@floating-ui/dom": "1.5.1",
+    "@node-rs/argon2": "^1.8.0",
     "@popperjs/core": "^2.11.8",
     "@sveltejs/adapter-static": "^2.0.3",
     "flowbite": "^1.8.1",

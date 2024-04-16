@@ -38,6 +38,12 @@ DEFINE INDEX personal_email ON admin FIELDS email.personal UNIQUE;
 DEFINE INDEX phone ON admin FIELDS personal.phone UNIQUE;
 
 -- ------------------------------
+-- TABLE: assignment
+-- ------------------------------
+
+DEFINE TABLE assignment SCHEMALESS PERMISSIONS FULL;
+
+-- ------------------------------
 -- TABLE: class
 -- ------------------------------
 
@@ -228,7 +234,7 @@ DEFINE TABLE teaches SCHEMALESS PERMISSIONS FULL;
 -- TABLE: user
 -- ------------------------------
 
-DEFINE TABLE user SCHEMAFULL PERMISSIONS FOR select, update, delete WHERE id = $auth.id, FOR create NONE;
+DEFINE TABLE user SCHEMAFULL PERMISSIONS FULL;
 
 DEFINE FIELD email ON user TYPE string ASSERT $value != NONE PERMISSIONS FULL;
 DEFINE FIELD password ON user TYPE string ASSERT $value != NONE PERMISSIONS FULL;
@@ -258,17 +264,27 @@ UPDATE admin:2030331010 CONTENT { blood_group: 'B+', department: department:CSE,
 UPDATE admin:2031331011 CONTENT { blood_group: 'AB+', department: department:EEE, designation: 'Administrative Officer', email: { academic: 'admin11@sust.edu', personal: 'admin11@example.com' }, gender: 'male', id: admin:2031331011, name: 'William Hernandez', personal: { birthday: '1979-04-10T00:00:00Z', father: 'Robert Hernandez', hometown: 'Noakhali', mother: 'Jessica Hernandez', phone: '01711112233' } };
 
 -- ------------------------------
+-- TABLE DATA: assignment
+-- ------------------------------
+
+UPDATE assignment:yefg4300s6h353zi8e14 CONTENT { creation_date: '2024-04-16', details: 'Details .....asdf', due_date: '2024-04-17', id: assignment:yefg4300s6h353zi8e14, submission: 'on', title: 'Project Submission', total_grade: '100' };
+UPDATE assignment:zdq3idbfjm9qaa0vrfrg CONTENT { creation_date: '2024-04-16', details: 'Submission Details', due_date: '2001-01-01', id: assignment:zdq3idbfjm9qaa0vrfrg, submission: 'on', title: 'Another Project Submission', total_grade: '101' };
+
+-- ------------------------------
 -- TABLE DATA: class
 -- ------------------------------
 
 UPDATE class:36zaynezidr1kehj1xsw CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:36zaynezidr1kehj1xsw };
 UPDATE class:5u3rkbkntqobqetfrite CONTENT { attendance: { "student:2019331013": true, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:5u3rkbkntqobqetfrite };
+UPDATE class:iko3h1d93ue6ykr5648i CONTENT { attendance: { "student:2019331013": true }, course: course:CSE330, date: '2024-04-16', id: class:iko3h1d93ue6ykr5648i };
+UPDATE class:j58fg1x9gbo1gm8ye16w CONTENT { attendance: { "student:2019331013": true, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:j58fg1x9gbo1gm8ye16w };
 UPDATE class:k3j6yxy8lqpuebnkmlp4 CONTENT { attendance: { "student:2019331013": false, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:k3j6yxy8lqpuebnkmlp4 };
 UPDATE class:ltmmsqjg2t3mekhs193m CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:ltmmsqjg2t3mekhs193m };
 UPDATE class:nnrxdnv23v3xg7izevqm CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:nnrxdnv23v3xg7izevqm };
 UPDATE class:rwtx3u0ypv8i53nco7xa CONTENT { attendance: { "student:2019331013": true, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:rwtx3u0ypv8i53nco7xa };
 UPDATE class:ua5201j43by4z45a9c22 CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:ua5201j43by4z45a9c22 };
 UPDATE class:xfzsyw4cm9ykvmc25q4f CONTENT { attendance: { "student:2019331013": false, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:xfzsyw4cm9ykvmc25q4f };
+UPDATE class:xvnxfywsx06cwiohay7z CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:xvnxfywsx06cwiohay7z };
 UPDATE class:zvzvoxzaabiwzrnyefvw CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:zvzvoxzaabiwzrnyefvw };
 
 -- ------------------------------
@@ -327,7 +343,9 @@ RELATE course:CSE222 -> follows:5r64y6ulhrhdf8zapyax -> routine:0890gz6xvnjc5oc9
 -- TABLE DATA: has
 -- ------------------------------
 
+RELATE course:CSE222 -> has:5gizd5fhz5e6786v615o -> assignment:yefg4300s6h353zi8e14 CONTENT { __: true, id: has:5gizd5fhz5e6786v615o, in: course:CSE222, out: assignment:yefg4300s6h353zi8e14 };
 RELATE course:CSE222 -> has:gdwh0a4n59m0wa8wukzk -> resource:a2lphbzcgp5ki4xe5jtv CONTENT { __: true, id: has:gdwh0a4n59m0wa8wukzk, in: course:CSE222, out: resource:a2lphbzcgp5ki4xe5jtv, type: 'Video', year: '2023' };
+RELATE course:CSE222 -> has:ivx3x5biqz2xoo003290 -> assignment:zdq3idbfjm9qaa0vrfrg CONTENT { __: true, id: has:ivx3x5biqz2xoo003290, in: course:CSE222, out: assignment:zdq3idbfjm9qaa0vrfrg };
 RELATE course:CSE222 -> has:rxpwnox0962wrglsgb3m -> resource:5072z1qsmtzt96uave4x CONTENT { __: true, id: has:rxpwnox0962wrglsgb3m, in: course:CSE222, out: resource:5072z1qsmtzt96uave4x, type: 'Video', year: '2023' };
 RELATE course:CSE222 -> has:tzzuw2ajfnjiakvlet0s -> resource:7cjcpi6sqgr8pi1typmx CONTENT { __: true, id: has:tzzuw2ajfnjiakvlet0s, in: course:CSE222, out: resource:7cjcpi6sqgr8pi1typmx, type: 'Pdf', year: '2023' };
 RELATE course:CSE222 -> has:ypkepaluk8sy26hugxh2 -> post:vuc687jrwp2014xl18mf CONTENT { __: true, id: has:ypkepaluk8sy26hugxh2, in: course:CSE222, out: post:vuc687jrwp2014xl18mf, year: '2023' };
@@ -440,7 +458,10 @@ UPDATE student:2029331010 CONTENT { blood_group: 'B+', current_semester: 6, depa
 -- TABLE DATA: taken
 -- ------------------------------
 
+RELATE class:j58fg1x9gbo1gm8ye16w -> taken:14r5zix1ea3q7syn0xar -> course:CSE222 CONTENT { __: true, id: taken:14r5zix1ea3q7syn0xar, in: class:j58fg1x9gbo1gm8ye16w, out: course:CSE222 };
+RELATE class:iko3h1d93ue6ykr5648i -> taken:9gtbv9fgen29hifb04ab -> course:CSE330 CONTENT { __: true, id: taken:9gtbv9fgen29hifb04ab, in: class:iko3h1d93ue6ykr5648i, out: course:CSE330 };
 RELATE class:5u3rkbkntqobqetfrite -> taken:9q0m4z01aml1xzgzlct1 -> course:CSE222 CONTENT { __: true, id: taken:9q0m4z01aml1xzgzlct1, in: class:5u3rkbkntqobqetfrite, out: course:CSE222 };
+RELATE class:xvnxfywsx06cwiohay7z -> taken:qgqd03x7j7p15ncrhu3l -> course:CSE222 CONTENT { __: true, id: taken:qgqd03x7j7p15ncrhu3l, in: class:xvnxfywsx06cwiohay7z, out: course:CSE222 };
 
 -- ------------------------------
 -- TABLE DATA: takes
@@ -459,6 +480,7 @@ UPDATE teacher:2018331004 CONTENT { blood_group: 'O+', department: department:EC
 UPDATE teacher:2018331005 CONTENT { blood_group: 'B+', department: department:CSE, designation: 'Assistant Professor', email: { academic: 'teacher1@sust.edu', personal: 'teacher1@example.com' }, gender: 'male', id: teacher:2018331005, name: 'David Wilson', personal: { birthday: '1990-11-03T00:00:00Z', father: 'Robert Wilson', hometown: 'Sylhet', mother: 'Emily Wilson', phone: '01711665544' } };
 UPDATE teacher:2019331005 CONTENT { blood_group: 'A-', department: department:PHY, designation: 'Professor', email: { academic: 'teacher5@sust.edu', personal: 'teacher5@example.com' }, gender: 'male', id: teacher:2019331005, name: 'William Brown', personal: { birthday: '1970-07-01T00:00:00Z', father: 'Robert Brown', hometown: 'Rajshahi', mother: 'Elizabeth Brown', phone: '01711556677' } };
 UPDATE teacher:2019331073 CONTENT { blood_group: 'B+', department: department:CSE, designation: 'Lecturer', email: { academic: 'mufassir73@sust.edu', personal: 'mac22214u@gmail.com' }, gender: 'male', id: teacher:2019331073, name: 'Mufassir Ahmad Chowdhury', personal: { birthday: '2001-07-10T07:18:52Z', father: 'Hafiz Md Mashhud Chowdhury', hometown: 'Sylhet', mother: 'Afsana Begum', phone: '1771144308' } };
+UPDATE teacher:2019331088 CONTENT { blood_group: 'A+', department: department:CSE, designation: 'Lecturer', email: { academic: 'sajid88@sust.edu', personal: 'sajid@gmail.com' }, gender: 'male', id: teacher:2019331088, name: 'Sajid Zakaria', personal: { birthday: '2000-12-31T18:00:00Z', father: 'Sajid', hometown: 'Sylhet', mother: 'Sajida', phone: '01771144388' } };
 UPDATE teacher:2020331006 CONTENT { blood_group: 'B-', department: department:CSE, designation: 'Assistant Professor', email: { academic: 'teacher6@sust.edu', personal: 'teacher6@example.com' }, gender: 'female', id: teacher:2020331006, name: 'Sophia Davis', personal: { birthday: '1988-02-14T00:00:00Z', father: 'Michael Davis', hometown: 'Barishal', mother: 'Jessica Davis', phone: '01711667788' } };
 UPDATE teacher:2022331008 CONTENT { blood_group: 'O-', department: department:ECO, designation: 'Lecturer', email: { academic: 'teacher8@sust.edu', personal: 'teacher8@example.com' }, gender: 'female', id: teacher:2022331008, name: 'Emily Garcia', personal: { birthday: '1993-06-18T00:00:00Z', father: 'Michael Garcia', hometown: 'Cumilla', mother: 'Jessica Garcia', phone: '01711889900' } };
 UPDATE teacher:2023331009 CONTENT { blood_group: 'A+', department: department:PHY, designation: 'Professor', email: { academic: 'teacher9@sust.edu', personal: 'teacher9@example.com' }, gender: 'male', id: teacher:2023331009, name: 'David Martinez', personal: { birthday: '1972-09-30T00:00:00Z', father: 'Robert Martinez', hometown: 'Feni', mother: 'Elizabeth Martinez', phone: '01711990011' } };
@@ -476,6 +498,7 @@ RELATE teacher:2019331073 -> teaches:1t8a2k9lz8q7c1mc4p6u -> course:CSE222 CONTE
 RELATE teacher:2019331073 -> teaches:3dhcx2nkh6ocyz5pkr5w -> course:CSE330 CONTENT { __: true, id: teaches:3dhcx2nkh6ocyz5pkr5w, in: teacher:2019331073, out: course:CSE330 };
 RELATE teacher:2018331005 -> teaches:6hxr3zsw37m5a1tz0lc8 -> course:CSE330 CONTENT { __: true, id: teaches:6hxr3zsw37m5a1tz0lc8, in: teacher:2018331005, out: course:CSE330 };
 RELATE teacher:2018331005 -> teaches:6v0a9l3dw8x3r4ipc38r -> course:CSE333 CONTENT { __: true, id: teaches:6v0a9l3dw8x3r4ipc38r, in: teacher:2018331005, out: course:CSE333 };
+RELATE teacher:2018331004 -> teaches:8uwss8gmd8ik9wkdcark -> course:CSE222 CONTENT { __: true, id: teaches:8uwss8gmd8ik9wkdcark, in: teacher:2018331004, out: course:CSE222 };
 RELATE teacher:2019331005 -> teaches:b29499oza8hdiq2hfnkz -> course:ECO251 CONTENT { __: true, id: teaches:b29499oza8hdiq2hfnkz, in: teacher:2019331005, out: course:ECO251 };
 RELATE teacher:2019331005 -> teaches:b5cn6z7e2xwg8wy9um11 -> course:ECO253 CONTENT { __: true, id: teaches:b5cn6z7e2xwg8wy9um11, in: teacher:2019331005, out: course:ECO253 };
 RELATE teacher:2017331003 -> teaches:b7qxwmykcm2to0jz7i7a -> course:EEE341 CONTENT { __: true, id: teaches:b7qxwmykcm2to0jz7i7a, in: teacher:2017331003, out: course:EEE341 };

@@ -6,7 +6,6 @@
 	import PhotoPicker from "$lib/Form/PhotoPicker.svelte";
 	import { bloodGroupOptions, genderOptions } from "$lib/utils";
   export let data;
-
 </script>    
 <!-- TODO : add pattern and title attributes -->
 <AddForm >

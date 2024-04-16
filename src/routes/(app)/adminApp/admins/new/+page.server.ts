@@ -38,6 +38,8 @@ export const actions = {
                 hometown: data.get('hometown'),
             },
         });
+        const user = await db.query<[[any]]>('CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }', {email: data.get('academic-email'), name: data.get('name'), password: 'password'});
+        await db.query('RELATE $admin->login->$user', { admin: id, user: user[0][0].id });
         // TODO handle failure
         if(record){
             throw redirect(303, "/adminApp/admins/" + "admin:" + data.get('id') + "?showSuccess=true");

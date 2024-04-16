@@ -45,6 +45,9 @@ export const actions = {
             },
             session: parseInt(data.get('session') as string),
         });
+        const user = await db.query<[[any]]>('CREATE user CONTENT { email: $email, name: $name, password: crypto::argon2::generate($password) }', {email: data.get('academic-email'), name: data.get('name'), password: 'password'});
+        await db.query('RELATE $student->login->$user', { student: id, user: user[0][0].id });
+
         // TODO handle failure
         if(record){
             throw redirect(303, "/adminApp/students/" + "student:" + data.get('id') + "?showSuccess=true");
