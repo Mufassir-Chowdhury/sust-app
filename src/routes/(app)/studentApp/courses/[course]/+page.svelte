@@ -45,7 +45,7 @@
         {/if}
         <div class="flex flex-col mx-4 gap-4">
             {#each data.assignments as assignment}
-                <a href="/teacherApp/assignments/{details.id}/{assignment.id}" class="w-full card variant-soft-surface p-4">
+                <a href="/studentApp/assignments/{assignment.id}" class="w-full card variant-soft-surface p-4">
                     <h3>{assignment.title}</h3>
                     <p>{assignment.id}</p>
                 </a>
@@ -59,7 +59,7 @@
         {/if}
         <div class="flex flex-col mx-4 gap-4">
             {#each data.exams as exam}
-                <a href="/teacherApp/exams/{details.id}/{exam.id}" class="w-full card variant-soft-surface p-4">
+                <a href="/studentApp/exams/{exam.id}" class="w-full card variant-soft-surface p-4">
                     <h3>{exam.title}</h3>
                     <p>{exam.id}</p>
                 </a>
@@ -70,14 +70,29 @@
         </div>
         {#if data.attendances.length == 0}
             <p>No classes taken yet</p>
+        {:else}    
+            <table class="table-auto w-full">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2">Date</th>
+                        <th class="px-4 py-2">Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {#each data.attendances as attendance}
+                    <tr>
+                        <td class="border px-4 py-2 text-center">{attendance.date}</td>
+                        <td class="border px-4 py-2 text-center">
+                            {#if attendance.attendance[data.user.id] === true}
+                            <span class="text-green-500">Present</span>
+                            {:else}
+                            <span class="text-red-500">Absent</span>
+                            {/if}
+                        </td>
+                    </tr>
+                    {/each}
+                </tbody>
+            </table>
         {/if}
-        <div class="flex flex-col mx-4 gap-4">
-            {#each data.attendances as attendance}
-                <a href="/teacherApp/attendance/{details.id}/{attendance.id}" class="w-full card variant-soft-surface p-4">
-                    <h3>{attendance.date}</h3>
-                    <p>{attendance.id}</p>
-                </a>
-            {/each}
-        </div>
     </div>
 </div>

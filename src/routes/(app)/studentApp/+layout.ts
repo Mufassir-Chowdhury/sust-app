@@ -18,6 +18,7 @@ export function load() {
                 "resources",
                 "result",
                 "attendance",
+                "courses"
             ],
         },
         {
