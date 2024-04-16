@@ -3,25 +3,31 @@ import { database, db } from "$lib/Database/surreal.js";
 export async function getNoticeList(){
     if(!database) return [
         {
-            id: "notice:1",
-            title: "Notice 1",
-            subtitle: "Office of The Controller of Examinations",
-            status: "New",
-            status_color: "red",
-            trailing: "2024-12-31",
+            title: "Computer Science and Engineering",
+            id: "department:CSE",
         },
         {
-            id: "notice:2",
-            title: "Notice 2",
-            subtitle: "Office of the Registrar",
-            status: "Seen",
-            status_color: "black",
-            trailing: "2024-12-31",
+            title: "Electrical and Electronic Engineering",
+            id: "department:EEE",
         }
     ];
-    // TODO connect with database
-    return null;
+    return await db.select('notice')
 }
+export async function getNoticeListByDepartment(id: string){
+    if(!database) return [
+        {
+            title: "Computer Science and Engineering",
+            id: "department:CSE",
+        },
+        {
+            title: "Electrical and Electronic Engineering",
+            id: "department:EEE",
+        }
+    ];
+    const [record] = await db.query('SELECT * FROM notice WHERE $id in department', {id: id});
+    return record;
+}
+
 
 export async function getNotice(id: string): Promise<any> {
     if(!database) return {
@@ -36,5 +42,6 @@ export async function getNotice(id: string): Promise<any> {
         submissions: false
     } ;
     // TODO connect with database
-    return null;
+    const [record] = await db.select(id);
+    return record;
 }

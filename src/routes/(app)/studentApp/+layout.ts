@@ -33,8 +33,7 @@ export function load() {
             "pages": [
                 "bus",
                 "people",
-                "events",
-                "map",
+                "events"
             ],
         },
     ];

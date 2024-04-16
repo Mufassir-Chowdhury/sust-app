@@ -10,14 +10,14 @@
     export let teacher = false;
     export let course = '';
 </script>
-{#if !teacher}
+{#if details.status_color}
     <div class="text-center {statusMap[details.status_color]}">
         {details.status}
     </div>
 {/if}
 <div class="px-24 py-4 border-b-2">
     <div class="font-thin">
-        {course}   |   {details.creation_date}
+        {course || details.creator}   |   {details.creation_date}
     </div>
     {#if details.total_grade}
         <div class="flex justify-between font-semibold">

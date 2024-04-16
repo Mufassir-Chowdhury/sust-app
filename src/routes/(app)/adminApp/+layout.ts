@@ -8,6 +8,7 @@ export function load() {
             "pages": [
                 "departments",
                 "courses",
+                "notices"
             ],
         },
         {
