@@ -126,6 +126,18 @@ DEFINE TABLE having SCHEMALESS PERMISSIONS FULL;
 DEFINE TABLE login SCHEMALESS PERMISSIONS FULL;
 
 -- ------------------------------
+-- TABLE: notice
+-- ------------------------------
+
+DEFINE TABLE notice SCHEMALESS PERMISSIONS FULL;
+
+-- ------------------------------
+-- TABLE: notify
+-- ------------------------------
+
+DEFINE TABLE notify SCHEMALESS PERMISSIONS FULL;
+
+-- ------------------------------
 -- TABLE: offers
 -- ------------------------------
 
@@ -289,6 +301,7 @@ UPDATE class:ltmmsqjg2t3mekhs193m CONTENT { attendance: { "student:2019331013": 
 UPDATE class:nnrxdnv23v3xg7izevqm CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:nnrxdnv23v3xg7izevqm };
 UPDATE class:plc2xz2k1zf0jj0nx2oy CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false, "student:2020331001": true }, course: course:CSE222, date: '2024-04-16', id: class:plc2xz2k1zf0jj0nx2oy };
 UPDATE class:rwtx3u0ypv8i53nco7xa CONTENT { attendance: { "student:2019331013": true, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:rwtx3u0ypv8i53nco7xa };
+UPDATE class:sy4depxxixiu1nuh0cn5 CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false, "student:2020331001": true }, course: course:CSE222, date: '2024-04-16', id: class:sy4depxxixiu1nuh0cn5 };
 UPDATE class:ua5201j43by4z45a9c22 CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:ua5201j43by4z45a9c22 };
 UPDATE class:xfzsyw4cm9ykvmc25q4f CONTENT { attendance: { "student:2019331013": false, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:xfzsyw4cm9ykvmc25q4f };
 UPDATE class:xvnxfywsx06cwiohay7z CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:xvnxfywsx06cwiohay7z };
@@ -342,6 +355,7 @@ UPDATE department:SWE CONTENT { building: 'Dr. M. A. Wazed Miah IICT Building', 
 -- TABLE DATA: exam
 -- ------------------------------
 
+UPDATE exam:rxapyq6ha3clq9andenh CONTENT { creation_date: '2024-04-16', details: 'Final Exam Details', due_date: '2024-04-17', id: exam:rxapyq6ha3clq9andenh, title: 'Final Exam', total_grade: '60' };
 UPDATE exam:y94xvbnh3mzv81pt0jco CONTENT { creation_date: '2024-04-16', details: 'exam announcements', due_date: '2024-01-01', id: exam:y94xvbnh3mzv81pt0jco, title: 'New Exam', total_grade: '25' };
 
 -- ------------------------------
@@ -360,6 +374,7 @@ RELATE course:CSE222 -> has:5gizd5fhz5e6786v615o -> assignment:yefg4300s6h353zi8
 RELATE course:CSE222 -> has:ee8j9b44rytcua6sq1bb -> exam:y94xvbnh3mzv81pt0jco CONTENT { __: true, id: has:ee8j9b44rytcua6sq1bb, in: course:CSE222, out: exam:y94xvbnh3mzv81pt0jco };
 RELATE course:CSE222 -> has:gdwh0a4n59m0wa8wukzk -> resource:a2lphbzcgp5ki4xe5jtv CONTENT { __: true, id: has:gdwh0a4n59m0wa8wukzk, in: course:CSE222, out: resource:a2lphbzcgp5ki4xe5jtv, type: 'Video', year: '2023' };
 RELATE course:CSE222 -> has:ivx3x5biqz2xoo003290 -> assignment:zdq3idbfjm9qaa0vrfrg CONTENT { __: true, id: has:ivx3x5biqz2xoo003290, in: course:CSE222, out: assignment:zdq3idbfjm9qaa0vrfrg };
+RELATE course:CSE222 -> has:l8vnt4ktsuejz28tu4ec -> exam:rxapyq6ha3clq9andenh CONTENT { __: true, id: has:l8vnt4ktsuejz28tu4ec, in: course:CSE222, out: exam:rxapyq6ha3clq9andenh };
 RELATE course:CSE222 -> has:rxpwnox0962wrglsgb3m -> resource:5072z1qsmtzt96uave4x CONTENT { __: true, id: has:rxpwnox0962wrglsgb3m, in: course:CSE222, out: resource:5072z1qsmtzt96uave4x, type: 'Video', year: '2023' };
 RELATE course:CSE222 -> has:tzzuw2ajfnjiakvlet0s -> resource:7cjcpi6sqgr8pi1typmx CONTENT { __: true, id: has:tzzuw2ajfnjiakvlet0s, in: course:CSE222, out: resource:7cjcpi6sqgr8pi1typmx, type: 'Pdf', year: '2023' };
 RELATE course:CSE222 -> has:ypkepaluk8sy26hugxh2 -> post:vuc687jrwp2014xl18mf CONTENT { __: true, id: has:ypkepaluk8sy26hugxh2, in: course:CSE222, out: post:vuc687jrwp2014xl18mf, year: '2023' };
@@ -421,6 +436,18 @@ RELATE student:2020331001 -> login:yz1jm6flvp4smztwrxxw -> user:yqjhe8r14hmnobsq
 RELATE admin:2025331005 -> login:zyafjnsxdml1l40davei -> user:3x7xfzq2uzita4xydaj2 CONTENT { __: true, id: login:zyafjnsxdml1l40davei, in: admin:2025331005, out: user:3x7xfzq2uzita4xydaj2 };
 
 -- ------------------------------
+-- TABLE DATA: notice
+-- ------------------------------
+
+UPDATE notice:h180mgl5jb8uve0g7zql CONTENT { creation_date: '4/16/2024', creator: 'Office of the developer', department: [department:ECO, department:EEE, department:PHY, department:SWE], details: 'This notice does not include CSE in recievers', id: notice:h180mgl5jb8uve0g7zql, title: 'Another Notice' };
+UPDATE notice:s706b46vny551yqsijrg CONTENT { creation_date: '4/16/2024', creator: 'Office of the developer', department: [department:CSE, department:ECO, department:EEE, department:PHY, department:SWE], details: 'New Title Details', id: notice:s706b46vny551yqsijrg, title: 'New Title' };
+
+-- ------------------------------
+-- TABLE DATA: notify
+-- ------------------------------
+
+
+-- ------------------------------
 -- TABLE DATA: offers
 -- ------------------------------
 
@@ -473,6 +500,7 @@ UPDATE student:2029331010 CONTENT { blood_group: 'B+', current_semester: 6, depa
 -- ------------------------------
 
 RELATE class:j58fg1x9gbo1gm8ye16w -> taken:14r5zix1ea3q7syn0xar -> course:CSE222 CONTENT { __: true, id: taken:14r5zix1ea3q7syn0xar, in: class:j58fg1x9gbo1gm8ye16w, out: course:CSE222 };
+RELATE class:sy4depxxixiu1nuh0cn5 -> taken:68ksdxyw4ijpa5nbs5qu -> course:CSE222 CONTENT { __: true, id: taken:68ksdxyw4ijpa5nbs5qu, in: class:sy4depxxixiu1nuh0cn5, out: course:CSE222 };
 RELATE class:plc2xz2k1zf0jj0nx2oy -> taken:91rnx402awzve1394fbn -> course:CSE222 CONTENT { __: true, id: taken:91rnx402awzve1394fbn, in: class:plc2xz2k1zf0jj0nx2oy, out: course:CSE222 };
 RELATE class:iko3h1d93ue6ykr5648i -> taken:9gtbv9fgen29hifb04ab -> course:CSE330 CONTENT { __: true, id: taken:9gtbv9fgen29hifb04ab, in: class:iko3h1d93ue6ykr5648i, out: course:CSE330 };
 RELATE class:5u3rkbkntqobqetfrite -> taken:9q0m4z01aml1xzgzlct1 -> course:CSE222 CONTENT { __: true, id: taken:9q0m4z01aml1xzgzlct1, in: class:5u3rkbkntqobqetfrite, out: course:CSE222 };
