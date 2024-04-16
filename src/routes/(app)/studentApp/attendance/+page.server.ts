@@ -39,7 +39,6 @@ export async function load() {
                 absentCount: absentCount,
             });
         }
-    console.log(coursesWithAttendance);
 
     return {
         enrolledCourses,

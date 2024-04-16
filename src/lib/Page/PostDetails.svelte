@@ -57,7 +57,7 @@
                     </div>
                     <div class="flex justify-between">
                         <div>
-                            {#if details.attachments.length == 0}
+                            {#if !details.attachments}
                                 No attachments
                             {:else}
                                 {#each details.attachments as attachment}
@@ -72,7 +72,7 @@
                     </div>
                 </div>
             </div>
-            {#if details.submissions}
+            {#if details.submission && details.submission == "on"}
                 
                 <div class="card">
                     <div class="p-4">

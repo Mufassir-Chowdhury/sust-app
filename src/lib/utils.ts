@@ -1,7 +1,9 @@
 import type { ListTile } from "./models";
 
 export function getID(id: string): string{
-    return id.split(':')[1];
+    if(id.split(':'))
+        return id.split(':')[1];
+    return id;
 }
 export const bloodGroupOptions = [
     {name: "A+", value: "A+"},

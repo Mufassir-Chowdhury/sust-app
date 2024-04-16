@@ -21,6 +21,14 @@ export async function getStudentListByCourse(id: string){
     ];
     return await db.query<[[{students: Student[]}]]>('SELECT <-takes<-student as students FROM $id FETCH students;', { "id": id }).then((res) => res[0][0].students);
 }
+export async function registerStudentToCourses(student: string, course: string[]){
+    course.forEach(async (courseId) => {
+        const result = await db.query<any>(
+            'RELATE $student->takes->$course',
+            { "student": student, "course": courseId }
+        );
+    });
+}
 
 export async function getStudent(id: string): Promise<any> {
     if(!database) return {

@@ -17,6 +17,38 @@ export async function getCourseList(id: string | null = null){
     if(!id) return await db.select('course');
     return await db.query<[[{courses: Course[]}]]>('SELECT ->teaches->course as courses FROM $id FETCH courses;', { "id": id }).then((res) => res[0][0].courses);
 }
+export async function getRegisteredCourses(id: string | null = null){
+    if(!database) return [
+        {
+            id: "course:CSE101",
+            title: "Introduction to Computer Science",
+            department: "CSE",
+        },
+        {
+            id: "course:CSE102",
+            title: "Programming Language",
+            department: "CSE",
+        }
+    ];
+    if(!id) return await db.select('course');
+    return await db.query<[[{courses: Course[]}]]>('SELECT ->takes->course as courses FROM $id FETCH courses;', { "id": id }).then((res) => res[0][0].courses);
+}
+export async function getCourseByDepartment(id: string | null = null){
+    if(!database) return [
+        {
+            id: "course:CSE101",
+            title: "Introduction to Computer Science",
+            department: "CSE",
+        },
+        {
+            id: "course:CSE102",
+            title: "Programming Language",
+            department: "CSE",
+        }
+    ];
+    if(!id) return await db.select('course');
+    return await db.query<[any[]]>('SELECT * FROM course WHERE department=$id;', { "id": id }).then((res) => res[0]);
+}
 
 export async function getCourse(id: string): Promise<any> {
     if(!database) return {

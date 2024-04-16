@@ -287,6 +287,7 @@ UPDATE class:j58fg1x9gbo1gm8ye16w CONTENT { attendance: { "student:2019331013": 
 UPDATE class:k3j6yxy8lqpuebnkmlp4 CONTENT { attendance: { "student:2019331013": false, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:k3j6yxy8lqpuebnkmlp4 };
 UPDATE class:ltmmsqjg2t3mekhs193m CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:ltmmsqjg2t3mekhs193m };
 UPDATE class:nnrxdnv23v3xg7izevqm CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:nnrxdnv23v3xg7izevqm };
+UPDATE class:plc2xz2k1zf0jj0nx2oy CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false, "student:2020331001": true }, course: course:CSE222, date: '2024-04-16', id: class:plc2xz2k1zf0jj0nx2oy };
 UPDATE class:rwtx3u0ypv8i53nco7xa CONTENT { attendance: { "student:2019331013": true, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:rwtx3u0ypv8i53nco7xa };
 UPDATE class:ua5201j43by4z45a9c22 CONTENT { attendance: { "student:2019331013": true, "student:2019331073": false }, course: course:CSE222, date: '2024-04-16', id: class:ua5201j43by4z45a9c22 };
 UPDATE class:xfzsyw4cm9ykvmc25q4f CONTENT { attendance: { "student:2019331013": false, "student:2019331073": true }, course: course:CSE222, date: '2024-04-16', id: class:xfzsyw4cm9ykvmc25q4f };
@@ -299,8 +300,8 @@ UPDATE class:zvzvoxzaabiwzrnyefvw CONTENT { attendance: { "student:2019331013": 
 
 UPDATE course:CSE222 CONTENT { course_code: 'CSE222', credit: 3f, department: department:CSE, id: course:CSE222, name: 'Computer Science', semester: 7, type: 'Theory', year: 2019 };
 UPDATE course:CSE330 CONTENT { course_code: 'CSE330', credit: 2f, department: department:CSE, id: course:CSE330, name: 'Web Tech', semester: 7, type: 'Lab', year: 2019 };
-UPDATE course:CSE333 CONTENT { course_code: 'CSE333', credit: 3f, department: department:CSE, id: course:CSE333, name: 'Software Engineering', semester: 7, type: 'Theory', year: 2019 };
-UPDATE course:CSE350 CONTENT { course_code: 'CSE350', credit: 3f, department: department:CSE, id: course:CSE350, name: 'Project Work III', semester: 7, type: 'Lab', year: 2019 };
+UPDATE course:CSE333 CONTENT { course_code: 'CSE333', credit: 3f, department: department:CSE, id: course:CSE333, name: 'Software Engineering', semester: 5, type: 'Theory', year: 2019 };
+UPDATE course:CSE350 CONTENT { course_code: 'CSE350', credit: 3f, department: department:CSE, id: course:CSE350, name: 'Project Work III', semester: 6, type: 'Lab', year: 2019 };
 UPDATE course:CSE431 CONTENT { course_code: 'CSE431', credit: 3f, department: department:CSE, id: course:CSE431, name: 'Computer Networks', semester: 7, type: 'Theory', year: 2019 };
 UPDATE course:CSE432 CONTENT { course_code: 'CSE432', credit: 1f, department: department:CSE, id: course:CSE432, name: 'Computer Networks Lab', semester: 7, type: 'Lab', year: 2019 };
 UPDATE course:CSE433 CONTENT { course_code: 'CSE433', credit: 3f, department: department:CSE, id: course:CSE433, name: 'Artificial Intelligence', semester: 7, type: 'Theory', year: 2019 };
@@ -316,8 +317,8 @@ UPDATE course:ECO252 CONTENT { course_code: 'ECO252', credit: 3f, department: de
 UPDATE course:ECO253 CONTENT { course_code: 'ECO253', credit: 3f, department: department:ECO, id: course:ECO253, name: 'International Economics', semester: 7, type: 'Theory', year: 2019 };
 UPDATE course:ECO254 CONTENT { course_code: 'ECO254', credit: 3f, department: department:ECO, id: course:ECO254, name: 'Econometrics', semester: 7, type: 'Theory', year: 2019 };
 UPDATE course:ECO255 CONTENT { course_code: 'ECO255', credit: 1f, department: department:ECO, id: course:ECO255, name: 'Econometrics Lab', semester: 7, type: 'Lab', year: 2019 };
-UPDATE course:EEE341 CONTENT { course_code: 'EEE341', credit: 3f, department: department:EEE, id: course:EEE341, name: 'Power Systems', semester: 7, type: 'Theory', year: 2019 };
-UPDATE course:EEE342 CONTENT { course_code: 'EEE342', credit: 1f, department: department:EEE, id: course:EEE342, name: 'Power Systems Lab', semester: 7, type: 'Lab', year: 2019 };
+UPDATE course:EEE341 CONTENT { course_code: 'EEE341', credit: 3f, department: department:EEE, id: course:EEE341, name: 'Power Systems', semester: 4, type: 'Theory', year: 2019 };
+UPDATE course:EEE342 CONTENT { course_code: 'EEE342', credit: 1f, department: department:EEE, id: course:EEE342, name: 'Power Systems Lab', semester: 4, type: 'Lab', year: 2019 };
 UPDATE course:EEE343 CONTENT { course_code: 'EEE343', credit: 3f, department: department:EEE, id: course:EEE343, name: 'Electromagnetics', semester: 7, type: 'Theory', year: 2019 };
 UPDATE course:EEE344 CONTENT { course_code: 'EEE344', credit: 1f, department: department:EEE, id: course:EEE344, name: 'Electromagnetics Lab', semester: 7, type: 'Lab', year: 2019 };
 
@@ -472,6 +473,7 @@ UPDATE student:2029331010 CONTENT { blood_group: 'B+', current_semester: 6, depa
 -- ------------------------------
 
 RELATE class:j58fg1x9gbo1gm8ye16w -> taken:14r5zix1ea3q7syn0xar -> course:CSE222 CONTENT { __: true, id: taken:14r5zix1ea3q7syn0xar, in: class:j58fg1x9gbo1gm8ye16w, out: course:CSE222 };
+RELATE class:plc2xz2k1zf0jj0nx2oy -> taken:91rnx402awzve1394fbn -> course:CSE222 CONTENT { __: true, id: taken:91rnx402awzve1394fbn, in: class:plc2xz2k1zf0jj0nx2oy, out: course:CSE222 };
 RELATE class:iko3h1d93ue6ykr5648i -> taken:9gtbv9fgen29hifb04ab -> course:CSE330 CONTENT { __: true, id: taken:9gtbv9fgen29hifb04ab, in: class:iko3h1d93ue6ykr5648i, out: course:CSE330 };
 RELATE class:5u3rkbkntqobqetfrite -> taken:9q0m4z01aml1xzgzlct1 -> course:CSE222 CONTENT { __: true, id: taken:9q0m4z01aml1xzgzlct1, in: class:5u3rkbkntqobqetfrite, out: course:CSE222 };
 RELATE class:xvnxfywsx06cwiohay7z -> taken:qgqd03x7j7p15ncrhu3l -> course:CSE222 CONTENT { __: true, id: taken:qgqd03x7j7p15ncrhu3l, in: class:xvnxfywsx06cwiohay7z, out: course:CSE222 };
@@ -481,8 +483,11 @@ RELATE class:xvnxfywsx06cwiohay7z -> taken:qgqd03x7j7p15ncrhu3l -> course:CSE222
 -- ------------------------------
 
 RELATE student:2019331013 -> takes:4tnahxcwnlgpj6l634dl -> course:CSE222 CONTENT { __: true, id: takes:4tnahxcwnlgpj6l634dl, in: student:2019331013, out: course:CSE222, semester: 12, year: 2019 };
+RELATE student:2020331001 -> takes:58f6fq9wa5swrkqti3jf -> course:CSE432 CONTENT { __: true, id: takes:58f6fq9wa5swrkqti3jf, in: student:2020331001, out: course:CSE432 };
 RELATE student:2019331073 -> takes:8783thlijgk4el3q7b4y -> course:CSE222 CONTENT { __: true, id: takes:8783thlijgk4el3q7b4y, in: student:2019331073, out: course:CSE222 };
+RELATE student:2020331001 -> takes:bhk9twkxgsioenfpnnhd -> course:CSE330 CONTENT { __: true, id: takes:bhk9twkxgsioenfpnnhd, in: student:2020331001, out: course:CSE330 };
 RELATE student:2019331013 -> takes:cvq6uvnqf51c3vvuws97 -> course:CSE330 CONTENT { __: true, id: takes:cvq6uvnqf51c3vvuws97, in: student:2019331013, out: course:CSE330, semester: 12, year: 2019 };
+RELATE student:2020331001 -> takes:um3ehoqs4etcw7p3luqq -> course:CSE222 CONTENT { __: true, id: takes:um3ehoqs4etcw7p3luqq, in: student:2020331001, out: course:CSE222 };
 
 -- ------------------------------
 -- TABLE DATA: teacher

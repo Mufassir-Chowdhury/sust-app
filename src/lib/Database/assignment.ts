@@ -1,7 +1,7 @@
 import { database, db } from "$lib/Database/surreal.js";
 
 export async function getAssignmentListByStudent(id: string) {
-    if(database) return [
+    if(!database) return [
         {
             id: "assignment:1",
             title: "Assignment 1",
@@ -19,8 +19,8 @@ export async function getAssignmentListByStudent(id: string) {
             trailing: "2024-12-31",
         }
     ];
-    const [record] = await db.query('SELECT <-has<-assignment FROM $id', { id: id });
-    return record;
+    const [record] = await db.query<[[assignments: any]]>('SELECT ->takes->course->has->assignment as assignments FROM $id FETCH assignments', { id: id });
+    return record[0].assignments;
 }
 export async function getAssignmentListByCourse(id: string) {
     if(!database) return [
@@ -61,4 +61,14 @@ export async function getAssignment(id: string): Promise<any> {
     } ;
     const [record] = await db.select(id);
     return record;
+}
+
+export async function getCourseFromAssignment(id: string) {
+    if(!database) return {
+        id: "course:CSE101",
+        title: "Introduction to Computer Science",
+        department: "CSE",
+    };
+    const [record] = await db.query<[[course: any]]>('SELECT <-has<-course as course FROM $id FETCH course', { id: id });
+    return record[0].course;
 }

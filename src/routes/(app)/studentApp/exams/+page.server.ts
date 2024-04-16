@@ -1,9 +1,8 @@
-import { getExamList } from "$lib/Database/exam";
+import { getExamListByStudent } from "$lib/Database/exam";
 import { getListTile } from "$lib/utils";
 
-export async function load() {
-    let exams = getListTile(await getExamList());
-    
+export async function load({ locals }) {
+    let exams = getListTile(await getExamListByStudent(locals.user.id));
     return {
         listItems: exams
     }
