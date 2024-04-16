@@ -21,7 +21,7 @@ const databaseInstance = {
 					_db = new Surreal();
 
 					if (!DB_URL) return null;
-					await _db.connect(DB_URL, { namespace: 'surreal', database: 'sveltekit'
+					await _db.connect(DB_URL, { namespace: 'test', database: 'test'
 					, auth: {
                                         namespace: 'test',
                                         database: 'test',
