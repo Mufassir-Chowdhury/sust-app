@@ -1,7 +1,7 @@
 import { database, db } from "$lib/Database/surreal.js";
 import type { Course, Teacher } from "$lib/models";
 
-export async function getCourseList(){
+export async function getCourseList(id: string | null = null){
     if(!database) return [
         {
             id: "course:CSE101",
@@ -14,7 +14,8 @@ export async function getCourseList(){
             department: "CSE",
         }
     ];
-    return await db.select('course')
+    if(!id) return await db.select('course');
+    return await db.query<[[{courses: Course[]}]]>('SELECT ->teaches->course as courses FROM $id FETCH courses;', { "id": id }).then((res) => res[0][0].courses);
 }
 
 export async function getCourse(id: string): Promise<any> {
