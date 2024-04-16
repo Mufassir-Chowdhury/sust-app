@@ -1,6 +1,28 @@
 import { database, db } from "$lib/Database/surreal.js";
 
-export async function getAssignmentList(){
+export async function getAssignmentListByStudent(id: string) {
+    if(database) return [
+        {
+            id: "assignment:1",
+            title: "Assignment 1",
+            subtitle: "Introduction to Computer Science",
+            status: "Not Submitted",
+            status_color: "black",
+            trailing: "2024-12-31",
+        },
+        {
+            id: "assignment:2",
+            title: "Assignment 2",
+            subtitle: "Introduction to Computer Science",
+            status: "Submitted",
+            status_color: "green",
+            trailing: "2024-12-31",
+        }
+    ];
+    const [record] = await db.query('SELECT <-has<-assignment FROM $id', { id: id });
+    return record;
+}
+export async function getAssignmentListByCourse(id: string) {
     if(!database) return [
         {
             id: "assignment:1",
@@ -19,8 +41,8 @@ export async function getAssignmentList(){
             trailing: "2024-12-31",
         }
     ];
-    // TODO connect with database
-    return null;
+    const record = await db.query<[[assignments: any[]]]>('SELECT ->has->assignment as assignments FROM $id FETCH assignments', { id: id });
+    return record[0][0].assignments;
 }
 
 export async function getAssignment(id: string): Promise<any> {
@@ -37,6 +59,6 @@ export async function getAssignment(id: string): Promise<any> {
         attachments: [],
         submissions: true
     } ;
-    // TODO connect with database
-    return null;
+    const [record] = await db.select(id);
+    return record;
 }

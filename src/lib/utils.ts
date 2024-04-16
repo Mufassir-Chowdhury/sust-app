@@ -23,6 +23,7 @@ export const typeOptions = [
 ]
 
 export function getListTile(list: any): ListTile[] {
+    if(!list) return [];
     let listItems: ListTile[] = list.map((item: any) => {
         return {
             title: item.title,

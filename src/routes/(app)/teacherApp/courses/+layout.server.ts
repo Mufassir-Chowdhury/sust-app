@@ -3,9 +3,9 @@ import { getListTile } from "$lib/utils";
 
 export async function load({ locals }) {
 
-    let admins = getListTile(await getCourseList(locals.user.id));
+    let courseList = getListTile(await getCourseList(locals.user.id));
     return {
-        listItems: admins
+        listItems: courseList
     }
     
 }

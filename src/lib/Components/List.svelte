@@ -14,7 +14,7 @@
     export let listItems: ListTile[];
     export let deletable: Boolean = false;
     export let editable: Boolean = false;
-
+    export let slug: string;
 
     const statusMap: Record<string, string> = {
         "green": "text-green-500",
@@ -23,12 +23,12 @@
         "black": "text-black",
     }
     
-
+    const path = slug ?? `/${appName}/${url}`;
 </script>
 
 {#each listItems as listItem}
     <div class="py-4 px-8 card card-hover variant-soft-surface my-4 grid grid-cols-12">
-            <a href="/{appName}/{url}/{listItem.id}" class="flex flex-col col-span-9">
+            <a href="{path}/{listItem.id}" class="flex flex-col col-span-9">
                 <div>
                     <h3>
                         {listItem.title ?? listItem.name}
