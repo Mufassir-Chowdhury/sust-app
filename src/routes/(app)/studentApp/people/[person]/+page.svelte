@@ -11,5 +11,9 @@
 <Detailsitem key="Email" value={details.email.academic}/>
 <Detailsitem key="Gender" value={details.gender}/>
 <Detailsitem key="Blood Group" value={details.blood_group}/>
+{#if details.designation}
+<Detailsitem key="Designation" value={details.designation}/>
+{:else}
 <Detailsitem key="Current Semester" value={details.current_semester}/>
 <Detailsitem key="Session" value={details.session}/>
+{/if}

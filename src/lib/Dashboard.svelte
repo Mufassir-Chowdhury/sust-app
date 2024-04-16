@@ -29,7 +29,7 @@
         </form>
 
     </div>
-    <div class="flex flex-row justify-between">
+    <!-- <div class="flex flex-row justify-between">
         <div class="card variant-soft-primary">
             <header class="card-header">
                 Due Exams
@@ -48,5 +48,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 </section>
