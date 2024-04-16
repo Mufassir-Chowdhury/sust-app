@@ -4,10 +4,6 @@
 
     export let data;
 
-    let studentId = '2019331073'
-
-    onMount(() => {
-    });
 </script>
 
 <div class="p-8">
@@ -21,11 +17,11 @@
                 </tr>
             </thead>
             <tbody>
-                {#each data.attendances as adata}
+                {#each data.attendances as attendance}
                     <tr>
-                        <td class="border px-4 py-2 text-center">{adata.date}</td>
+                        <td class="border px-4 py-2 text-center">{attendance.date}</td>
                         <td class="border px-4 py-2 text-center">
-                            {#if adata.students[studentId] === true}
+                            {#if attendance.attendance[data.user] === true}
                                 <span class="text-green-500">Present</span>
                             {:else}
                                 <span class="text-red-500">Absent</span>

@@ -1,15 +1,11 @@
-import { getAttendancesByCourseId, getCourseById, getStudentsByAttendanceId } from "$lib/Database/sajiddb";
+import { getClasses, getCourse } from "$lib/Database/course.js";
 
-export async function load({ params }) {
-    const course: any = await getCourseById(params.courseId);
-    const attendances: any = await getAttendancesByCourseId(params.courseId);
-    const students: any = await getStudentsByAttendanceId(attendances[0].id);
-
-    console.log(attendances)
-    console.log("HER")
+export async function load({ params, locals }) {
+    const course = await getCourse(params.courseId);
+    const attendances = await getClasses(params.courseId);
     return {
         course,
         attendances,
-        students,
+        user: locals.user.id
     };
 }
