@@ -33,6 +33,9 @@ nancheck inf oz14: 0 entries with different NaN/Inf status than dgemm
 nancheck inf oz16: 0 entries with different NaN/Inf status than dgemm
 nancheck inf ozw14: 0 entries with different NaN/Inf status than dgemm
 nancheck inf sw1: 853 entries with different NaN/Inf status than dgemm
+edge underflow s=14: oz [9.9999999999999992e+249, 9.9999999999999998e-201] dgemm [9.9999999999999992e+249, 9.9999999999999998e-201] ok
+edge underflow s=16: oz [9.9999999999999992e+249, 9.9999999999999998e-201] dgemm [9.9999999999999992e+249, 9.9999999999999998e-201] ok
+edge reproducibility: oz14 differs from its first run in 0/200 runs, ozw14 differs from oz14 in 0/200 ok
 == 6. error regression
 0 0 1 1 1              dgemm                              max_cw=6.62e-17 limit=1.0e-12 ok
 0 0 1 1 1              sw1                                max_cw=6.62e-17 limit=1.0e-12 ok
@@ -118,6 +121,30 @@ nancheck inf sw1: 853 entries with different NaN/Inf status than dgemm
 3 32 600 600 600       oz15                               max_cw=2.35e-17 limit=1.0e-12 ok
 3 32 600 600 600       oz16                               max_cw=2.35e-17 limit=5.3e-16 ok
 3 32 600 600 600       ozf14:slp/winograd.slp             max_cw=1.71e-16 limit=1.0e-12 ok
+3 300 500 500 500      dgemm                              max_cw=2.67e-16 limit=inf ok
+3 300 500 500 500      sw1                                max_cw=4.79e+153 limit=inf ok
+3 300 500 500 500      sw2                                max_cw=2.24e+159 limit=inf ok
+3 300 500 500 500      sw3                                max_cw=8.37e+159 limit=inf ok
+3 300 500 500 500      g:slp/winograd.slp:2:0:2           max_cw=2.24e+159 limit=inf ok
+3 300 500 500 500      g:slp/winograd-squared.slp:1:0:1   max_cw=2.76e+159 limit=inf ok
+3 300 500 500 500      g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=4.62e+159 limit=inf ok
+3 300 500 500 500      sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=2.90e+157 limit=inf ok
+3 300 500 500 500      oz14                               max_cw=1.84e-16 limit=1.0e-12 ok
+3 300 500 500 500      oz15                               max_cw=1.58e-17 limit=1.0e-12 ok
+3 300 500 500 500      oz16                               max_cw=1.58e-17 limit=5.3e-16 ok
+3 300 500 500 500      ozf14:slp/winograd.slp             max_cw=1.84e-16 limit=1.0e-12 ok
+2 400 300 300 300      dgemm                              max_cw=3.83e-16 limit=inf ok
+2 400 300 300 300      sw1                                max_cw=5.04e+234 limit=inf ok
+2 400 300 300 300      sw2                                max_cw=inf limit=inf ok
+2 400 300 300 300      sw3                                max_cw=inf limit=inf ok
+2 400 300 300 300      g:slp/winograd.slp:2:0:2           max_cw=inf limit=inf ok
+2 400 300 300 300      g:slp/winograd-squared.slp:1:0:1   max_cw=inf limit=inf ok
+2 400 300 300 300      g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=inf limit=inf ok
+2 400 300 300 300      sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=inf limit=inf ok
+2 400 300 300 300      oz14                               max_cw=4.26e-16 limit=1.0e-12 ok
+2 400 300 300 300      oz15                               max_cw=4.39e-17 limit=1.0e-12 ok
+2 400 300 300 300      oz16                               max_cw=2.34e-17 limit=7.7e-16 ok
+2 400 300 300 300      ozf14:slp/winograd.slp             max_cw=4.26e-16 limit=1.0e-12 ok
 4 20 1500 1500 1500    dgemm                              max_cw=2.41e-15 limit=inf ok
 4 20 1500 1500 1500    sw1                                max_cw=3.26e-14 limit=inf ok
 4 20 1500 1500 1500    sw2                                max_cw=1.04e-13 limit=inf ok
@@ -131,4 +158,3 @@ nancheck inf sw1: 853 entries with different NaN/Inf status than dgemm
 4 20 1500 1500 1500    oz16                               max_cw=1.84e-16 limit=4.8e-15 ok
 4 20 1500 1500 1500    ozf14:slp/winograd.slp             max_cw=1.55e-14 limit=1.0e-12 ok
 ALL CHECKS PASSED
-checks exit 0

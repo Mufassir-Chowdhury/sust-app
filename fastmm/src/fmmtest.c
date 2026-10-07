@@ -136,6 +136,7 @@ int main(int argc, char **argv) {
     size_t m = atol(argv[4]), k = atol(argv[5]), n = atol(argv[6]), ns = atol(argv[7]);
     double *A = amalloc(m * k * 8), *B = amalloc(k * n * 8), *C = amalloc(m * n * 8);
     testmat_fill(type, r, m, k, n, A, B, 42);
+    if (!ns) g_ref = ref_full(m, k, n, A, B);  // all entries: compute the reference once for all methods
     for (int a = 8; a < argc; a++) {
       method me = parse(argv[a]);
       memset(C, 0, m * n * 8);
@@ -160,6 +161,55 @@ int main(int argc, char **argv) {
     printf("bitcmp type=%s r=%d m=%zu k=%zu n=%zu %s vs %s: %zu of %zu entries differ\n", testmat_name[type], r, m, k,
            n, argv[7], argv[8], diff, m * n);
     return diff != 0;
+  }
+  if (!strcmp(argv[1], "refcheck")) {  // ref_full must equal ref_entry bitwise
+    size_t m = 517, k = 301, n = 77, bad = 0;
+    double *A = amalloc(m * k * 8), *B = amalloc(k * n * 8);
+    for (int type = 0; type < 6; type++) {
+      testmat_fill(type, 32, m, k, n, A, B, 42);
+      refall_t *R = ref_full(m, k, n, A, B);
+      for (size_t j = 0; j < n; j++)
+        for (size_t i = 0; i < m; i++) {
+          double lo, ab, r = ref_entry(m, k, A, B, i, j, &lo, &ab);
+          size_t o = i + j * m;
+          bad += memcmp(&r, &R->r[o], 8) || memcmp(&lo, &R->lo[o], 8) || memcmp(&ab, &R->ab[o], 8);
+        }
+    }
+    printf("refcheck: %zu entries differ between the blocked and the per-entry reference %s\n", bad, bad ? "FAIL" : "ok");
+    return bad != 0;
+  }
+  if (!strcmp(argv[1], "edge")) {  // regressions found by the independent review (docs/independent_review.md)
+    int fails = 0;
+    // 1. a row of A that underflows once its column is scaled by the inner scaling must not be lost
+    double A[2] = {1e150, 1e-300}, B[1] = {1e100}, C[2], D[2];
+    for (int s = 14; s <= 16; s += 2) {
+      oz_dgemm(s, 2, 1, 1, A, 2, B, 1, C, 2, NULL);
+      dgemm_nn(2, 1, 1, 1.0, A, 2, B, 1, 0.0, D, 2);
+      int ok = C[0] == D[0] && C[1] == D[1];
+      fails += !ok;
+      printf("edge underflow s=%d: oz [%.17g, %.17g] dgemm [%.17g, %.17g] %s\n", s, C[0], C[1], D[0], D[1], ok ? "ok" : "FAIL");
+    }
+    // 2. bitwise reproducibility when a row norm of B sits on a rounding boundary of the inner scaling
+    //    (the review's construction: the old sum-of-squares reduction depended on thread arrival order)
+    size_t m = 64, k = 128, n = 64;
+    double *A2 = amalloc(m * k * 8), *B2 = amalloc(k * n * 8), *C0 = amalloc(m * n * 8), *C1 = amalloc(m * n * 8);
+    testmat_fill(0, 0, m, k, n, A2, B2, 3);
+    for (size_t i = 0; i < m; i++) A2[i] = i == 0 ? 1.0 : 0.0;
+    for (size_t j = 0; j < n; j++) B2[j * k] = 0;
+    double t = sqrt(0.6 * ldexp(1.0, -51));
+    B2[0] = nextafter(2.0, 0.0); B2[16 * k] = t; B2[32 * k] = t;
+    oz_dgemm(14, m, k, n, A2, m, B2, k, C0, m, NULL);
+    int differ = 0, differw = 0;
+    for (int rep = 0; rep < 200; rep++) {
+      oz_dgemm(14, m, k, n, A2, m, B2, k, C1, m, NULL);
+      differ += memcmp(C0, C1, m * n * 8) != 0;
+      oz_dgemm_w(14, m, k, n, A2, m, B2, k, C1, m, NULL);
+      differw += memcmp(C0, C1, m * n * 8) != 0;
+    }
+    fails += differ + differw > 0;
+    printf("edge reproducibility: oz14 differs from its first run in %d/200 runs, ozw14 differs from oz14 in %d/200 %s\n",
+           differ, differw, differ + differw ? "FAIL" : "ok");
+    return fails != 0;
   }
   if (!strcmp(argv[1], "nancheck")) {  // NaN/Inf must propagate like in the BLAS
     size_t n = 300;

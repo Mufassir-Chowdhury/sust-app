@@ -84,6 +84,47 @@ static double ref_entry(size_t m, size_t k, const double *A, const double *B, si
   return s;
 }
 
+// Reference for all entries at once, with the same arithmetic and summation order as ref_entry
+// (bitwise identical results), blocked so that it vectorises over i and reuses the A block.
+typedef struct { double *r, *lo, *ab; } refall_t;
+static refall_t *g_ref;  // when set, err_sampled(ns = 0) reads the reference from here
+static refall_t *ref_full(size_t m, size_t k, size_t n, const double *A, const double *B) {
+  refall_t *R = malloc(sizeof *R);
+  R->r = malloc(m * n * 8); R->lo = malloc(m * n * 8); R->ab = malloc(m * n * 8);
+  const size_t IB = 256, JB = 16;
+  size_t ni = (m + IB - 1) / IB, nj = (n + JB - 1) / JB;
+  #pragma omp parallel for schedule(dynamic, 1)
+  for (size_t t = 0; t < ni * nj; t++) {
+    size_t i0 = (t % ni) * IB, j0 = (t / ni) * JB;
+    size_t ilen = m - i0 < IB ? m - i0 : IB, jlen = n - j0 < JB ? n - j0 : JB;
+    double hi[16][256], lo[16][256], ab[16][256];
+    for (size_t jj = 0; jj < jlen; jj++)
+      for (size_t i = 0; i < ilen; i++) hi[jj][i] = lo[jj][i] = ab[jj][i] = 0;
+    for (size_t p = 0; p < k; p++) {
+      const double *a = A + i0 + p * m;
+      for (size_t jj = 0; jj < jlen; jj++) {
+        double b = B[p + (j0 + jj) * k];
+        double *h = hi[jj], *l = lo[jj], *x = ab[jj];
+        #pragma omp simd
+        for (size_t i = 0; i < ilen; i++) {
+          double pr = a[i] * b, pe = fma(a[i], b, -pr);
+          double sm = h[i] + pr, bb = sm - h[i], e = (h[i] - (sm - bb)) + (pr - bb);
+          h[i] = sm;
+          l[i] = (l[i] + e) + pe;
+          x[i] += fabs(pr);
+        }
+      }
+    }
+    for (size_t jj = 0; jj < jlen; jj++)
+      for (size_t i = 0; i < ilen; i++) {
+        size_t o = i0 + i + (j0 + jj) * m;
+        double sm = hi[jj][i] + lo[jj][i];
+        R->r[o] = sm; R->lo[o] = lo[jj][i] - (sm - hi[jj][i]); R->ab[o] = ab[jj][i];
+      }
+  }
+  return R;
+}
+
 typedef struct { double max_cw, med_cw, max_rel, med_rel, nrm; } errstats;
 
 // Error of C against the reference on `ns` sampled entries (all entries if ns == 0).
@@ -103,7 +144,9 @@ static errstats err_sampled(size_t m, size_t k, size_t n, const double *A, const
       rng_next(&s);
       i = rng_next(&s) % m; j = rng_next(&s) % n;
     } else { i = t % m; j = t / m; }
-    double lo, ab, r = ref_entry(m, k, A, B, i, j, &lo, &ab);
+    double lo, ab, r;
+    if (!ns && g_ref) { r = g_ref->r[i + j * m]; lo = g_ref->lo[i + j * m]; ab = g_ref->ab[i + j * m]; }
+    else r = ref_entry(m, k, A, B, i, j, &lo, &ab);
     double d = fabs((C[i + j * m] - r) - lo);
     ae[t] = d;
     cw[t] = ab > 0 ? d / ab : 0;

@@ -5,7 +5,8 @@
 #  3. CRT constants are regenerated with exact integer checks;
 #  4. AMX int8 kernel matches a naive integer product on awkward shapes;
 #  5. emulation with modular Strassen is bitwise identical to the plain emulation;
-#  6. error regression on odd shapes for every method (thresholds relative to dgemm).
+#  6. error regression on odd shapes for every method (thresholds relative to dgemm), including inner
+#     scalings of 2^+-300 and the edge cases found by the independent review (underflow, reproducibility).
 set -e
 cd "$(dirname "$0")/.."
 export OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OMP_PROC_BIND=close
@@ -33,6 +34,8 @@ done
 echo "== 5b. guards: k > 131071 (split inner dimension), NaN/Inf propagation"
 ./bin/fmmtest acc 0 0 64 140000 64 0 dgemm oz14 oz16 | awk '{print $5, $7, $8}'
 ./bin/fmmtest nancheck
+./bin/fmmtest edge
+./bin/fmmtest refcheck
 echo "== 6. error regression"
 python3 - <<'PY'
 import subprocess, re, sys
@@ -41,7 +44,8 @@ meths = ["dgemm", "sw1", "sw2", "sw3", f"g:{W1}:2:0:2", f"g:{W2}:1:0:1", f"g:{P4
          "oz14", "oz15", "oz16", f"ozf14:{W1}"]
 fails = 0
 for shape in ("0 0 1 1 1", "0 0 33 65 97", "0 0 301 517 203", "1 0 777 1000 555", "5 0 1000 1000 1000",
-              "2 32 600 600 600", "3 32 600 600 600", "4 20 1500 1500 1500"):
+              "2 32 600 600 600", "3 32 600 600 600", "3 300 500 500 500", "2 400 300 300 300",
+              "4 20 1500 1500 1500"):
     out = subprocess.run(["./bin/fmmtest", "acc"] + shape.split()[:2] + shape.split()[2:] + ["0"] + meths,
                          capture_output=True, text=True, check=True).stdout
     res = {kv["method"]: kv for kv in (dict(re.findall(r"(\w+)=(\S+)", l)) for l in out.splitlines())}

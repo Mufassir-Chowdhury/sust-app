@@ -69,8 +69,9 @@ What these numbers mean against the goal:
      to 2^±32.
    * The exception is entries with independently random exponents of 2^±48 or wider at small n:
      28x worse than DGEMM at 2^±48 and 1000x worse at 2^±64, both at n = 1000.
-   * The Strassen-type plans are 2-20x worse than DGEMM on well-scaled data, 10^5-10^6 x worse at
-     2^±64, and completely wrong on row- or column-scaled data unless the inputs are rescaled.
+   * The Strassen-type plans are 2-20x worse than DGEMM on well-scaled data, up to 10^5-10^6 x
+     worse at 2^±64 (n = 1000), and completely wrong on row- or column-scaled data unless the
+     inputs are rescaled.
 4. **Below n = 1500, nothing beats MKL** on this machine: neither Strassen-type plans nor the
    emulation.
 5. **The first call is slow.** The emulation allocates and pre-faults a persistent workspace of up
