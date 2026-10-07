@@ -24,7 +24,7 @@ $(BIN)/bench_sw_openblas: src/bench_sw.c src/sw.c src/fmm.h src/blas.h src/commo
 	$(CC) $(CFLAGS) -o $@ src/bench_sw.c src/sw.c $(OBLAS) $(LIBS)
 
 AMXF = -mamx-tile -mamx-int8 -DAMX_KERNEL=14 -DAMX_KC=512 -DAMX_MC=128 -DAMX_NC=256 -DAMX_PF=1
-FSRC = src/fmmtest.c src/sw.c src/ozaki.c src/ozfmm.c src/amx.c src/gen.c
+FSRC = src/fmmtest.c src/sw.c src/ozaki.c src/ozfmm.c src/ozw.c src/amx.c src/gen.c
 FHDR = src/slp.h src/oz_internal.h src/gen.h src/fmm.h src/blas.h src/common.h src/ozaki.h src/amx.h src/testmat.h src/oz_consts.h
 
 src/oz_consts.h: tools/gen_oz_consts.py
@@ -32,3 +32,13 @@ src/oz_consts.h: tools/gen_oz_consts.py
 
 $(BIN)/fmmtest: $(FSRC) $(FHDR) | $(BIN)
 	$(CC) $(CFLAGS) $(AMXF) -DUSE_MKL -o $@ $(FSRC) $(MKL) $(LIBS)
+
+$(BIN)/bench_amx: src/bench_amx.c src/amx.c src/amx.h src/common.h | $(BIN)
+	$(CC) $(CFLAGS) $(AMXF) -o $@ src/bench_amx.c src/amx.c $(LIBS)
+$(BIN)/bench_par: src/bench_par.c src/blas.h src/common.h | $(BIN)
+	$(CC) $(CFLAGS) -DUSE_MKL -o $@ $< $(MKL) $(LIBS)
+$(BIN)/stream: src/stream.c src/common.h | $(BIN)
+	$(CC) $(CFLAGS) -o $@ $< $(LIBS)
+
+all: baselines $(BIN)/fmmtest $(BIN)/bench_amx $(BIN)/bench_par $(BIN)/stream
+.PHONY: all baselines

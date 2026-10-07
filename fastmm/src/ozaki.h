@@ -11,3 +11,7 @@ void oz_release(void);  // free the persistent workspace
 // (integer coefficients) exactly in Z/p: the result is bit-identical to oz_dgemm(s, ...).
 void oz_dgemm_fmm(int s, const gen_scheme *g, size_t m, size_t k, size_t n, const double *A, size_t lda,
                   const double *B, size_t ldb, double *C, size_t ldc, oz_times *tm);
+// Specialised: one exact Strassen-Winograd level per modulus (unsigned residues, AMX u8 x u8),
+// memory-blocked; bit-identical to oz_dgemm(s, ...).
+void oz_dgemm_w(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, const double *B, size_t ldb,
+                double *C, size_t ldc, oz_times *tm);

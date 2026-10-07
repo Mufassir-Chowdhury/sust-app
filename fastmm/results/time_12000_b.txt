@@ -1,0 +1,6 @@
+time m=12000 k=12000 n=12000 method=dgemm reps=3 median=12.06963 min=12.01223 eff_gflops=286.3 speedup_vs_first=1.000 paired=1.000 [IQR 1.000-1.000]
+time m=12000 k=12000 n=12000 method=sw1 reps=3 median=10.98218 min=10.76316 eff_gflops=314.7 speedup_vs_first=1.099 paired=1.099 [IQR 1.055-1.150]
+time m=12000 k=12000 n=12000 method=sw2 reps=3 median=12.40845 min=12.39690 eff_gflops=278.5 speedup_vs_first=0.973 paired=0.969 [IQR 0.947-0.973]
+time m=12000 k=12000 n=12000 method=sw1+g:slp/winograd-squared.slp:1:0:1 reps=3 median=10.35703 min=10.35030 eff_gflops=333.7 speedup_vs_first=1.165 paired=1.161 [IQR 1.153-1.165]
+time m=12000 k=12000 n=12000 method=sw1+g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 reps=3 median=10.14757 min=10.05472 eff_gflops=340.6 speedup_vs_first=1.189 paired=1.200 [IQR 1.147-1.219]
+time m=12000 k=12000 n=12000 method=sw1+g:slp/3x3x6_r40_fastmatmul-tichavsky_kovac336-40-960.slp:1:0:1 reps=3 median=10.75736 min=10.19995 eff_gflops=321.3 speedup_vs_first=1.122 paired=1.117 [IQR 1.0

@@ -30,9 +30,10 @@ static void epi_none(const int32_t *blk, size_t ld, size_t i0, size_t j0, void *
 
 int main(int argc, char **argv) {
   if (amx_init()) { fprintf(stderr, "AMX not available\n"); return 1; }
-  // correctness on an odd-sized problem
-  {
-    size_t m = 77, n = 45, k = 200;
+  // correctness on odd-sized problems (sampled check against a naive product)
+  size_t shapes[][3] = {{77, 45, 200}, {2000, 2000, 2000}, {1500, 1500, 1500}, {1000, 1000, 1000}, {96, 64, 64}, {100, 64, 64}};
+  for (int sh = 0; sh < (int)(sizeof shapes / sizeof shapes[0]); sh++) {
+    size_t m = shapes[sh][0], n = shapes[sh][1], k = shapes[sh][2];
     size_t Mp = amx_pad(m, 32), Np = amx_pad(n, AMX_COLPAD), Kp = amx_pad(k, 64);
     int8_t *A = malloc(m * k), *B = malloc(k * n), *Ap = aligned_alloc(4096, Mp * Kp), *Bp = aligned_alloc(4096, Np * Kp);
     int32_t *C = calloc(m * n, 4);
@@ -43,13 +44,14 @@ int main(int argc, char **argv) {
     store_ctx ctx = {C, m, m, n};
     amx_gemm_s8s8(Mp, Np, Kp, Ap, Bp, epi_store, &ctx);
     long bad = 0;
-    for (size_t i = 0; i < m; i++)
-      for (size_t j = 0; j < n; j++) {
+    for (size_t i = 0; i < m; i += (m > 200 ? 7 : 1))
+      for (size_t j = 0; j < n; j += (n > 200 ? 5 : 1)) {
         int32_t r = 0;
         for (size_t p = 0; p < k; p++) r += (int32_t)A[i + p * m] * B[p + j * k];
         if (r != C[i + j * m]) bad++;
       }
-    printf("correctness: %ld mismatches\n", bad);
+    printf("correctness %zux%zux%zu: %ld mismatches\n", m, n, k, bad);
+    free(A); free(B); free(Ap); free(Bp); free(C);
   }
   for (int a = 1; a < argc; a++) {
     size_t n = atol(argv[a]);

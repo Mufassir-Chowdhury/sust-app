@@ -25,3 +25,6 @@ typedef void (*amx_epilogue_fn)(const int32_t *blk, size_t ld, size_t i0, size_t
 // Every 32x32 block of C is handed to `epi`.
 void amx_gemm_s8s8(size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8_t *Bp, amx_epilogue_fn epi,
                    void *ctx);
+// Same with unsigned 8-bit operands (u8 x u8 -> int32 exact while Kp * 255^2 < 2^31).
+void amx_gemm_u8u8(size_t Mp, size_t Np, size_t Kp, const uint8_t *Ap, const uint8_t *Bp, amx_epilogue_fn epi,
+                   void *ctx);

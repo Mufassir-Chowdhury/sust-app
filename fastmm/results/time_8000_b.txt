@@ -1,0 +1,5 @@
+time m=8000 k=8000 n=8000 method=dgemm reps=5 median=3.62342 min=3.39952 eff_gflops=282.6 speedup_vs_first=1.000 paired=1.000 [IQR 1.000-1.000]
+time m=8000 k=8000 n=8000 method=sw1 reps=5 median=3.27197 min=3.18672 eff_gflops=313.0 speedup_vs_first=1.107 paired=1.111 [IQR 1.074-1.132]
+time m=8000 k=8000 n=8000 method=g:slp/winograd-squared.slp:1:0:1 reps=5 median=3.39148 min=3.21774 eff_gflops=301.9 speedup_vs_first=1.068 paired=1.065 [IQR 1.063-1.075]
+time m=8000 k=8000 n=8000 method=g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 reps=5 median=3.23596 min=3.14296 eff_gflops=316.4 speedup_vs_first=1.120 paired=1.100 [IQR 1.051-1.115]
+time m=8000 k=8000 n=8000 method=g:slp/3x3x6_r40_fastmatmul-tichavsky_kovac336-40-960.slp:1:0:1 reps=5 median=3.21412 min=3.06630 eff_gflops=318.6 speedup_vs_first=1.127 paired=1.131 [IQR 1.020-1.146]

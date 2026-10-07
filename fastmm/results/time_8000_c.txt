@@ -1,0 +1,8 @@
+time m=8000 k=8000 n=8000 method=dgemm reps=5 median=3.64430 min=3.61254 eff_gflops=281.0 speedup_vs_first=1.000 paired=1.000 [IQR 1.000-1.000]
+time m=8000 k=8000 n=8000 method=oz14 reps=5 median=2.65937 min=2.52767 eff_gflops=385.1 speedup_vs_first=1.370 paired=1.375 [IQR 1.370-1.429] [scale 0.0232 conv 0.2704 gemm 2.4559 crt 0.0937]
+time m=8000 k=8000 n=8000 method=oz16 reps=5 median=3.12430 min=2.91090 eff_gflops=327.8 speedup_vs_first=1.166 paired=1.235 [IQR 1.215-1.241] [scale 0.0280 conv 0.2815 gemm 2.7342 crt 0.0805]
+time m=8000 k=8000 n=8000 method=ozf14:slp/winograd.slp reps=5 median=2.83590 min=2.68514 eff_gflops=361.1 speedup_vs_first=1.285 paired=1.337 [IQR 1.294-1.357] [scale 0.0000 conv 0.3724 gemm 2.1467 crt 0.3167]
+time m=8000 k=8000 n=8000 method=ozf16:slp/winograd.slp reps=5 median=3.23294 min=2.99752 eff_gflops=316.7 speedup_vs_first=1.127 paired=1.159 [IQR 1.122-1.224] [scale 0.0000 conv 0.4231 gemm 2.2316 crt 0.3428]
+time m=8000 k=8000 n=8000 method=sw1+oz14 reps=5 median=2.76490 min=2.59085 eff_gflops=370.4 speedup_vs_first=1.318 paired=1.334 [IQR 1.318-1.429] [scale 0.0000 conv 0.4231 gemm 2.2316 crt 0.3428]
+time m=8000 k=8000 n=8000 method=sw1+oz16 reps=5 median=3.03281 min=2.91002 eff_gflops=337.6 speedup_vs_first=1.202 paired=1.191 [IQR 1.163-1.246] [scale 0.0000 conv 0.4231 gemm 2.2316 crt 0.3428]
+time m=8000 k=8000 n=8000 method=sc:sw1+oz16 reps=5 median=3.78806 min=3.73904 eff_gflops=270.3 speedup_vs_first=0.962 paired=0.970 [IQR 0.962-1.031] [scale 0.0000 conv 0.4231 gemm 2.2316 crt 0.3428]

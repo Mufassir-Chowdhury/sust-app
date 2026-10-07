@@ -1,0 +1,11 @@
+cold n=2000 method=dgemm first=0.0709 then=0.0747 0.0706 0.0647
+cold n=2000 method=oz14 first=0.0727 then=0.0547 0.0562 0.0567
+cold n=2000 method=oz16 first=0.0777 then=0.0615 0.0591 0.0595
+cold n=2000 method=ozw14 first=0.0816 then=0.0770 0.0807 0.0696
+cold n=2000 method=sw1 first=0.0674 then=0.0631 0.0786 0.0793
+cold n=8000 method=dgemm first=3.6386 then=3.6337 3.5846 3.5663
+cold n=8000 method=oz14 first=5.6789 then=2.5473 2.6181 2.6189
+cold n=8000 method=oz16 first=3.6104 then=2.7594 2.9772 2.8665
+cold n=8000 method=ozw14 first=4.3714 then=2.3411 2.2364 2.3052
+cold n=8000 method=sw1 first=3.3244 then=3.3535 3.3250 3.4136
+ALLDONE

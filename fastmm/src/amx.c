@@ -92,8 +92,31 @@ static inline void kernel_14(const int8_t *a, const int8_t *b0, const int8_t *b1
   _tile_stored(0, c, CST); _tile_stored(1, c + 16, CST); _tile_stored(2, c + 32, CST); _tile_stored(3, c + 48, CST);
 }
 
-void amx_gemm_s8s8(size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8_t *Bp, amx_epilogue_fn epi,
-                   void *ctx) {
+// unsigned (u8 x u8) twin of kernel_14.
+// 1x4: C tiles 0..3 (16 x 64), A tile 4, B tiles 6/7 alternating.  bq = first tile of B
+// panel q (consecutive kb tiles 1 KiB apart).
+static inline void kernel_14u(const int8_t *a, const int8_t *b0, const int8_t *b1, const int8_t *b2,
+                             const int8_t *b3, size_t nkb, int32_t *c, int load_c) {
+  if (load_c) {
+    _tile_loadd(0, c, CST); _tile_loadd(1, c + 16, CST); _tile_loadd(2, c + 32, CST); _tile_loadd(3, c + 48, CST);
+  } else { _tile_zero(0); _tile_zero(1); _tile_zero(2); _tile_zero(3); }
+  for (size_t kb = 0; kb < nkb; kb++) {
+    size_t o = kb * 1024;
+#ifdef AMX_PF
+    // prefetch the A tile AMX_PF steps ahead (it streams from L2) into L1
+    for (int l = 0; l < 1024; l += 64) _mm_prefetch((const char *)a + o + AMX_PF * 1024 + l, _MM_HINT_T0);
+#endif
+    _tile_loadd(4, a + o, 64);
+    _tile_loadd(6, b0 + o, 64); _tile_dpbuud(0, 4, 6);
+    _tile_loadd(7, b1 + o, 64); _tile_dpbuud(1, 4, 7);
+    _tile_loadd(6, b2 + o, 64); _tile_dpbuud(2, 4, 6);
+    _tile_loadd(7, b3 + o, 64); _tile_dpbuud(3, 4, 7);
+  }
+  _tile_stored(0, c, CST); _tile_stored(1, c + 16, CST); _tile_stored(2, c + 32, CST); _tile_stored(3, c + 48, CST);
+}
+
+static void amx_gemm_impl(int uns, size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8_t *Bp,
+                          amx_epilogue_fn epi, void *ctx) {
   size_t nkbt = Kp / 64;
   size_t nmt = (Mp + AMX_MC - 1) / AMX_MC, nnt = (Np + AMX_NC - 1) / AMX_NC;
   #pragma omp parallel
@@ -125,9 +148,14 @@ void amx_gemm_s8s8(size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8
             size_t j16 = (j0 + 64 * bj) / 16;
             const int8_t *b0 = Bp + amx_tile_off(j16, kb0, Kp), *b1 = Bp + amx_tile_off(j16 + 1, kb0, Kp);
             const int8_t *b2 = Bp + amx_tile_off(j16 + 2, kb0, Kp), *b3 = Bp + amx_tile_off(j16 + 3, kb0, Kp);
-            for (size_t bi = 0; bi < mc / 16; bi++)
-              kernel_14(Ap + amx_tile_off((i0 + 16 * bi) / 16, kb0, Kp), b0, b1, b2, b3, nkb,
-                        cbuf + 16 * bi * AMX_NC + 64 * bj, kb0 > 0);
+            for (size_t bi = 0; bi < mc / 16; bi++) {
+              if (uns)
+                kernel_14u(Ap + amx_tile_off((i0 + 16 * bi) / 16, kb0, Kp), b0, b1, b2, b3, nkb,
+                           cbuf + 16 * bi * AMX_NC + 64 * bj, kb0 > 0);
+              else
+                kernel_14(Ap + amx_tile_off((i0 + 16 * bi) / 16, kb0, Kp), b0, b1, b2, b3, nkb,
+                          cbuf + 16 * bi * AMX_NC + 64 * bj, kb0 > 0);
+            }
           }
 #endif
         }
@@ -138,4 +166,16 @@ void amx_gemm_s8s8(size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8
     }
     _tile_release();
   }
+}
+
+void amx_gemm_s8s8(size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8_t *Bp, amx_epilogue_fn epi,
+                   void *ctx) {
+  amx_gemm_impl(0, Mp, Np, Kp, Ap, Bp, epi, ctx);
+}
+void amx_gemm_u8u8(size_t Mp, size_t Np, size_t Kp, const uint8_t *Ap, const uint8_t *Bp, amx_epilogue_fn epi,
+                   void *ctx) {
+#if AMX_KERNEL == 22
+#error "unsigned products are only implemented for the 1x4 kernel"
+#endif
+  amx_gemm_impl(1, Mp, Np, Kp, (const int8_t *)Ap, (const int8_t *)Bp, epi, ctx);
 }

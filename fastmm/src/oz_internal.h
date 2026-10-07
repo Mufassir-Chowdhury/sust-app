@@ -3,11 +3,13 @@
 #pragma once
 #include <immintrin.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/mman.h>
 #include "common.h"
 #include "oz_consts.h"
 
 int8_t *oz_workspace(size_t bytes);  // persistent buffer pool, defined in ozaki.c
+size_t oz_workspace_size(void);
 
 static void *hp_alloc(size_t bytes) {
   void *p = amalloc(bytes);
@@ -82,9 +84,14 @@ static void mod_consts(int s, int with_q, modc_t *mc) {
 
 
 // Scaling-aware variant of safe_norm_exp: norm of x_p * 2^(sgn*ek[p]).
+// Set when a NaN or Inf is met; the caller then falls back to the BLAS (IEEE propagation).
+extern int oz_nonfinite_seen;
 static int safe_norm_exp_sc(const double *x, size_t inc, size_t len, const double *ek, int sgn) {
   double mx = 0;
-  for (size_t p = 0; p < len; p++) mx = fmax(mx, fabs(ldexp(x[p * inc], sgn * (int)ek[p])));
+  for (size_t p = 0; p < len; p++) {
+    if (!isfinite(x[p * inc])) { __atomic_store_n(&oz_nonfinite_seen, 1, __ATOMIC_RELAXED); return L_ZERO_ROW; }
+    mx = fmax(mx, fabs(ldexp(x[p * inc], sgn * (int)ek[p])));
+  }
   if (mx == 0 || !isfinite(mx)) return L_ZERO_ROW;
   int em;
   frexp(mx, &em);
@@ -124,4 +131,47 @@ static double *oz_inner_scaling(size_t m, size_t k, size_t n, const double *A, s
     if (ca[p] > 0 && rb[p] > 0 && isfinite(ca[p]) && isfinite(rb[p])) ek[p] = (double)lround(0.25 * log2(rb[p] / ca[p]));
   free(ca); free(rb);
   return ek;
+}
+
+// Bytes the kernel reports as available (MemAvailable: free + reclaimable cache); falls back to free pages.
+#include <unistd.h>
+static double oz_mem_available(void) {
+  FILE *f = fopen("/proc/meminfo", "r");
+  char line[256];
+  double kb = -1;
+  while (f && fgets(line, sizeof line, f))
+    if (sscanf(line, "MemAvailable: %lf kB", &kb) == 1) break;
+  if (f) fclose(f);
+  double avail = kb > 0 ? kb * 1024.0 : (double)sysconf(_SC_AVPHYS_PAGES) * (double)sysconf(_SC_PAGESIZE);
+  // Respect a cgroup memory limit if there is one (v1: memory.limit_in_bytes, v2: memory.max):
+  // headroom = limit - (usage - inactive file cache).
+  char line2[512], cgpath[400] = "";
+  int v2 = 0;
+  FILE *cg = fopen("/proc/self/cgroup", "r");
+  while (cg && fgets(line2, sizeof line2, cg)) {
+    char *p1 = strstr(line2, ":memory:");
+    if (p1) { sscanf(p1 + 8, "%399s", cgpath); v2 = 0; break; }
+    if (!strncmp(line2, "0::", 3)) { sscanf(line2 + 3, "%399s", cgpath); v2 = 1; }
+  }
+  if (cg) fclose(cg);
+  char fn[600];
+  double lim = -1, use = -1, inact = 0;
+  snprintf(fn, sizeof fn, v2 ? "/sys/fs/cgroup%s/memory.max" : "/sys/fs/cgroup/memory%s/memory.limit_in_bytes", cgpath);
+  FILE *fm = fopen(fn, "r");
+  if (fm) { if (fscanf(fm, "%lf", &lim) != 1) lim = -1; fclose(fm); }
+  snprintf(fn, sizeof fn, v2 ? "/sys/fs/cgroup%s/memory.current" : "/sys/fs/cgroup/memory%s/memory.usage_in_bytes", cgpath);
+  FILE *fu = fopen(fn, "r");
+  if (fu) { if (fscanf(fu, "%lf", &use) != 1) use = -1; fclose(fu); }
+  snprintf(fn, sizeof fn, v2 ? "/sys/fs/cgroup%s/memory.stat" : "/sys/fs/cgroup/memory%s/memory.stat", cgpath);
+  FILE *fs = fopen(fn, "r");
+  while (fs && fgets(line2, sizeof line2, fs)) {
+    double v;
+    if (sscanf(line2, v2 ? "inactive_file %lf" : "total_inactive_file %lf", &v) == 1) inact = v;
+  }
+  if (fs) fclose(fs);
+  if (lim > 0 && lim < 1e18 && use >= 0) {
+    double head = lim - (use - inact);
+    if (head < avail) avail = head;
+  }
+  return avail;
 }

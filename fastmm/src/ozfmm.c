@@ -113,8 +113,8 @@ typedef struct {
 } geom_t;
 
 // ---- A side: left factors as VNNI operands (plane dims mbp x kbp) --------------------------
-static void pack_left(int s, int L, const geom_t *G, const gen_scheme *g, const double *A, size_t lda, int *sig,
-                      int8_t **out /* [l * r + prod] */) {
+static void pack_left(int s, int L, const geom_t *G, const gen_scheme *g, const double *A, size_t lda, const double *ek,
+                      int *sig, int8_t **out /* [l * r + prod] */) {
   const int M = G->M, K = G->K, r = G->r, MK = M * K;
   size_t nkb = G->kbp / 64, ni16 = G->mbp / 16;
   modc_t mc[OZ_SMAX];
@@ -144,7 +144,9 @@ static void pack_left(int s, int L, const geom_t *G, const gen_scheme *g, const 
         __m512d a0 = _mm512_setzero_pd(), a1 = a0;
         const double *rowp = A + bi * G->mb + i0;
         for (size_t p = 0; p < G->k; p++) {
-          __m512d d0 = _mm512_maskz_loadu_pd(mk[bi][0], rowp + p * lda), d1 = _mm512_maskz_loadu_pd(mk[bi][1], rowp + 8 + p * lda);
+          __m512d e = _mm512_set1_pd(ek[p]);
+          __m512d d0 = _mm512_scalef_pd(_mm512_maskz_loadu_pd(mk[bi][0], rowp + p * lda), e);
+          __m512d d1 = _mm512_scalef_pd(_mm512_maskz_loadu_pd(mk[bi][1], rowp + 8 + p * lda), e);
           a0 = _mm512_fmadd_pd(d0, d0, a0);
           a1 = _mm512_fmadd_pd(d1, d1, a1);
         }
@@ -153,7 +155,7 @@ static void pack_left(int s, int L, const geom_t *G, const gen_scheme *g, const 
         for (int c = 0; c < 16; c++) {
           size_t il = i0 + c, ig = bi * G->mb + il;
           if (il >= G->mb || ig >= G->m) { t[c] = 0; continue; }
-          int e = (isfinite(ss[c]) && ss[c] > 1e-280) ? L - norm_exp(ss[c], 0) : L - safe_norm_exp(A + ig, lda, G->k);
+          int e = (isfinite(ss[c]) && ss[c] > 1e-280) ? L - norm_exp(ss[c], 0) : L - safe_norm_exp_sc(A + ig, lda, G->k, ek, 1);
           sig[ig] = e;
           t[c] = (double)e;
         }
@@ -170,9 +172,10 @@ static void pack_left(int s, int L, const geom_t *G, const gen_scheme *g, const 
               for (int bk = 0; bk < K; bk++) {
                 int b = bi * K + bk;
                 int ok = kk < G->kb && bk * G->kb + kk < G->k;
+                __m512d e = _mm512_set1_pd(ok ? ek[bk * G->kb + kk] : 0.0);
                 for (int h = 0; h < 2; h++) {
                   __m512d d = ok ? _mm512_maskz_loadu_pd(mk[bi][h], base[b] + 8 * h + kk * lda) : _mm512_setzero_pd();
-                  d = _mm512_roundscale_pd(_mm512_scalef_pd(d, sc[bi][h]), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+                  d = _mm512_roundscale_pd(_mm512_scalef_pd(d, _mm512_add_pd(sc[bi][h], e)), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
                   x[q][b][h] = split32(d);
                 }
               }
@@ -204,8 +207,8 @@ static void pack_left(int s, int L, const geom_t *G, const gen_scheme *g, const 
 }
 
 // ---- B side: right factors as AMX "A" operands (plane dims nbp x kbp) -----------------------
-static void pack_right(int s, int L, const geom_t *G, const gen_scheme *g, const double *B, size_t ldb, int *tau,
-                       int8_t **out) {
+static void pack_right(int s, int L, const geom_t *G, const gen_scheme *g, const double *B, size_t ldb, const double *ek,
+                       int *tau, int8_t **out) {
   const int K = G->K, N = G->N, r = G->r, KN = K * N;
   size_t nkb = G->kbp / 64;
   modc_t mc[OZ_SMAX];
@@ -226,10 +229,17 @@ static void pack_right(int s, int L, const geom_t *G, const gen_scheme *g, const
           const double *c = B + jg * ldb;
           __m512d acc = _mm512_setzero_pd();
           size_t p = 0;
-          for (; p + 8 <= G->k; p += 8) { __m512d d = _mm512_loadu_pd(c + p); acc = _mm512_fmadd_pd(d, d, acc); }
-          if (p < G->k) { __m512d d = _mm512_maskz_loadu_pd((__mmask8)((1u << (G->k - p)) - 1), c + p); acc = _mm512_fmadd_pd(d, d, acc); }
+          for (; p + 8 <= G->k; p += 8) {
+            __m512d d = _mm512_scalef_pd(_mm512_loadu_pd(c + p), _mm512_sub_pd(_mm512_setzero_pd(), _mm512_loadu_pd(ek + p)));
+            acc = _mm512_fmadd_pd(d, d, acc);
+          }
+          if (p < G->k) {
+            __m512d d = _mm512_maskz_loadu_pd((__mmask8)((1u << (G->k - p)) - 1), c + p);
+            d = _mm512_scalef_pd(d, _mm512_sub_pd(_mm512_setzero_pd(), _mm512_loadu_pd(ek + p)));
+            acc = _mm512_fmadd_pd(d, d, acc);
+          }
           double ss = _mm512_reduce_add_pd(acc);
-          tj = (isfinite(ss) && ss > 1e-280) ? L - norm_exp(ss, 0) : L - safe_norm_exp(c, 1, G->k);
+          tj = (isfinite(ss) && ss > 1e-280) ? L - norm_exp(ss, 0) : L - safe_norm_exp_sc(c, 1, G->k, ek, -1);
           tau[jg] = tj;
         }
         for (int bk = 0; bk < K; bk++) {
@@ -249,7 +259,8 @@ static void pack_right(int s, int L, const geom_t *G, const gen_scheme *g, const
               for (int c = 0; c < 8; c++)
                 if (kl + c < G->kb && bk * G->kb + kl + c < G->k) mm |= (__mmask8)(1u << c);
             __m512d d = mm ? _mm512_maskz_loadu_pd(mm, col[b] + kl) : _mm512_setzero_pd();
-            d = _mm512_roundscale_pd(_mm512_scalef_pd(d, vt[b]), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+            __m512d ev = _mm512_maskz_loadu_pd(mm, ek + bk * G->kb + kl);  // global k indices
+            d = _mm512_roundscale_pd(_mm512_scalef_pd(d, _mm512_sub_pd(vt[b], ev)), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
             x[b][v] = split32(d);
           }
         }
@@ -301,8 +312,8 @@ static void epi2(const int32_t *blk, size_t ld, size_t r0, size_t c0, void *vctx
 }
 
 // ---- reconstruction: output combinations mod p, then CRT ---------------------------------
-static void reconstruct2(int s, const geom_t *G, const gen_scheme *g, uint8_t **Y /* [l*r+pr] */, const int *sig,
-                         const int *tau, double *C, size_t ldc) {
+static void reconstruct2(int s, const geom_t *G, const gen_scheme *g, uint8_t **Y /* [l*r+pr] */, size_t ldy,
+                         const int *sig, const int *tau, double *C, size_t ldc) {
   const oz_const_t *Kc = &oz_const[s];
   const int M = G->M, N = G->N, r = G->r, MN = M * N;
   size_t nchunk = (G->mb + 63) / 64;
@@ -319,7 +330,7 @@ static void reconstruct2(int s, const geom_t *G, const gen_scheme *g, uint8_t **
           __m512i lo16[MAXR], hi16[MAXR], olo[MAXB], ohi[MAXB];
           const __m512i vhi = _mm512_set1_epi16((short)(p - 1 - p / 2)), vp = _mm512_set1_epi16((short)p);
           for (int pr = 0; pr < r; pr++) {
-            __m512i b = _mm512_loadu_si512((const void *)(Y[l * r + pr] + i0 + j * G->mbp));  // in [0,p)
+            __m512i b = _mm512_loadu_si512((const void *)(Y[l * r + pr] + i0 + j * ldy));  // in [0,p)
             __m512i a0 = _mm512_cvtepu8_epi16(_mm512_castsi512_si256(b)), a1 = _mm512_cvtepu8_epi16(_mm512_extracti64x4_epi64(b, 1));
             lo16[pr] = _mm512_mask_sub_epi16(a0, _mm512_cmpgt_epi16_mask(a0, vhi), a0, vp);  // to symmetric
             hi16[pr] = _mm512_mask_sub_epi16(a1, _mm512_cmpgt_epi16_mask(a1, vhi), a1, vp);
@@ -375,35 +386,48 @@ void oz_dgemm_fmm(int s, const gen_scheme *g, size_t m, size_t k, size_t n, cons
     fprintf(stderr, "oz_dgemm_fmm: unsupported scheme\n");
     exit(1);
   }
+  if (k > 131071) { oz_dgemm(s, m, k, n, A, lda, B, ldb, C, ldc, tm); return; }  // int32 range: see ozaki.c
   double t0 = now_sec();
   int L = oz_bits(s, k);
   if (s < 2 || s > 16 || L > 62) { fprintf(stderr, "oz_dgemm_fmm: need 2 <= s <= 16\n"); exit(1); }
+  oz_nonfinite_seen = 0;
   geom_t G = {m, k, n, 0, 0, 0, 0, 0, 0, g->M, g->K, g->N, g->r};
   G.mb = (m + g->M - 1) / g->M; G.kb = (k + g->K - 1) / g->K; G.nb = (n + g->N - 1) / g->N;
   G.mbp = amx_pad(G.mb, AMX_COLPAD); G.kbp = amx_pad(G.kb, 64); G.nbp = amx_pad(G.nb, 32);
   int *sig = malloc(m * sizeof(int)), *tau = malloc(n * sizeof(int));
   int r = g->r;
-  size_t szL = G.mbp * G.kbp, szR = G.nbp * G.kbp, szY = amx_pad(G.mbp * G.nb, 4096);
-  int8_t *ws = oz_workspace((size_t)s * r * (szL + szR + szY));
+  size_t szL = G.mbp * G.kbp, szR = G.nbp * G.kbp;
+  // product planes of one modulus are interleaved by column: element (i, j) of product pr is at
+  // Ybase_l + (j * r + pr) * mbp + i, so the reconstruction reads r adjacent columns per modulus.
+  size_t ldy = (size_t)r * G.mbp, szYl = amx_pad(ldy * G.nb, 4096);
+  int8_t *ws = oz_workspace((size_t)s * r * (szL + szR) + (size_t)s * szYl);
   int8_t **Lp = malloc((size_t)s * r * sizeof(int8_t *)), **Rp = malloc((size_t)s * r * sizeof(int8_t *));
   uint8_t **Yp = malloc((size_t)s * r * sizeof(uint8_t *));
   for (int q = 0; q < s * r; q++) {
-    Lp[q] = ws + (size_t)q * (szL + szR + szY);
+    Lp[q] = ws + (size_t)q * (szL + szR);
     Rp[q] = Lp[q] + szL;
-    Yp[q] = (uint8_t *)(Rp[q] + szR);
   }
+  uint8_t *ybase = (uint8_t *)(ws + (size_t)s * r * (szL + szR));
+  for (int l = 0; l < s; l++)
+    for (int pr = 0; pr < r; pr++) Yp[l * r + pr] = ybase + (size_t)l * szYl + (size_t)pr * G.mbp;
   double t1 = now_sec();
-  pack_left(s, L, &G, g, A, lda, sig, Lp);
-  pack_right(s, L, &G, g, B, ldb, tau, Rp);
+  double *ek = oz_inner_scaling(m, k, n, A, lda, B, ldb, amx_pad(k, 64));
+  pack_left(s, L, &G, g, A, lda, ek, sig, Lp);
+  pack_right(s, L, &G, g, B, ldb, ek, tau, Rp);
+  free(ek);
   double t2 = now_sec();
   for (int l = 0; l < s; l++)
     for (int pr = 0; pr < r; pr++) {
-      epi2_ctx e = {Yp[l * r + pr], G.mbp, G.mbp, G.nb, (double)oz_mod[l], 1.0 / oz_mod[l]};
+      epi2_ctx e = {Yp[l * r + pr], ldy, G.mbp, G.nb, (double)oz_mod[l], 1.0 / oz_mod[l]};
       amx_gemm_s8s8(G.nbp, G.mbp, G.kbp, Rp[l * r + pr], Lp[l * r + pr], epi2, &e);
     }
   double t3 = now_sec();
-  reconstruct2(s, &G, g, Yp, sig, tau, C, ldc);
+  reconstruct2(s, &G, g, Yp, ldy, sig, tau, C, ldc);
   double t4 = now_sec();
   free(sig); free(tau); free(Lp); free(Rp); free(Yp);
+  if (oz_nonfinite_seen) {  // NaN/Inf: the plain emulation falls back to the BLAS
+    oz_nonfinite_seen = 0;
+    oz_dgemm(s, m, k, n, A, lda, B, ldb, C, ldc, NULL);
+  }
   if (tm) { tm->scale = 0; tm->convert = t2 - t1; tm->gemm = t3 - t2; tm->crt = t4 - t3; (void)t0; }
 }

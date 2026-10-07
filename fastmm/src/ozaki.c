@@ -24,6 +24,9 @@
 #include "oz_consts.h"
 
 #include "oz_internal.h"
+#include <unistd.h>
+#include "blas.h"
+#define OZ_KMAX 131071  // (2^31 - 1) / 128^2
 
 static int8_t *g_ws = NULL;
 static size_t g_ws_size = 0;
@@ -38,6 +41,8 @@ int8_t *oz_workspace(size_t bytes) {
   return g_ws;
 }
 void oz_release(void) { free(g_ws); g_ws = NULL; g_ws_size = 0; }
+size_t oz_workspace_size(void) { return g_ws_size; }
+int oz_nonfinite_seen = 0;
 
 int oz_max_moduli(void) { return 16; }  // split32 residue path needs |scaled entries| < 2^63
 
@@ -194,6 +199,7 @@ static void epi_mod(const int32_t *blk, size_t ld, size_t r0, size_t c0, void *v
       out[h] = _mm512_cvtepi64_epi8(_mm512_cvtpd_epi64(d));
     }
     __m256i y = _mm256_set_m128i(_mm_unpacklo_epi64(out[2], out[3]), _mm_unpacklo_epi64(out[0], out[1]));
+    if (c0 >= e->m) return;  // block lies entirely in the zero padding (Mp is a multiple of 64)
     uint8_t *dst = e->Y + c0 + j * e->ldy;
     size_t cnt = e->m - c0 < 32 ? e->m - c0 : 32;
     if (cnt == 32) _mm256_storeu_si256((__m256i *)dst, y);
@@ -237,16 +243,38 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
               double *C, size_t ldc, oz_times *tm) {
   static int inited = 0;
   if (!inited) { amx_init(); inited = 1; }
+  // int32 accumulation of int8 residues (|r| <= 128) is exact for k <= 131071: longer inner
+  // dimensions are split and the partial products summed in double (one rounding per chunk).
+  if (k > OZ_KMAX) {
+    double *T = amalloc(m * n * sizeof(double));
+    for (size_t p0 = 0; p0 < k; p0 += OZ_KMAX) {
+      size_t kk = k - p0 < OZ_KMAX ? k - p0 : OZ_KMAX;
+      oz_dgemm(s, m, kk, n, A + p0 * lda, lda, B + p0, ldb, p0 ? T : C, p0 ? m : ldc, tm);
+      if (p0)
+        #pragma omp parallel for
+        for (size_t j = 0; j < n; j++) for (size_t i = 0; i < m; i++) C[i + j * ldc] += T[i + j * m];
+    }
+    free(T);
+    return;
+  }
   int L = oz_bits(s, k);
   if (s < 2 || s > 16 || L > 62) { fprintf(stderr, "oz_dgemm: need 2 <= s <= 16 (got %d)\n", s); exit(1); }
+  oz_nonfinite_seen = 0;
   // Memory blocking: C is computed in H x W blocks; the residues of a row panel of A (H rows)
   // are reused for every column panel of B.  Workspace = s * (Hp*Kp + Wp*Kp + H*W) bytes.
-  double budget = getenv("OZ_MEM_GB") ? atof(getenv("OZ_MEM_GB")) * 1e9 : 4.0e9;
+  // Budget: OZ_MEM_GB if set, else 80 % of the currently available physical memory, capped at 8 GB.
+  double avail = oz_mem_available() + (double)oz_workspace_size();
+  double budget = getenv("OZ_MEM_GB") ? atof(getenv("OZ_MEM_GB")) * 1e9 : fmin(8.0e9, 0.8 * avail);
+  // Shrink the column panel first: with a single row panel (H = m) every residue of A and of B
+  // is computed exactly once; only if A's residues alone do not fit is the row panel split.
+  // Column panels narrower than ~4096 make the AMX GEMM re-stream its row operand too often, so
+  // W is not halved below 4096 (unless the matrix is narrower); instead the row panel is halved.
   size_t Kp = amx_pad(k, 64), H = m, W = n;
   for (;;) {
     double need = (double)s * ((double)amx_pad(H, AMX_COLPAD) * Kp + (double)amx_pad(W, 32) * Kp + (double)H * W);
     if (need <= budget || (H <= 256 && W <= 256)) break;
-    if (H >= W) H = amx_pad((H + 1) / 2, AMX_COLPAD); else W = amx_pad((W + 1) / 2, 32);
+    if (W / 2 >= 4096 || (H <= 256 && W > 256)) W = amx_pad((W + 1) / 2, 32);
+    else { H = amx_pad((H + 1) / 2, AMX_COLPAD); W = n; }
   }
   size_t Hp = amx_pad(H, AMX_COLPAD), Wp = amx_pad(W, 32);
   int *sig = malloc(m * sizeof(int)), *tau = malloc(n * sizeof(int));
@@ -286,6 +314,10 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
     }
   }
   free(sig); free(tau); free(ek);
+  if (oz_nonfinite_seen) {  // NaN/Inf in the input: recompute with the BLAS so they propagate as in IEEE
+    dgemm_nn(m, n, k, 1.0, A, lda, B, ldb, 0.0, C, ldc);
+    oz_nonfinite_seen = 0;
+  }
   if (getenv("OZ_VERBOSE") && atoi(getenv("OZ_VERBOSE")))
     fprintf(stderr, "oz_dgemm s=%d blocks H=%zu W=%zu workspace %.2f GB\n", s, H, W, (double)s * per / 1e9);
   if (tm) { tm->scale = t_inner; tm->convert = tconv; tm->gemm = tgemm; tm->crt = tcrt; }

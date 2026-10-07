@@ -1,0 +1,134 @@
+correctness 77x45x200: 0 mismatches
+correctness 2000x2000x2000: 0 mismatches
+correctness 1500x1500x1500: 0 mismatches
+correctness 1000x1000x1000: 0 mismatches
+correctness 96x64x64: 0 mismatches
+correctness 100x64x64: 0 mismatches
+ok
+== 5. bit identity of modular Strassen
+bitcmp type=unif r=0 m=33 k=65 n=97 oz14 vs ozf14:slp/winograd.slp: 0 of 3201 entries differ
+bitcmp type=unif r=0 m=33 k=65 n=97 oz16 vs ozf16:slp/winograd-squared.slp: 0 of 3201 entries differ
+bitcmp type=unif r=0 m=33 k=65 n=97 oz15 vs ozw15: 0 of 3201 entries differ
+bitcmp type=randexp r=20 m=1000 k=7 n=3 oz14 vs ozf14:slp/winograd.slp: 0 of 3000 entries differ
+bitcmp type=randexp r=20 m=1000 k=7 n=3 oz16 vs ozf16:slp/winograd-squared.slp: 0 of 3000 entries differ
+bitcmp type=randexp r=20 m=1000 k=7 n=3 oz15 vs ozw15: 0 of 3000 entries differ
+bitcmp type=inner r=20 m=301 k=517 n=203 oz14 vs ozf14:slp/winograd.slp: 0 of 61103 entries differ
+bitcmp type=inner r=20 m=301 k=517 n=203 oz16 vs ozf16:slp/winograd-squared.slp: 0 of 61103 entries differ
+bitcmp type=inner r=20 m=301 k=517 n=203 oz15 vs ozw15: 0 of 61103 entries differ
+bitcmp type=randexp r=32 m=999 k=1001 n=1003 oz14 vs ozf14:slp/winograd.slp: 0 of 1001997 entries differ
+bitcmp type=randexp r=32 m=999 k=1001 n=1003 oz16 vs ozf16:slp/winograd-squared.slp: 0 of 1001997 entries differ
+bitcmp type=randexp r=32 m=999 k=1001 n=1003 oz15 vs ozw15: 0 of 1001997 entries differ
+bitcmp type=cancel r=0 m=1500 k=1500 n=1500 oz14 vs ozf14:slp/winograd.slp: 0 of 2250000 entries differ
+bitcmp type=cancel r=0 m=1500 k=1500 n=1500 oz16 vs ozf16:slp/winograd-squared.slp: 0 of 2250000 entries differ
+bitcmp type=cancel r=0 m=1500 k=1500 n=1500 oz15 vs ozw15: 0 of 2250000 entries differ
+== 5b. guards: k > 131071 (split inner dimension), NaN/Inf propagation
+k=140000 method=dgemm max_cw=9.144e-18
+k=140000 method=oz14 max_cw=1.208e-16
+k=140000 method=oz16 max_cw=1.610e-18
+nancheck nan oz14: 0 entries with different NaN/Inf status than dgemm
+nancheck nan oz16: 0 entries with different NaN/Inf status than dgemm
+nancheck nan ozw14: 0 entries with different NaN/Inf status than dgemm
+nancheck nan sw1: 448 entries with different NaN/Inf status than dgemm
+nancheck inf oz14: 0 entries with different NaN/Inf status than dgemm
+nancheck inf oz16: 0 entries with different NaN/Inf status than dgemm
+nancheck inf ozw14: 0 entries with different NaN/Inf status than dgemm
+nancheck inf sw1: 853 entries with different NaN/Inf status than dgemm
+== 6. error regression
+0 0 1 1 1              dgemm                              max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              sw1                                max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              sw2                                max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              sw3                                max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              g:slp/winograd.slp:2:0:2           max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              g:slp/winograd-squared.slp:1:0:1   max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              oz14                               max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              oz15                               max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 1 1 1              oz16                               max_cw=6.62e-17 limit=2.0e-16 ok
+0 0 1 1 1              ozf14:slp/winograd.slp             max_cw=6.62e-17 limit=1.0e-12 ok
+0 0 33 65 97           dgemm                              max_cw=2.70e-16 limit=1.0e-12 ok
+0 0 33 65 97           sw1                                max_cw=5.13e-16 limit=1.0e-12 ok
+0 0 33 65 97           sw2                                max_cw=1.07e-15 limit=1.0e-12 ok
+0 0 33 65 97           sw3                                max_cw=2.10e-15 limit=1.0e-12 ok
+0 0 33 65 97           g:slp/winograd.slp:2:0:2           max_cw=9.86e-16 limit=1.0e-12 ok
+0 0 33 65 97           g:slp/winograd-squared.slp:1:0:1   max_cw=8.39e-16 limit=1.0e-12 ok
+0 0 33 65 97           g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=1.18e-15 limit=1.0e-12 ok
+0 0 33 65 97           sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=2.18e-15 limit=1.0e-12 ok
+0 0 33 65 97           oz14                               max_cw=2.33e-16 limit=1.0e-12 ok
+0 0 33 65 97           oz15                               max_cw=5.05e-17 limit=1.0e-12 ok
+0 0 33 65 97           oz16                               max_cw=5.05e-17 limit=5.4e-16 ok
+0 0 33 65 97           ozf14:slp/winograd.slp             max_cw=2.33e-16 limit=1.0e-12 ok
+0 0 301 517 203        dgemm                              max_cw=2.26e-16 limit=1.0e-12 ok
+0 0 301 517 203        sw1                                max_cw=8.14e-16 limit=1.0e-12 ok
+0 0 301 517 203        sw2                                max_cw=1.38e-15 limit=1.0e-12 ok
+0 0 301 517 203        sw3                                max_cw=1.99e-15 limit=1.0e-12 ok
+0 0 301 517 203        g:slp/winograd.slp:2:0:2           max_cw=1.44e-15 limit=1.0e-12 ok
+0 0 301 517 203        g:slp/winograd-squared.slp:1:0:1   max_cw=1.19e-15 limit=1.0e-12 ok
+0 0 301 517 203        g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=1.18e-15 limit=1.0e-12 ok
+0 0 301 517 203        sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=2.24e-15 limit=1.0e-12 ok
+0 0 301 517 203        oz14                               max_cw=1.72e-16 limit=1.0e-12 ok
+0 0 301 517 203        oz15                               max_cw=1.50e-17 limit=1.0e-12 ok
+0 0 301 517 203        oz16                               max_cw=1.50e-17 limit=4.5e-16 ok
+0 0 301 517 203        ozf14:slp/winograd.slp             max_cw=1.72e-16 limit=1.0e-12 ok
+1 0 777 1000 555       dgemm                              max_cw=1.49e-15 limit=1.0e-12 ok
+1 0 777 1000 555       sw1                                max_cw=1.06e-15 limit=1.0e-12 ok
+1 0 777 1000 555       sw2                                max_cw=1.17e-15 limit=1.0e-12 ok
+1 0 777 1000 555       sw3                                max_cw=1.06e-15 limit=1.0e-12 ok
+1 0 777 1000 555       g:slp/winograd.slp:2:0:2           max_cw=1.17e-15 limit=1.0e-12 ok
+1 0 777 1000 555       g:slp/winograd-squared.slp:1:0:1   max_cw=1.42e-15 limit=1.0e-12 ok
+1 0 777 1000 555       g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=7.79e-15 limit=1.0e-12 ok
+1 0 777 1000 555       sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=1.06e-15 limit=1.0e-12 ok
+1 0 777 1000 555       oz14                               max_cw=3.07e-16 limit=1.0e-12 ok
+1 0 777 1000 555       oz15                               max_cw=1.39e-16 limit=1.0e-12 ok
+1 0 777 1000 555       oz16                               max_cw=1.11e-16 limit=3.0e-15 ok
+1 0 777 1000 555       ozf14:slp/winograd.slp             max_cw=3.07e-16 limit=1.0e-12 ok
+5 0 1000 1000 1000     dgemm                              max_cw=3.05e-16 limit=1.0e-12 ok
+5 0 1000 1000 1000     sw1                                max_cw=9.33e-16 limit=1.0e-12 ok
+5 0 1000 1000 1000     sw2                                max_cw=2.91e-15 limit=1.0e-12 ok
+5 0 1000 1000 1000     sw3                                max_cw=4.67e-15 limit=1.0e-12 ok
+5 0 1000 1000 1000     g:slp/winograd.slp:2:0:2           max_cw=3.02e-15 limit=1.0e-12 ok
+5 0 1000 1000 1000     g:slp/winograd-squared.slp:1:0:1   max_cw=3.14e-15 limit=1.0e-12 ok
+5 0 1000 1000 1000     g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=1.39e-15 limit=1.0e-12 ok
+5 0 1000 1000 1000     sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=4.94e-15 limit=1.0e-12 ok
+5 0 1000 1000 1000     oz14                               max_cw=1.81e-16 limit=1.0e-12 ok
+5 0 1000 1000 1000     oz15                               max_cw=1.82e-17 limit=1.0e-12 ok
+5 0 1000 1000 1000     oz16                               max_cw=3.62e-19 limit=6.1e-16 ok
+5 0 1000 1000 1000     ozf14:slp/winograd.slp             max_cw=1.81e-16 limit=1.0e-12 ok
+2 32 600 600 600       dgemm                              max_cw=2.64e-16 limit=inf ok
+2 32 600 600 600       sw1                                max_cw=3.62e+18 limit=inf ok
+2 32 600 600 600       sw2                                max_cw=6.48e+20 limit=inf ok
+2 32 600 600 600       sw3                                max_cw=4.15e+21 limit=inf ok
+2 32 600 600 600       g:slp/winograd.slp:2:0:2           max_cw=4.54e+20 limit=inf ok
+2 32 600 600 600       g:slp/winograd-squared.slp:1:0:1   max_cw=3.89e+20 limit=inf ok
+2 32 600 600 600       g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=1.56e+20 limit=inf ok
+2 32 600 600 600       sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=4.67e+21 limit=inf ok
+2 32 600 600 600       oz14                               max_cw=1.71e-16 limit=1.0e-12 ok
+2 32 600 600 600       oz15                               max_cw=2.35e-17 limit=1.0e-12 ok
+2 32 600 600 600       oz16                               max_cw=2.35e-17 limit=5.3e-16 ok
+2 32 600 600 600       ozf14:slp/winograd.slp             max_cw=1.71e-16 limit=1.0e-12 ok
+3 32 600 600 600       dgemm                              max_cw=2.64e-16 limit=inf ok
+3 32 600 600 600       sw1                                max_cw=6.95e+01 limit=inf ok
+3 32 600 600 600       sw2                                max_cw=9.56e+01 limit=inf ok
+3 32 600 600 600       sw3                                max_cw=6.90e+02 limit=inf ok
+3 32 600 600 600       g:slp/winograd.slp:2:0:2           max_cw=9.42e+01 limit=inf ok
+3 32 600 600 600       g:slp/winograd-squared.slp:1:0:1   max_cw=9.59e+01 limit=inf ok
+3 32 600 600 600       g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=1.57e+02 limit=inf ok
+3 32 600 600 600       sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=7.52e+02 limit=inf ok
+3 32 600 600 600       oz14                               max_cw=1.71e-16 limit=1.0e-12 ok
+3 32 600 600 600       oz15                               max_cw=2.35e-17 limit=1.0e-12 ok
+3 32 600 600 600       oz16                               max_cw=2.35e-17 limit=5.3e-16 ok
+3 32 600 600 600       ozf14:slp/winograd.slp             max_cw=1.71e-16 limit=1.0e-12 ok
+4 20 1500 1500 1500    dgemm                              max_cw=2.41e-15 limit=inf ok
+4 20 1500 1500 1500    sw1                                max_cw=3.26e-14 limit=inf ok
+4 20 1500 1500 1500    sw2                                max_cw=1.04e-13 limit=inf ok
+4 20 1500 1500 1500    sw3                                max_cw=1.91e-13 limit=inf ok
+4 20 1500 1500 1500    g:slp/winograd.slp:2:0:2           max_cw=1.14e-13 limit=inf ok
+4 20 1500 1500 1500    g:slp/winograd-squared.slp:1:0:1   max_cw=1.18e-13 limit=inf ok
+4 20 1500 1500 1500    g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 max_cw=9.57e-14 limit=inf ok
+4 20 1500 1500 1500    sw1+g:slp/winograd-squared.slp:1:0:1 max_cw=1.46e-13 limit=inf ok
+4 20 1500 1500 1500    oz14                               max_cw=1.55e-14 limit=1.0e-12 ok
+4 20 1500 1500 1500    oz15                               max_cw=3.34e-15 limit=1.0e-12 ok
+4 20 1500 1500 1500    oz16                               max_cw=1.84e-16 limit=4.8e-15 ok
+4 20 1500 1500 1500    ozf14:slp/winograd.slp             max_cw=1.55e-14 limit=1.0e-12 ok
+ALL CHECKS PASSED
+checks exit 0

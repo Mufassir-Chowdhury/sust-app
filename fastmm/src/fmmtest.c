@@ -45,6 +45,7 @@ static method parse(const char *s) {
     if (!m.g) exit(1);
     return m;
   }
+  if (!strncmp(s, "ozw", 3)) { strcpy(m.kind, "ozw"); m.param = atoi(s + 3); return m; }
   if (!strcmp(s, "dgemm")) { strcpy(m.kind, "dgemm"); return m; }
   if (!strncmp(s, "sw", 2)) { strcpy(m.kind, "sw"); m.param = atoi(s + 2); return m; }
   if (!strncmp(s, "oz", 2)) { strcpy(m.kind, "oz"); m.param = atoi(s + 2); return m; }
@@ -62,6 +63,7 @@ static size_t g_lwork_sz = 0;
 static void gen_leaf(size_t m, size_t k, size_t n, const double *A, size_t lda, const double *B, size_t ldb, double *C,
                      size_t ldc, void *ctx) {
   (void)ctx;
+  if (!strcmp(g_leafm.kind, "oz")) { oz_dgemm(g_leafm.param, m, k, n, A, lda, B, ldb, C, ldc, NULL); return; }
   size_t ws = gen_workspace(g_leafm.g, m, k, n, g_leafm.param, g_leafm.dfs, g_leafm.bfs);
   if (ws > g_lwork_sz) { free(g_lwork); g_lwork = amalloc(ws * 8); g_lwork_sz = ws; }
   gen_dgemm(g_leafm.g, g_leafm.param, g_leafm.dfs, g_leafm.bfs, m, k, n, A, lda, B, ldb, C, ldc, g_lwork);
@@ -119,6 +121,7 @@ static void run(method me, size_t m, size_t k, size_t n, const double *A, const 
     sw_dgemm(me.param, m, k, n, A, m, B, k, C, m, g_work);
   } else if (!strcmp(me.kind, "oz")) oz_dgemm(me.param, m, k, n, A, m, B, k, C, m, &g_ozt);
   else if (!strcmp(me.kind, "ozf")) oz_dgemm_fmm(me.param, me.g, m, k, n, A, m, B, k, C, m, &g_ozt);
+  else if (!strcmp(me.kind, "ozw")) oz_dgemm_w(me.param, m, k, n, A, m, B, k, C, m, &g_ozt);
   else if (!strcmp(me.kind, "gen")) {
     size_t ws = gen_workspace(me.g, m, k, n, me.param, me.dfs, me.bfs);
     if (ws > g_work_sz) { free(g_work); g_work = amalloc(ws * 8); g_work_sz = ws; }
@@ -127,7 +130,7 @@ static void run(method me, size_t m, size_t k, size_t n, const double *A, const 
 }
 
 int main(int argc, char **argv) {
-  if (argc < 3) { fprintf(stderr, "see source for usage\n"); return 1; }
+  if (argc < 2) { fprintf(stderr, "see source for usage\n"); return 1; }
   if (!strcmp(argv[1], "acc")) {
     int type = atoi(argv[2]), r = atoi(argv[3]);
     size_t m = atol(argv[4]), k = atol(argv[5]), n = atol(argv[6]), ns = atol(argv[7]);
@@ -142,6 +145,51 @@ int main(int argc, char **argv) {
              testmat_name[type], r, m, k, n, argv[a], e.max_cw, e.med_cw, e.max_rel, e.med_rel, e.nrm);
       fflush(stdout);
     }
+    return 0;
+  }
+  if (!strcmp(argv[1], "bitcmp")) {  // bitcmp <type> <r> <m> <k> <n> methodA methodB : bitwise equality
+    int type = atoi(argv[2]), r = atoi(argv[3]);
+    size_t m = atol(argv[4]), k = atol(argv[5]), n = atol(argv[6]);
+    double *A = amalloc(m * k * 8), *B = amalloc(k * n * 8), *C1 = amalloc(m * n * 8), *C2 = amalloc(m * n * 8);
+    testmat_fill(type, r, m, k, n, A, B, 42);
+    method a = parse(argv[7]), b = parse(argv[8]);
+    run(a, m, k, n, A, B, C1);
+    run(b, m, k, n, A, B, C2);
+    size_t diff = 0;
+    for (size_t i = 0; i < m * n; i++) if (memcmp(&C1[i], &C2[i], 8)) diff++;
+    printf("bitcmp type=%s r=%d m=%zu k=%zu n=%zu %s vs %s: %zu of %zu entries differ\n", testmat_name[type], r, m, k,
+           n, argv[7], argv[8], diff, m * n);
+    return diff != 0;
+  }
+  if (!strcmp(argv[1], "nancheck")) {  // NaN/Inf must propagate like in the BLAS
+    size_t n = 300;
+    double *A = amalloc(n * n * 8), *B = amalloc(n * n * 8), *C1 = amalloc(n * n * 8), *C2 = amalloc(n * n * 8);
+    const char *meths[] = {"oz14", "oz16", "ozw14", "sw1"};
+    int bad = 0;
+    for (int t = 0; t < 2; t++) {
+      testmat_fill(0, 0, n, n, n, A, B, 42);
+      A[17 + 33 * n] = t ? INFINITY : NAN;  // row 17
+      B[5 + 200 * n] = t ? -INFINITY : NAN; // column 200
+      run(parse("dgemm"), n, n, n, A, B, C1);
+      for (int q = 0; q < 4; q++) {
+        run(parse(meths[q]), n, n, n, A, B, C2);
+        size_t mism = 0;
+        for (size_t i = 0; i < n * n; i++) mism += (isnan(C1[i]) != isnan(C2[i])) || (isinf(C1[i]) != isinf(C2[i]));
+        printf("nancheck %s %s: %zu entries with different NaN/Inf status than dgemm\n", t ? "inf" : "nan", meths[q], mism);
+        bad |= mism && strcmp(meths[q], "sw1");  // Strassen may legitimately turn Inf into NaN (Inf - Inf)
+      }
+    }
+    return bad;
+  }
+  if (!strcmp(argv[1], "cold")) {  // cold <n> method: time of the first call in a fresh process vs the next calls
+    size_t n = atol(argv[2]);
+    method me = parse(argv[3]);
+    double *A = amalloc(n * n * 8), *B = amalloc(n * n * 8), *C = amalloc(n * n * 8);
+    testmat_fill(0, 0, n, n, n, A, B, 42);
+    memset(C, 0, n * n * 8);
+    double t[4];
+    for (int i = 0; i < 4; i++) { double t0 = now_sec(); run(me, n, n, n, A, B, C); t[i] = now_sec() - t0; }
+    printf("cold n=%zu method=%s first=%.4f then=%.4f %.4f %.4f\n", n, argv[3], t[0], t[1], t[2], t[3]);
     return 0;
   }
   if (!strcmp(argv[1], "passes")) {  // passes <slp> <reps> n...
@@ -191,7 +239,7 @@ int main(int argc, char **argv) {
       double rmed = median(rat, reps), rlo = rat[reps / 4], rhi = rat[(3 * reps) / 4];  // rat sorted now
       printf("time m=%zu k=%zu n=%zu method=%s reps=%d median=%.5f min=%.5f eff_gflops=%.1f speedup_vs_first=%.3f paired=%.3f [IQR %.3f-%.3f]",
              m, k, n, argv[6 + a], reps, tmed, tmin, flop / tmed * 1e-9, tref / tmed, rmed, rlo, rhi);
-      if (!strcmp(me[a].kind, "oz") || !strcmp(me[a].kind, "ozf")) {
+      if (!strcmp(me[a].kind, "oz") || !strcmp(me[a].kind, "ozf") || !strcmp(me[a].kind, "ozw")) {
         oz_times o = ozt[a][reps - 1];
         printf(" [scale %.4f conv %.4f gemm %.4f crt %.4f]", o.scale, o.convert, o.gemm, o.crt);
       }

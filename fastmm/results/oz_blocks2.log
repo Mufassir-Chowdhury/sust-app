@@ -1,0 +1,8 @@
+oz_dgemm s=14 blocks H=5056 W=5024 workspace 3.18 GB
+oz_dgemm s=14 blocks H=5056 W=5024 workspace 3.18 GB
+oz_dgemm s=14 blocks H=5056 W=5024 workspace 3.18 GB
+oz_dgemm s=14 blocks H=5056 W=5024 workspace 3.18 GB
+oz_dgemm_w s=16 blocks H=640 W=5056 workspace 3.30 GB
+oz_dgemm_w s=16 blocks H=640 W=5056 workspace 3.30 GB
+oz_dgemm_w s=16 blocks H=640 W=5056 workspace 3.30 GB
+oz_dgemm_w s=16 blocks H=640 W=5056 workspace 3.30 GB

@@ -201,3 +201,17 @@ In fast mode 2^{s_i} ≈ 2^L/‖a_i‖₂, so the error is about 2^{−L}·√k�
 - SC'25 workshop paper: arXiv:2508.03984
 - Code: https://github.com/RIKEN-RCCS/GEMMul8, https://github.com/enp1s0/ozIMMU, https://github.com/RIKEN-RCCS/accelerator_for_ozIMMU
 - FFLAS-FFPACK: arXiv:cs/0601133
+
+## Addendum (from docs/novelty_check.md, 2026-10-07)
+
+* **LIBXS** (H. Pabst, https://github.com/hfp/libxs, `samples/ozaki`) is open-source prior art for
+  Ozaki I and II on AMX-INT8 as a drop-in DGEMM replacement (16 moduli by default for FP64, per
+  row/column power-of-two scaling, `_tile_dpbuud`). It is benchmarked against our implementation in
+  `results/libxs_compare.md`.
+* Fast *complex* bilinear tricks (Karatsuba/3M, 2M) are already used on the int8 residues inside
+  Ozaki II (Uchino et al. arXiv:2512.08321; Caday arXiv:2609.05419), with the explicit remark that
+  they cost no accuracy because the integer arithmetic is exact. Multimodular Strassen-Winograd per
+  prime is standard in computer algebra (FLINT `fmpz_mat_mul_multi_mod`, FFLAS-FFPACK). Real block
+  Strassen-Winograd inside Ozaki II was not found, but it is a direct transfer of that practice.
+* Inside (k-dimension) power-of-two scaling is from Ballard, Benson, Druinsky, Lipshitz, Schwartz
+  (SIMAX 2016) for fast matrix multiplication; no use inside Ozaki-type emulation was found.

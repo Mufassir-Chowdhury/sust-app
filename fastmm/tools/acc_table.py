@@ -8,7 +8,9 @@ for line in open(sys.argv[1]):
     kv = dict(re.findall(r"(\w+)=(\S+)", line))
     key = (int(kv["n"]), kv["type"], int(kv["r"]))
     m = kv["method"]
-    short = m.replace("g:slp/", "").replace(".slp", "").replace(":1:0:1", "[bfs]").replace("ozf14:slp/winograd", "oz14+W")
+    short = (m.replace("g:slp/", "").replace(".slp", "").replace(":1:0:1", "[bfs]").replace("ozf14:slp/winograd", "oz14+modW")
+             .replace("winograd-squared", "W2").replace("4x4x4_r48_plinopt-204", "P48")
+             .replace("3x3x6_r40_fastmatmul-tichavsky_kovac336-40-960", "S336").replace("3x3x3_r23_fastmatmul-grey333-23-142", "L23"))
     if short not in meths: meths.append(short)
     rows.setdefault(key, {})[short] = kv
 for metric, title in (("max_cw", "max |C-C*| / (|A||B|)  (componentwise; classical bound ~ k*u)"),

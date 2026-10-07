@@ -1,0 +1,7 @@
+n=500  MKL 4T: 197.8 GF/s   4 x 1T concurrent: 214.3 GF/s aggregate
+n=750  MKL 4T: 189.4 GF/s   4 x 1T concurrent: 212.8 GF/s aggregate
+n=1000  MKL 4T: 201.6 GF/s   4 x 1T concurrent: 211.5 GF/s aggregate
+n=1500  MKL 4T: 231.7 GF/s   4 x 1T concurrent: 250.9 GF/s aggregate
+n=2000  MKL 4T: 228.6 GF/s   4 x 1T concurrent: 242.7 GF/s aggregate
+n=3000  MKL 4T: 229.0 GF/s   4 x 1T concurrent: 262.8 GF/s aggregate
+n=4000  MKL 4T: 272.0 GF/s   4 x 1T concurrent: 264.1 GF/s aggregate

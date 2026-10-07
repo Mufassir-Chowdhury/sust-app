@@ -1,24 +1,27 @@
 #!/usr/bin/env python3
-"""Cost model for recursive fast matrix multiplication on top of a BLAS.
+"""Cost model for recursive fast matrix multiplication on top of a BLAS (see docs/costmodel.md).
 
-A *plan* is a list of levels, top first; each level is (slp_file, mode) with mode in
-  'dfs'  products one after another, leaves use all T threads, passes parallel;
-  'bfs'  products spawned as tasks (leaves single-threaded), passes parallel at this level;
-  'ser'  inside a task: everything serial.
-Predicted time = leaf GEMM time (from a measured DGEMM table) + fused-pass time
-(bytes moved / measured streaming bandwidth) + task-scheduling imbalance.
-
-Calibration file (JSON, produced by bench/calibrate.sh):
-  {"gemm": {"4": [[n, seconds], ...], "1": [[n, seconds], ...]},
-   "bw":   {"4": [[bytes_footprint, GB/s], ...], "1": [...]}}
+A plan is a comma-separated list of levels, top first, each "<slp-file>@<mode>":
+  lean  memory-lean Strassen-Winograd level (src/sw.c, Boyer et al. schedule; slp must be 2x2x2 r=7)
+  dfs   generic engine, products one after another, leaves use all threads, passes in parallel
+  bfs   generic engine, products as tasks (this and all deeper levels inside the tasks)
+Time = leaf GEMMs + fused-pass memory traffic (+ task imbalance), using measured inputs
+(results/calib.json from tools/calibrate.py):
+  * leaf GEMM time from the measured DGEMM table (4 threads, or 1 thread inside tasks with a
+    concurrency derating CONC, because 4 busy cores run slower than one),
+  * pass time = bytes moved / measured fused-pass bandwidth (writes counted twice for
+    write-allocate),
+  * BFS levels: ceil(#leaf tasks / threads) rounds of the per-task time.
 """
 import json, math, sys, bisect
+
+CONC = 0.88          # throughput of one core when all four are busy, relative to running alone
+LEAN_TRANSFERS = 33  # block transfers (reads+writes, in units of one quarter block) per lean level
 
 
 def read_slp_header(path):
     """Return (M, K, N, r, nbufA, nbufB) from an .slp file."""
-    with open(path) as f:
-        toks = f.read().split()
+    toks = open(path).read().split()
     it = iter(toks)
     assert next(it) == "dims"
     M, K, N, r = (int(next(it)) for _ in range(4))
@@ -26,7 +29,7 @@ def read_slp_header(path):
     for _ in range(r): next(it)
     nb = []
     for sec in range(3):
-        next(it); next(it)  # "slp X"
+        next(it); next(it)
         nin, nins, nout = (int(next(it)) for _ in range(3))
         for _ in range(nins):
             nt = int(next(it))
@@ -36,67 +39,93 @@ def read_slp_header(path):
     return M, K, N, r, nb[0], nb[1]
 
 
+def interp_loglog(table, x):
+    xs = [p[0] for p in table]
+    if x <= xs[0]: return table[0][1]
+    if x >= xs[-1]: return table[-1][1]
+    i = bisect.bisect_left(xs, x)
+    (x0, y0), (x1, y1) = table[i - 1], table[i]
+    w = (math.log(x) - math.log(x0)) / (math.log(x1) - math.log(x0))
+    return y0 + w * (y1 - y0)
+
+
 class Model:
-    def __init__(self, calib):
+    def __init__(self, calib, threads=4):
         c = json.load(open(calib))
-        self.gemm = {int(t): sorted(v) for t, v in c["gemm"].items()}
-        self.bw = {int(t): sorted(v) for t, v in c["bw"].items()}
+        self.T = threads
+        # GFLOP/s tables
+        self.gf = {t: sorted((n, 2.0 * n ** 3 / s / 1e9) for n, s in v) for t, v in c["gemm"].items()}
+        bw = sorted(c["bw"]["4"])
+        self.bw = sum(b for _, b in bw) / len(bw) * 1e9  # bytes/s (footprints all exceed caches)
 
-    @staticmethod
-    def _interp(table, x, logy=False):
-        xs = [p[0] for p in table]
-        i = bisect.bisect_left(xs, x)
-        if i <= 0: return table[0][1], table[0][0]
-        if i >= len(xs): return table[-1][1], table[-1][0]
-        (x0, y0), (x1, y1) = table[i - 1], table[i]
-        w = (math.log(x) - math.log(x0)) / (math.log(x1) - math.log(x0))
-        return y0 + w * (y1 - y0), None
+    def gemm(self, m, k, n, threads):
+        """threads = 4: multithreaded BLAS; 1: one task while all cores run tasks (table '1c',
+        measured with 4 concurrent single-threaded dgemms; falls back to '1' derated by CONC)."""
+        if threads == 1 and "1c" in self.gf:
+            g = interp_loglog(self.gf["1c"], (m * k * n) ** (1 / 3))
+            return 2.0 * m * k * n / (g * 1e9)
+        g = interp_loglog(self.gf[str(threads)], (m * k * n) ** (1 / 3))
+        t = 2.0 * m * k * n / (g * 1e9)
+        return t / CONC if threads == 1 else t
 
-    def gemm_time(self, m, k, n, threads):
-        """Seconds for an m x k x n dgemm: interpolate the measured GFLOP/s at size (mkn)^(1/3)."""
-        tab = [(sz, 2.0 * sz ** 3 / t / 1e9) for sz, t in self.gemm[threads]]  # (n, GFLOP/s)
-        g, _ = self._interp(tab, (m * k * n) ** (1.0 / 3))
-        return 2.0 * m * k * n / (g * 1e9)
-
-    def bandwidth(self, footprint_bytes, threads):
-        g, _ = self._interp(self.bw[threads], footprint_bytes)
-        return g * 1e9
-
-    def predict(self, plan, m, k, n, threads=4, in_task=False):
-        """Return (seconds, breakdown dict) for computing an m x k x n product with `plan`."""
+    def predict(self, plan, m, k, n, in_task=False):
+        """seconds for one m x k x n product; returns (total, gemm_part, pass_part, ntasks)."""
         if not plan:
-            return self.gemm_time(m, k, n, 1 if in_task else threads), {"gemm": None}
+            t = self.gemm(m, k, n, 1 if in_task else self.T)
+            return t, t, 0.0, 1
         path, mode = plan[0]
         M, K, N, r, nA, nB = read_slp_header(path)
         mb, kb, nb = m // M, k // K, n // N
-        # bytes of the three fused passes (writes counted twice: write-allocate)
-        elems = (M * K + 2 * nA) * mb * kb + (K * N + 2 * nB) * kb * nb + (r + 2 * M * N) * mb * nb
-        footprint = 8 * (m * k + k * n + m * n + nA * mb * kb + nB * kb * nb + r * mb * nb)
-        pt = threads if not in_task else 1
-        t_pass = 8 * elems / self.bandwidth(footprint, pt)
-        if mode == "bfs" and not in_task:
-            # products as tasks on `threads` workers; children serial inside the task
-            t_child, _ = self.predict(plan[1:], mb, kb, nb, threads, in_task=True)
-            # leaf tasks: r^(number of further bfs levels) - here children are serial, so r tasks
-            rounds = math.ceil(r / threads)
-            t_prod = rounds * t_child
-            # passes inside tasks run concurrently: they are part of t_child already
+        if mode == "lean":
+            elems = LEAN_TRANSFERS * mb * nb
         else:
-            t_child, _ = self.predict(plan[1:], mb, kb, nb, threads, in_task)
-            t_prod = r * t_child
-        return t_pass + t_prod, {"pass": t_pass, "prod": t_prod}
+            elems = (M * K + 2 * nA) * mb * kb + (K * N + 2 * nB) * kb * nb + (r + 2 * M * N) * mb * nb
+        t_pass = 8.0 * elems / self.bw
+        if mode == "bfs" and not in_task:
+            # every level below runs inside tasks; count leaf tasks of consecutive bfs levels
+            ct, cg, cp, ntask = self.predict(plan[1:], mb, kb, nb, in_task=True)
+            tasks = r * (ntask if plan[1:] and plan[1][1] == "bfs" else 1)
+            per = ct / (ntask if plan[1:] and plan[1][1] == "bfs" else 1)
+            # tasks run on T workers; a task's passes (memory-bound) overlap with other tasks'
+            # GEMMs, so the makespan is bounded below both by the critical round structure of
+            # the GEMM parts and by the total work spread over the workers.
+            g_per, p_per = per * (cg / ct), per * (cp / ct)
+            rounds = math.ceil(tasks / self.T)
+            t_prod = max(rounds * g_per, tasks * (g_per + p_per) / self.T)
+            return t_pass + t_prod, rounds * g_per, t_pass + max(0.0, t_prod - rounds * g_per), tasks
+        ct, cg, cp, nt = self.predict(plan[1:], mb, kb, nb, in_task)
+        if in_task and mode == "bfs":
+            return t_pass + r * ct, r * cg, t_pass + r * cp, r * nt
+        return t_pass + r * ct, r * cg, t_pass + r * cp, 1
+
+
+def workspace_bytes(plan, m, k, n):
+    """Extra memory (bytes) used by a plan, mirroring sw_workspace / gen_workspace."""
+    if not plan: return 0
+    path, mode = plan[0]
+    M, K, N, r, nA, nB = read_slp_header(path)
+    mb, kb, nb = m // M, k // K, n // N
+    child = workspace_bytes(plan[1:], mb, kb, nb)
+    if mode == "lean":
+        return 8 * (mb * max(kb, nb) + kb * nb + mb * nb) + child
+    own = 8 * (nA * mb * kb + nB * kb * nb + r * mb * nb)
+    tasks_here = mode == "bfs" and not any(md == "bfs" for _, md in [])
+    return own + (r if mode == "bfs" else 1) * child
+
+
+def parse_plan(s):
+    if s in ("dgemm", ""): return []
+    return [tuple(x.split("@")) for x in s.split(",")]
 
 
 def main():
     calib, n = sys.argv[1], int(sys.argv[2])
-    plans = sys.argv[3:]
     mdl = Model(calib)
-    base = mdl.gemm_time(n, n, n, 4)
-    print(f"n={n} dgemm predicted {base:.4f}s")
-    for p in plans:
-        plan = [tuple(x.split("@")) for x in p.split(",")] if p != "dgemm" else []
-        t, b = mdl.predict(plan, n, n, n)
-        print(f"  {p}: {t:.4f}s  speedup {base / t:.3f}  {b}")
+    base = mdl.gemm(n, n, n, 4)
+    print(f"n={n}  dgemm predicted {base:.4f}s")
+    for p in sys.argv[3:]:
+        t, g, ps, _ = mdl.predict(parse_plan(p), n, n, n)
+        print(f"  {p:60s} {t:8.4f}s  speedup {base / t:6.3f}   (gemm {g:.3f}  passes {ps:.3f})")
 
 
 if __name__ == "__main__":
