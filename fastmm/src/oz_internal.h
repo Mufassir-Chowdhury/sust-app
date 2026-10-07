@@ -80,3 +80,48 @@ static void mod_consts(int s, int with_q, modc_t *mc) {
   }
 }
 
+
+// Scaling-aware variant of safe_norm_exp: norm of x_p * 2^(sgn*ek[p]).
+static int safe_norm_exp_sc(const double *x, size_t inc, size_t len, const double *ek, int sgn) {
+  double mx = 0;
+  for (size_t p = 0; p < len; p++) mx = fmax(mx, fabs(ldexp(x[p * inc], sgn * (int)ek[p])));
+  if (mx == 0 || !isfinite(mx)) return L_ZERO_ROW;
+  int em;
+  frexp(mx, &em);
+  double ss = 0;
+  for (size_t p = 0; p < len; p++) { double v = ldexp(x[p * inc], sgn * (int)ek[p] - em); ss += v * v; }
+  return norm_exp(ss, em);
+}
+
+// Inner-dimension equilibration (exact powers of two): A' = A*2^ek, B' = 2^-ek*B with
+// ek = round(log2(sqrt(||B_k,:|| / ||A_:,k||))).  Returns ek as doubles, zero-padded to Kp.
+// Disabled (all zero) with OZ_INNER=0.
+static double *oz_inner_scaling(size_t m, size_t k, size_t n, const double *A, size_t lda, const double *B,
+                                size_t ldb, size_t Kp) {
+  double *ek = calloc(Kp + 8, sizeof(double));
+  if (getenv("OZ_INNER") && !atoi(getenv("OZ_INNER"))) return ek;
+  double *ca = calloc(k, sizeof(double)), *rb = calloc(k, sizeof(double));
+  #pragma omp parallel
+  {
+    #pragma omp for schedule(static) nowait
+    for (size_t p = 0; p < k; p++) {
+      const double *c = A + p * lda;
+      __m512d acc = _mm512_setzero_pd();
+      size_t i = 0;
+      for (; i + 8 <= m; i += 8) { __m512d d = _mm512_loadu_pd(c + i); acc = _mm512_fmadd_pd(d, d, acc); }
+      if (i < m) { __m512d d = _mm512_maskz_loadu_pd((__mmask8)((1u << (m - i)) - 1), c + i); acc = _mm512_fmadd_pd(d, d, acc); }
+      ca[p] = _mm512_reduce_add_pd(acc);
+    }
+    double *loc = calloc(k, sizeof(double));
+    #pragma omp for schedule(static)
+    for (size_t j = 0; j < n; j++)
+      for (size_t p = 0; p < k; p++) loc[p] += B[p + j * ldb] * B[p + j * ldb];
+    #pragma omp critical
+    for (size_t p = 0; p < k; p++) rb[p] += loc[p];
+    free(loc);
+  }
+  for (size_t p = 0; p < k; p++)
+    if (ca[p] > 0 && rb[p] > 0 && isfinite(ca[p]) && isfinite(rb[p])) ek[p] = (double)lround(0.25 * log2(rb[p] / ca[p]));
+  free(ca); free(rb);
+  return ek;
+}

@@ -36,10 +36,27 @@ size_t sw_workspace(size_t m, size_t k, size_t n, int depth) {
 static void sw_rec(int depth, size_t m, size_t k, size_t n, const double *A, size_t lda, const double *B,
                    size_t ldb, double *C, size_t ldc, double *W);
 
+// Optional leaf multiply (C = A*B) used instead of dgemm when the recursion bottoms out;
+// lets the memory-lean top levels hand sub-products to another algorithm.
+static sw_leaf_fn g_leaf = NULL;
+static void *g_leaf_ctx = NULL;
+void sw_set_leaf(sw_leaf_fn f, void *ctx) { g_leaf = f; g_leaf_ctx = ctx; }
+static void leaf_mul(size_t m, size_t k, size_t n, const double *A, size_t lda, const double *B, size_t ldb, double *C,
+                     size_t ldc) {
+  if (g_leaf) g_leaf(m, k, n, A, lda, B, ldb, C, ldc, g_leaf_ctx);
+  else dgemm_nn(m, n, k, 1.0, A, lda, B, ldb, 0.0, C, ldc);
+}
+
 // C = alpha*A*B + beta*C using recursion depth d (Z is scratch m x n when needed)
 static void mul(int d, double alpha, size_t m, size_t k, size_t n, const double *A, size_t lda,
                 const double *B, size_t ldb, double beta, double *C, size_t ldc, double *Z, double *W) {
-  if (d <= 0) { dgemm_nn(m, n, k, alpha, A, lda, B, ldb, beta, C, ldc); return; }
+  if (d <= 0 && !g_leaf) { dgemm_nn(m, n, k, alpha, A, lda, B, ldb, beta, C, ldc); return; }
+  if (d <= 0) {
+    if (alpha == 1.0 && beta == 0.0) { leaf_mul(m, k, n, A, lda, B, ldb, C, ldc); return; }
+    leaf_mul(m, k, n, A, lda, B, ldb, Z, m);
+    axpby2(m, n, alpha, Z, m, beta, C, ldc, C, ldc);
+    return;
+  }
   if (alpha == 1.0 && beta == 0.0) { sw_rec(d, m, k, n, A, lda, B, ldb, C, ldc, W); return; }
   sw_rec(d, m, k, n, A, lda, B, ldb, Z, m, W);
   axpby2(m, n, alpha, Z, m, beta, C, ldc, C, ldc);
@@ -47,7 +64,7 @@ static void mul(int d, double alpha, size_t m, size_t k, size_t n, const double 
 
 static void sw_rec(int depth, size_t m, size_t k, size_t n, const double *A, size_t lda, const double *B,
                    size_t ldb, double *C, size_t ldc, double *W) {
-  if (depth <= 0 || m < 2 || k < 2 || n < 2) { dgemm_nn(m, n, k, 1.0, A, lda, B, ldb, 0.0, C, ldc); return; }
+  if (depth <= 0 || m < 2 || k < 2 || n < 2) { leaf_mul(m, k, n, A, lda, B, ldb, C, ldc); return; }
   size_t m2 = m / 2, k2 = k / 2, n2 = n / 2;
   const double *A11 = A, *A21 = A + m2, *A12 = A + k2 * lda, *A22 = A + m2 + k2 * lda;
   const double *B11 = B, *B21 = B + k2, *B12 = B + n2 * ldb, *B22 = B + k2 + n2 * ldb;

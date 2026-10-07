@@ -44,8 +44,8 @@ int oz_max_moduli(void) { return 16; }  // split32 residue path needs |scaled en
 // Pack B (k x n) as the AMX "A" operand (rows = columns j of B, 64 k per tile row), computing
 // the column scaling exponent tau_j in the same pass (column j stays in L1/L2 between the two
 // uses).  Out_l = packed residues for modulus l (no q factor).  Np = pad(n,32), Kp = pad(k,64).
-static void pack_B_res(int s, int L, size_t k, size_t n, const double *B, size_t ldb, int *tau, int8_t **out,
-                       size_t Np, size_t Kp) {
+static void pack_B_res(int s, int L, size_t k, size_t n, const double *B, size_t ldb, const double *ek, int *tau,
+                       int8_t **out, size_t Np, size_t Kp) {
   size_t nkb = Kp / 64;
   modc_t mc[OZ_SMAX];
   mod_consts(s, 0, mc);
@@ -59,10 +59,17 @@ static void pack_B_res(int s, int L, size_t k, size_t n, const double *B, size_t
       if (j < n) {
         __m512d acc = _mm512_setzero_pd();
         size_t p = 0;
-        for (; p + 8 <= k; p += 8) { __m512d d = _mm512_loadu_pd(col + p); acc = _mm512_fmadd_pd(d, d, acc); }
-        if (p < k) { __m512d d = _mm512_maskz_loadu_pd((__mmask8)((1u << (k - p)) - 1), col + p); acc = _mm512_fmadd_pd(d, d, acc); }
+        for (; p + 8 <= k; p += 8) {
+          __m512d d = _mm512_scalef_pd(_mm512_loadu_pd(col + p), _mm512_sub_pd(_mm512_setzero_pd(), _mm512_loadu_pd(ek + p)));
+          acc = _mm512_fmadd_pd(d, d, acc);
+        }
+        if (p < k) {
+          __m512d d = _mm512_maskz_loadu_pd((__mmask8)((1u << (k - p)) - 1), col + p);
+          d = _mm512_scalef_pd(d, _mm512_sub_pd(_mm512_setzero_pd(), _mm512_loadu_pd(ek + p)));
+          acc = _mm512_fmadd_pd(d, d, acc);
+        }
         double ss = _mm512_reduce_add_pd(acc);
-        tj = (isfinite(ss) && ss > 1e-280) ? L - norm_exp(ss, 0) : L - safe_norm_exp(col, 1, k);
+        tj = (isfinite(ss) && ss > 1e-280) ? L - norm_exp(ss, 0) : L - safe_norm_exp_sc(col, 1, k, ek, -1);
         tau[j] = tj;
       }
       __m512d vt = _mm512_set1_pd((double)tj);
@@ -73,7 +80,8 @@ static void pack_B_res(int s, int L, size_t k, size_t n, const double *B, size_t
           __mmask8 mk = k0 >= k ? 0 : (k - k0 >= 8 ? 0xFF : (__mmask8)((1u << (k - k0)) - 1));
           if (j >= n) mk = 0;
           __m512d d = _mm512_maskz_loadu_pd(mk, col + k0);
-          d = _mm512_roundscale_pd(_mm512_scalef_pd(d, vt), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
+          __m512d sh = _mm512_sub_pd(vt, _mm512_loadu_pd(ek + k0));  // ek is padded to Kp with zeros
+          d = _mm512_roundscale_pd(_mm512_scalef_pd(d, sh), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC);
           x[v] = split32(d);
         }
         for (int l = 0; l < s; l++) {
@@ -95,8 +103,8 @@ static void pack_B_res(int s, int L, size_t k, size_t n, const double *B, size_t
 // Pack A (m x k) as the AMX VNNI operand ("columns" = rows i of A): tile (i16, kb), tile row r
 // holds for c = 0..15 the 4 bytes A[16 i16 + c, 64 kb + 4 r + 0..3].  Includes the q_l factor.
 // Works on 16-row strips: first the 16 row norms (strip stays in L2), then the conversion.
-static void pack_A_res(int s, int L, size_t m, size_t k, const double *A, size_t lda, int *sig, int8_t **out,
-                       size_t Mp, size_t Kp) {
+static void pack_A_res(int s, int L, size_t m, size_t k, const double *A, size_t lda, const double *ek, int *sig,
+                       int8_t **out, size_t Mp, size_t Kp) {
   size_t nkb = Kp / 64, ni16 = Mp / 16;
   modc_t mc[OZ_SMAX];
   mod_consts(s, 1, mc);
@@ -116,7 +124,9 @@ static void pack_A_res(int s, int L, size_t m, size_t k, const double *A, size_t
       // row norms of the strip
       __m512d a0 = _mm512_setzero_pd(), a1 = a0;
       for (size_t p = 0; p < k; p++) {
-        __m512d d0 = _mm512_maskz_loadu_pd(m0, A + i0 + p * lda), d1 = _mm512_maskz_loadu_pd(m1, A + i0 + 8 + p * lda);
+        __m512d e = _mm512_set1_pd(ek[p]);
+        __m512d d0 = _mm512_scalef_pd(_mm512_maskz_loadu_pd(m0, A + i0 + p * lda), e);
+        __m512d d1 = _mm512_scalef_pd(_mm512_maskz_loadu_pd(m1, A + i0 + 8 + p * lda), e);
         a0 = _mm512_fmadd_pd(d0, d0, a0);
         a1 = _mm512_fmadd_pd(d1, d1, a1);
       }
@@ -125,7 +135,7 @@ static void pack_A_res(int s, int L, size_t m, size_t k, const double *A, size_t
       for (int c = 0; c < 16; c++) {
         size_t i = i0 + c;
         if (i >= m) { t[c] = 0.0; continue; }
-        int e = (isfinite(ss[c]) && ss[c] > 1e-280) ? L - norm_exp(ss[c], 0) : L - safe_norm_exp(A + i, lda, k);
+        int e = (isfinite(ss[c]) && ss[c] > 1e-280) ? L - norm_exp(ss[c], 0) : L - safe_norm_exp_sc(A + i, lda, k, ek, 1);
         sig[i] = e;
         t[c] = (double)e;
       }
@@ -140,8 +150,9 @@ static void pack_A_res(int s, int L, size_t m, size_t k, const double *A, size_t
               d0 = _mm512_maskz_loadu_pd(m0, A + i0 + kk * lda);
               d1 = _mm512_maskz_loadu_pd(m1, A + i0 + 8 + kk * lda);
             }
-            x[2 * q] = split32(_mm512_roundscale_pd(_mm512_scalef_pd(d0, sc0), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));
-            x[2 * q + 1] = split32(_mm512_roundscale_pd(_mm512_scalef_pd(d1, sc1), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));
+            __m512d e = _mm512_set1_pd(ek[kk]);
+            x[2 * q] = split32(_mm512_roundscale_pd(_mm512_scalef_pd(d0, _mm512_add_pd(sc0, e)), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));
+            x[2 * q + 1] = split32(_mm512_roundscale_pd(_mm512_scalef_pd(d1, _mm512_add_pd(sc1, e)), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));
           }
           for (int l = 0; l < s; l++) {
             __m512i z = _mm512_setzero_si512();
@@ -226,35 +237,56 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
               double *C, size_t ldc, oz_times *tm) {
   static int inited = 0;
   if (!inited) { amx_init(); inited = 1; }
-  double t0 = now_sec();
   int L = oz_bits(s, k);
   if (s < 2 || s > 16 || L > 62) { fprintf(stderr, "oz_dgemm: need 2 <= s <= 16 (got %d)\n", s); exit(1); }
+  // Memory blocking: C is computed in H x W blocks; the residues of a row panel of A (H rows)
+  // are reused for every column panel of B.  Workspace = s * (Hp*Kp + Wp*Kp + H*W) bytes.
+  double budget = getenv("OZ_MEM_GB") ? atof(getenv("OZ_MEM_GB")) * 1e9 : 4.0e9;
+  size_t Kp = amx_pad(k, 64), H = m, W = n;
+  for (;;) {
+    double need = (double)s * ((double)amx_pad(H, AMX_COLPAD) * Kp + (double)amx_pad(W, 32) * Kp + (double)H * W);
+    if (need <= budget || (H <= 256 && W <= 256)) break;
+    if (H >= W) H = amx_pad((H + 1) / 2, AMX_COLPAD); else W = amx_pad((W + 1) / 2, 32);
+  }
+  size_t Hp = amx_pad(H, AMX_COLPAD), Wp = amx_pad(W, 32);
   int *sig = malloc(m * sizeof(int)), *tau = malloc(n * sizeof(int));
-  size_t Mp = amx_pad(m, AMX_COLPAD), Np = amx_pad(n, 32), Kp = amx_pad(k, 64);
+  double t_inner0 = now_sec();
+  double *ek = oz_inner_scaling(m, k, n, A, lda, B, ldb, Kp);
+  double t_inner = now_sec() - t_inner0;
   int8_t *Ares[OZ_SMAX], *Bres[OZ_SMAX];
   uint8_t *Y[OZ_SMAX];
   // Persistent workspace (kept between calls, like a BLAS library's buffer pool): re-faulting
   // gigabytes of fresh pages on every call would otherwise dominate the conversion time.
-  size_t per = Mp * Kp + Np * Kp + amx_pad(m * n, 4096);
+  size_t per = Hp * Kp + Wp * Kp + amx_pad(H * W, 4096);
   int8_t *ws = oz_workspace((size_t)s * per);
   for (int l = 0; l < s; l++) {
     Ares[l] = ws + (size_t)l * per;
-    Bres[l] = Ares[l] + Mp * Kp;
-    Y[l] = (uint8_t *)(Bres[l] + Np * Kp);
+    Bres[l] = Ares[l] + Hp * Kp;
+    Y[l] = (uint8_t *)(Bres[l] + Wp * Kp);
   }
-  double t1 = now_sec();
-  pack_A_res(s, L, m, k, A, lda, sig, Ares, Mp, Kp);
-  double t1b = now_sec();
-  pack_B_res(s, L, k, n, B, ldb, tau, Bres, Np, Kp);
-  double t2 = now_sec();
-  if (getenv("OZ_VERBOSE") && atoi(getenv("OZ_VERBOSE"))) fprintf(stderr, "packA %.4f packB %.4f\n", t1b - t1, t2 - t1b);
-  for (int l = 0; l < s; l++) {
-    epi_ctx e = {Y[l], m, m, n, (double)oz_mod[l], 1.0 / oz_mod[l]};
-    amx_gemm_s8s8(Np, Mp, Kp, Bres[l], Ares[l], epi_mod, &e);
+  double tconv = 0, tgemm = 0, tcrt = 0;
+  for (size_t i0 = 0; i0 < m; i0 += H) {
+    size_t h = m - i0 < H ? m - i0 : H, hp = amx_pad(h, AMX_COLPAD);
+    double t0 = now_sec();
+    pack_A_res(s, L, h, k, A + i0, lda, ek, sig + i0, Ares, hp, Kp);
+    tconv += now_sec() - t0;
+    for (size_t j0 = 0; j0 < n; j0 += W) {
+      size_t w = n - j0 < W ? n - j0 : W, wp = amx_pad(w, 32);
+      double t1 = now_sec();
+      pack_B_res(s, L, k, w, B + j0 * ldb, ldb, ek, tau + j0, Bres, wp, Kp);
+      double t2 = now_sec();
+      for (int l = 0; l < s; l++) {
+        epi_ctx e = {Y[l], h, h, w, (double)oz_mod[l], 1.0 / oz_mod[l]};
+        amx_gemm_s8s8(wp, hp, Kp, Bres[l], Ares[l], epi_mod, &e);
+      }
+      double t3 = now_sec();
+      reconstruct(s, h, w, Y, h, sig + i0, tau + j0, C + i0 + j0 * ldc, ldc);
+      double t4 = now_sec();
+      tconv += t2 - t1; tgemm += t3 - t2; tcrt += t4 - t3;
+    }
   }
-  double t3 = now_sec();
-  reconstruct(s, m, n, Y, m, sig, tau, C, ldc);
-  double t4 = now_sec();
-  free(sig); free(tau);
-  if (tm) { tm->scale = t1 - t0; tm->convert = t2 - t1; tm->gemm = t3 - t2; tm->crt = t4 - t3; }
+  free(sig); free(tau); free(ek);
+  if (getenv("OZ_VERBOSE") && atoi(getenv("OZ_VERBOSE")))
+    fprintf(stderr, "oz_dgemm s=%d blocks H=%zu W=%zu workspace %.2f GB\n", s, H, W, (double)s * per / 1e9);
+  if (tm) { tm->scale = t_inner; tm->convert = tconv; tm->gemm = tgemm; tm->crt = tcrt; }
 }

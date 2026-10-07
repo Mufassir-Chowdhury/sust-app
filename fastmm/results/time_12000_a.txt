@@ -1,0 +1,15 @@
+oz_dgemm s=14 blocks H=6016 W=6016 workspace 2.53 GB
+oz_dgemm s=16 blocks H=6016 W=6016 workspace 2.90 GB
+oz_dgemm s=14 blocks H=6016 W=6016 workspace 2.53 GB
+oz_dgemm s=16 blocks H=6016 W=6016 workspace 2.90 GB
+oz_dgemm s=14 blocks H=6016 W=6016 workspace 2.53 GB
+oz_dgemm s=16 blocks H=6016 W=6016 workspace 2.90 GB
+oz_dgemm s=14 blocks H=6016 W=6016 workspace 2.53 GB
+oz_dgemm s=16 blocks H=6016 W=6016 workspace 2.90 GB
+time m=12000 k=12000 n=12000 method=dgemm reps=3 median=12.07499 min=12.05248 eff_gflops=286.2 speedup_vs_first=1.000 paired=1.000 [IQR 1.000-1.000]
+time m=12000 k=12000 n=12000 method=sw1 reps=3 median=10.61252 min=10.59903 eff_gflops=325.7 speedup_vs_first=1.138 paired=1.139 [IQR 1.136-1.176]
+time m=12000 k=12000 n=12000 method=sw2 reps=3 median=12.43346 min=11.87998 eff_gflops=278.0 speedup_vs_first=0.971 paired=0.969 [IQR 0.960-1.016]
+time m=12000 k=12000 n=12000 method=sw1+g:slp/w1.slp:1:0:1 reps=3 median=11.56014 min=11.43061 eff_gflops=299.0 speedup_vs_first=1.045 paired=1.056 [IQR 1.003-1.123]
+time m=12000 k=12000 n=12000 method=sw1+g:slp/w2.slp:1:0:1 reps=3 median=10.16850 min=9.92203 eff_gflops=339.9 speedup_vs_first=1.187 paired=1.185 [IQR 1.172-1.308]
+time m=12000 k=12000 n=12000 method=oz14 reps=3 median=8.68392 min=8.54110 eff_gflops=398.0 speedup_vs_first=1.390 paired=1.388 [IQR 1.382-1.520] [scale 0.0000 conv 0.8141 gemm 7.5815 crt 0.1454]
+time m=12000 k=12000 n=12000 method=oz16 reps=3 median=9.92893 min=9.83523 eff_gflops=348.1 speedup_vs_first=1.216 paired=1.228 [IQR 1.212-1.308] [scale 0.0000 conv 0.8219 gemm 8.9076 crt 0.1993]

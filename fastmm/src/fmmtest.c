@@ -12,10 +12,20 @@
 #include "testmat.h"
 #include "gen.h"
 
-typedef struct { char kind[16]; int param, dfs, bfs; gen_scheme *g; } method;
+typedef struct { char kind[16]; int param, dfs, bfs; gen_scheme *g; int swtop, scaled; } method;
 
 static method parse(const char *s) {
-  method m = {"", 0, 0, 0, NULL};
+  method m = {"", 0, 0, 0, NULL, 0, 0};
+  if (!strncmp(s, "sc:", 3)) {  // outside-inside power-of-two scaling around any method
+    method in = parse(s + 3);
+    in.scaled = 1;
+    return in;
+  }
+  if (!strncmp(s, "sw", 2) && strchr(s, '+')) {  // swD+g:...  memory-lean Strassen top levels, generic leaves
+    method in = parse(strchr(s, '+') + 1);
+    in.swtop = atoi(s + 2);
+    return in;
+  }
   if (!strncmp(s, "g:", 2)) {  // g:<file.slp>:<depth>:<dfs>:<bfs>
     char path[512];
     strcpy(m.kind, "gen");
@@ -46,7 +56,62 @@ static double *g_work = NULL;
 static size_t g_work_sz = 0;
 static oz_times g_ozt;
 
+static method g_leafm;
+static double *g_lwork = NULL;
+static size_t g_lwork_sz = 0;
+static void gen_leaf(size_t m, size_t k, size_t n, const double *A, size_t lda, const double *B, size_t ldb, double *C,
+                     size_t ldc, void *ctx) {
+  (void)ctx;
+  size_t ws = gen_workspace(g_leafm.g, m, k, n, g_leafm.param, g_leafm.dfs, g_leafm.bfs);
+  if (ws > g_lwork_sz) { free(g_lwork); g_lwork = amalloc(ws * 8); g_lwork_sz = ws; }
+  gen_dgemm(g_leafm.g, g_leafm.param, g_leafm.dfs, g_leafm.bfs, m, k, n, A, lda, B, ldb, C, ldc, g_lwork);
+}
+
+static void run(method me, size_t m, size_t k, size_t n, const double *A, const double *B, double *C);
+
+// Outside-inside scaling (powers of two, exact): A' = Dr A Dk, B' = Dk^-1 B Dc, C = Dr^-1 (A'B') Dc^-1.
+// Dk balances column norms of A against row norms of B; Dr, Dc then normalise rows of A' and
+// columns of B'.  (Cf. Ballard, Benson, Druinsky, Lipshitz, Schwartz, SIMAX 2016.)
+static void run_scaled(method me, size_t m, size_t k, size_t n, const double *A, const double *B, double *C) {
+  double *As = amalloc(m * k * 8), *Bs = amalloc(k * n * 8);
+  int *ek = calloc(k, sizeof(int)), *fr = calloc(m, sizeof(int)), *gc = calloc(n, sizeof(int));
+  double *ca = calloc(k, 8), *rb = calloc(k, 8), *ra = calloc(m, 8);
+  #pragma omp parallel for
+  for (size_t p = 0; p < k; p++) { double s = 0; for (size_t i = 0; i < m; i++) s += A[i + p * m] * A[i + p * m]; ca[p] = s; }
+  for (size_t j = 0; j < n; j++) for (size_t p = 0; p < k; p++) rb[p] += B[p + j * k] * B[p + j * k];
+  for (size_t p = 0; p < k; p++) ek[p] = (ca[p] > 0 && rb[p] > 0) ? (int)lround(0.25 * log2(rb[p] / ca[p])) : 0;
+  #pragma omp parallel for
+  for (size_t p = 0; p < k; p++) for (size_t i = 0; i < m; i++) As[i + p * m] = ldexp(A[i + p * m], ek[p]);
+  for (size_t p = 0; p < k; p++) for (size_t i = 0; i < m; i++) ra[i] += As[i + p * m] * As[i + p * m];
+  for (size_t i = 0; i < m; i++) fr[i] = ra[i] > 0 ? -(int)lround(0.5 * log2(ra[i])) : 0;
+  #pragma omp parallel for
+  for (size_t p = 0; p < k; p++) for (size_t i = 0; i < m; i++) As[i + p * m] = ldexp(As[i + p * m], fr[i]);
+  #pragma omp parallel for
+  for (size_t j = 0; j < n; j++) {
+    double s = 0;
+    for (size_t p = 0; p < k; p++) { double v = ldexp(B[p + j * k], -ek[p]); Bs[p + j * k] = v; s += v * v; }
+    gc[j] = s > 0 ? -(int)lround(0.5 * log2(s)) : 0;
+    for (size_t p = 0; p < k; p++) Bs[p + j * k] = ldexp(Bs[p + j * k], gc[j]);
+  }
+  method in = me;
+  in.scaled = 0;
+  run(in, m, k, n, As, Bs, C);
+  #pragma omp parallel for
+  for (size_t j = 0; j < n; j++) for (size_t i = 0; i < m; i++) C[i + j * m] = ldexp(C[i + j * m], -fr[i] - gc[j]);
+  free(As); free(Bs); free(ek); free(fr); free(gc); free(ca); free(rb); free(ra);
+}
+
 static void run(method me, size_t m, size_t k, size_t n, const double *A, const double *B, double *C) {
+  if (me.scaled) { run_scaled(me, m, k, n, A, B, C); return; }
+  if (me.swtop > 0) {
+    g_leafm = me;
+    sw_set_leaf(gen_leaf, NULL);
+    size_t ws = sw_workspace(m, k, n, me.swtop);
+    if (ws > g_work_sz) { free(g_work); g_work = amalloc(ws * 8); g_work_sz = ws; }
+    sw_dgemm(me.swtop, m, k, n, A, m, B, k, C, m, g_work);
+    sw_set_leaf(NULL, NULL);
+    return;
+  }
   if (!strcmp(me.kind, "dgemm")) dgemm_nn(m, n, k, 1.0, A, m, B, k, 0.0, C, m);
   else if (!strcmp(me.kind, "sw")) {
     size_t ws = sw_workspace(m, k, n, me.param);
