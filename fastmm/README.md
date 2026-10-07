@@ -6,51 +6,90 @@ measured there with 4 threads unless stated.
 
 ## Verdict
 
-*Draft: final numbers for n = 16000 and 20000 and the LIBXS comparison are filled in below.*
-
-**Goal:** a general dense algorithm, double-precision accurate, measurably faster than both tuned BLAS
-(MKL here; OpenBLAS and BLIS are slower on this machine) and a careful Strassen-Winograd, for
+**Goal:** a general dense algorithm, accurate in double precision, measurably faster than both a tuned
+BLAS (MKL here; OpenBLAS and BLIS are slower on this machine) and a careful Strassen-Winograd, for
 n = 500-20000.
 
-**What I achieved:**
+**Result: a partial success, reached by changing the kind of algorithm, and the method is not new.**
 
-1. **No bilinear (Strassen-type) algorithm beats Strassen-Winograd meaningfully.**
-   * The best plans I found are fused multi-level Winograd, or one memory-lean Winograd level over a
-     <4,4,4;48> rational scheme with task-parallel leaves.
-   * They reach 1.1-1.3x over MKL for n >= 2000. They are slower than MKL at n = 4000-6000 and at
-     n <= 1000.
-   * They are always within the noise of plain Strassen-Winograd plans.
-   * The lower-exponent schemes I tried (<4,4,4;48>, <3,3,6;40>, <5,5,5;93>) do not change this at
-     n <= 20000. My cost model says why: multiplication count and leaf BLAS efficiency dominate, and
-     the bigger base cases do not fit in memory in a fused implementation.
-2. **What does beat both is a different kind of algorithm: FP64 GEMM emulated with exact int8 products
-   on the AMX units** (Ozaki scheme II: integer scaling, Chinese remainder theorem, 14-16 int8 GEMMs).
-   * The method is published and open-source prior art exists (LIBXS, Kouya 2026). What is mine is
-     this implementation and its measurement against MKL and Strassen.
-   * Measured paired speedup over MKL DGEMM: 1.2-1.5x with 14 moduli and 1.1-1.3x with 16 moduli,
-     for 2000 <= n <= 12000.
-   * At n <= 1000 it is slower than MKL. At n >= 16000, two levels of Strassen-Winograd catch up.
-3. **Accuracy of the emulation:**
-   * With 16 moduli and the built-in power-of-two scaling of rows, columns and the inner dimension, the
-     componentwise error is at or below MKL's on every input class I tested. The exception is matrices
-     whose entries have independently random exponents spanning more than about 2^±32; there it
-     degrades, while DGEMM does not.
-   * With 14 moduli it is DGEMM-level on well-scaled data (median relative error about 2x DGEMM's) and
-     up to 100x worse on wide exponent ranges.
-   * Strassen-type algorithms are 2-1000x worse than DGEMM on these tests, and catastrophically wrong
-     on row- or column-scaled inputs unless they are rescaled.
-4. **It is hardware-specific.** The gain exists only because int8 matrix units are about 26x faster
-   per operation than FP64 FMA here. On a CPU without AMX (AVX512-VNNI only: about 8x) the emulation
+* **Strassen-type algorithms.** No bilinear (Strassen-type) algorithm I built or found beats a
+  careful Strassen-Winograd by more than the measurement noise.
+* **What beats both.** FP64 GEMM emulated with exact int8 products on the CPU's AMX matrix units
+  (Ozaki scheme II with the Chinese remainder theorem) beats both MKL and the best Strassen-type
+  plan from n = 1500 to 20000.
+* **Not new.** The method is published, and open-source CPU implementations exist. This is an
+  independent implementation and measurement.
+* **Limits.**
+  * It does not help at n <= 1000.
+  * It needs AMX-class int8 hardware.
+  * Matching DGEMM's accuracy takes 16 moduli, and even then not on every input.
+
+Measured on an Intel Xeon (Emerald Rapids), 4 cores, MKL 2026.1, 4 threads. Each entry is the
+paired speedup over MKL DGEMM: the median of interleaved rounds, where > 1 means faster than MKL.
+Where two numbers are given, they come from two separate sessions: the main sweep and the
+final-code runs.
+
+| n | best Strassen-type plan | emulation, 14 moduli | emulation, 16 moduli |
+|---|---|---|---|
+| 500 | 0.83 | 0.54 | 0.48 |
+| 1000 | 0.93 | 0.88 | 0.75 |
+| 1500 | 1.00 | 1.04 | 0.97 |
+| 2000 | 1.25 | 1.35 | 1.17 |
+| 3000 | 1.30 | 1.46 | 1.32 |
+| 4000 | 1.04-1.05 | 1.19-1.33 | 1.12-1.21 |
+| 6000 | 1.07 | 1.25-1.37 (exact-Winograd variant: 1.45) | 1.09-1.19 |
+| 8000 | 1.12 | 1.36-1.38 (1.45) | 1.21-1.27 |
+| 10000 | 1.15 | 1.31 | 1.18 |
+| 12000 | 1.23 | 1.40-1.43 (1.52) | 1.22-1.25 |
+| 16000 | 1.27 | 1.33-1.42 | 1.16-1.30 |
+| 20000 | 1.23 | 1.39-1.41 | 1.18-1.25 |
+
+What these numbers mean against the goal:
+
+1. **Speed, 14 moduli.**
+   * Faster than MKL and than the best Strassen-type plan at every measured size from 1500 to
+     20000.
+   * The margin over the Strassen-type plan is 8-28% for 2000 <= n <= 12000 and 5-15% at
+     16000-20000. At 1500 it is 4%, which is within noise.
+   * Accuracy:
+     * About DGEMM's on well-scaled and diagonally scaled data.
+     * 5-100x worse than DGEMM, componentwise, on entries with random exponents in 2^±20 to
+       2^±32, and up to 10^5 x worse at 2^±64.
+     * On every tested input class it is as accurate as or more accurate than the two-level
+       Strassen-type plans it is compared with, and close to one Strassen-Winograd level.
+2. **Speed, 16 moduli.** This is the variant that is DGEMM-accurate.
+   * Faster than MKL for n >= 2000.
+   * Faster than the best Strassen-type plan by 8-15% only at n = 4000 and 8000.
+   * At 3000, 10000, 12000 and 20000 it is within ±5% of that plan (a tie).
+   * At 6000 it is 2-11% faster and at 16000 9% slower to 2% faster, depending on the session.
+   * At 2000 it is slower (1.17 vs 1.25).
+3. **Accuracy, 16 moduli** (section 6).
+   * Componentwise error at or below MKL's on every class tested: uniform, positive, cancellation,
+     rows or columns scaled by 2^±32, inner dimension scaled by 2^±20, and random exponents up
+     to 2^±32.
+   * The exception is entries with independently random exponents of 2^±48 or wider at small n:
+     28x worse than DGEMM at 2^±48 and 1000x worse at 2^±64, both at n = 1000.
+   * The Strassen-type plans are 2-20x worse than DGEMM on well-scaled data, 10^5-10^6 x worse at
+     2^±64, and completely wrong on row- or column-scaled data unless the inputs are rescaled.
+4. **Below n = 1500, nothing beats MKL** on this machine: neither Strassen-type plans nor the
+   emulation.
+5. **The first call is slow.** The emulation allocates and pre-faults a persistent workspace of up
+   to 8 GB. At n = 8000 the first call takes 3.6-5.7 s, against 2.3-2.9 s afterwards and 3.6 s for
+   MKL. A single isolated product is therefore not faster; repeated products are.
+6. **It is hardware-specific.** The gain exists only because int8 matrix units are about 26x faster
+   per operation than FP64 FMA here. On a CPU without AMX (AVX512-VNNI: about 8x) the emulation
    loses.
-5. **Strassen applied exactly inside the modular int8 products** gives bit-identical results to the
-   plain emulation (verified) and cuts the int8 work by 13%. My implementation of the modular-domain
-   additions costs more than that saves at n <= 8000, so it is not faster yet.
+7. **Strassen applied exactly inside the modular int8 products** gives bit-identical results to the
+   plain emulation. The specialised version adds 3-7% at 6000 <= n <= 12000 with 14 moduli and
+   loses at n <= 4000.
+8. **The existing open-source AMX Ozaki code (LIBXS)**, as I configured it, was 3-6x slower than MKL
+   on this machine. It loses about 10 digits on inputs whose inner dimension is badly scaled
+   (`results/libxs_compare.md`). The speed and the robustness reported here come from engineering
+   (int8 kernel, conversion, inner scaling), not from a new method.
 
-So: a partial success. On this hardware the emulation is faster than tuned BLAS and than my best
-Strassen for roughly 2000 <= n <= 12000, with DGEMM-level accuracy except on adversarial exponent
-ranges. It is not a new matrix multiplication algorithm, and it does not lower the exponent.
-
-(Full tables, method and caveats below. Everything can be re-run with `./run_all.sh`.)
+It is not a new matrix multiplication algorithm, and it does not lower the exponent. Everything was
+measured on one 4-core VM. Full tables, method and caveats follow below. Everything can be re-run
+with `./run_all.sh`.
 
 ## Contents
 
@@ -148,7 +187,7 @@ Full table: `docs/ideas.md`. In short:
 
 | # | Idea | Weakness it attacks | Kill test | Outcome |
 |---|---|---|---|---|
-| 1 | FP64 emulation on AMX-INT8 (Ozaki II) | FP64 FMA throughput itself | int8:FP64 throughput ratio < ~16 | ratio about 26; **1.2-1.5x over MKL** for 2000-12000 |
+| 1 | FP64 emulation on AMX-INT8 (Ozaki II) | FP64 FMA throughput itself | int8:FP64 throughput ratio < ~16 | ratio about 26; **1.2-1.5x over MKL** for 2000-20000 (14 moduli) |
 | 2 | Fused multi-level Winograd (one <4,4,4;49> level), task-parallel leaves | traffic, MKL's mid-size threading | no gain over 1-level Strassen at n = 8000 | small, within noise of Winograd plans |
 | 3 | Lower-rank base cases (<4,4,4;48>, <3,3,6;40>, <5,5,5;93>, <3,3,3;23>) | multiplication count | cost model, then measurement at 8000/12000 | <4,4,4;48> best bilinear plan at 12000 (1.20x vs 1.16x), within noise |
 | 4 | Alternative basis / sparsified schemes | additions | model sensitivity | killed: under 4% even if the passes were free |
@@ -211,7 +250,8 @@ Full table: `docs/ideas.md`. In short:
 4. **CRT.** Reconstruction in double with a three-way split of the CRT weights. The constants are
    generated and checked with exact integers. The high and middle sums are exact, then the result is
    rescaled with `scalef`.
-5. **Guards.** Memory blocking keeps the workspace under 80% of free RAM (n = 20000 fits in 15 GB). A
+5. **Guards.** Memory blocking keeps the workspace under 80% of the memory actually available, the
+   smaller of the kernel's MemAvailable and the cgroup limit (n = 20000 fits in 15 GB). A
    persistent pre-faulted workspace is used. NaN/Inf inputs fall back to MKL.
 
 * The only rounding errors are the rounding of the scaled inputs to L-bit integers and the final
@@ -220,7 +260,7 @@ Full table: `docs/ideas.md`. In short:
 * Throughput: the AMX GEMM reaches 7.2-7.6 Tops/s on 4 cores, against oneDNN 3.9.2's 7.0 Tops/s and
   MKL's `cblas_gemm_s8u8s32` at 5.2 Tops/s on this machine. That is about 26x the DGEMM rate but only
   about 35% of the AMX peak.
-* Time split at n = 8000 with 14 moduli: conversion 0.24 s, int8 GEMMs 2.4-2.6 s, CRT 0.08 s, scaling
+* Time split at n = 8000 with 14 moduli: conversion 0.25 s, int8 GEMMs 2.2-2.6 s, CRT 0.06-0.08 s, scaling
   0.02 s.
 
 ## 6. Accuracy
@@ -309,26 +349,52 @@ faster than MKL. Raw data: `results/sweep.txt`, `results/sweep_oz_final.txt`.
 | 16000 | 272 | 216 | 127 | lean + <4,4,4;48> | 1.27 | **1.33** | 1.22 | 1.16 |
 | 20000 | 273 | 221 | 112 | 2 lean levels | 1.23 | **1.41** | 1.33 | 1.25 |
 
-**Final emulation code** (`results/sweep_oz_final.md`, `bench/sweep_final_oz.sh`; run after the
-sweep). Changes since the sweep: memory blocking that converts each operand once where it fits and
-respects the container's cgroup memory limit, NaN/Inf and long-k guards, and the exact-Winograd
-variant `ozw`. Each cell is paired against MKL in its own session.
+**Final emulation code** (`results/sweep_oz_final.md`, scripts `bench/sweep_final_small.sh` and
+`bench/sweep_final_oz.sh`, run after the main sweep). What changed since the sweep:
+* memory blocking that converts each operand once where it fits and respects the container's cgroup
+  memory limit;
+* the NaN/Inf and long-k guards;
+* the exact-Winograd variant `ozw`.
 
-| n | oz14 (plain) | ozw14 (exact Winograd) | oz16 (plain) | ozw16 (exact Winograd) |
-|---|---|---|---|---|
-| 4000 | 1.34 | 1.13 | 1.09 | 0.93 |
-| 6000 | 1.37 | **1.45** | 1.19 | 1.21 |
-| 8000 | 1.42 | **1.47** | 1.24-1.30 | 1.31-1.38 |
-| 12000 | 1.43 | **1.52** | 1.25 | 1.25 |
-| 16000 | 1.42 | 1.44 | **1.30** | 1.17 (memory-blocked) |
-| 20000 | **1.39** | 1.32 | 1.18 | falls back to oz16 |
+At n = 4000-12000 all variants are interleaved in one session. At n = 4000 and 8000 that session
+also includes the Strassen-type plans. At 16000 and 20000 each variant is paired with MKL in its own
+session.
 
-(The 4000 and 8000 rows come from the interleaved runs in sections 5 and 7 of the log, i.e.
-`results/` raw outputs of `fmmtest time`; the 8000 ranges are two separate sessions.)
+| n | oz14 (plain) | ozw14 (exact Winograd) | oz16 (plain) | ozw16 (exact Winograd) | sw1 | W2 task-par. | P48 task-par. |
+|---|---|---|---|---|---|---|---|
+| 4000 | **1.33** | 1.17 | 1.21 | 1.03 | 0.83 | 1.05 | 1.02 |
+| 6000 | 1.37 | **1.45** | 1.19 | 1.21 | | | |
+| 8000 | 1.36 | **1.45** | 1.27 | 1.31 | 1.07 | 1.11 | 1.12 |
+| 12000 | 1.43 | **1.52** | 1.25 | 1.25 | | | |
+| 16000 | 1.42 | **1.44** | 1.30 | 1.33 (memory-blocked) | | | |
+| 20000 | **1.39** | 1.32 | 1.18 | 1.17 (falls back to oz16) | | | |
 
-**Cold first call** (`results/cold.txt`): the first call of the emulation allocates and pre-faults its
-workspace. See the file for the measured first-call versus steady-state times; the steady-state numbers
-above exclude this one-off cost, as is usual for library buffer pools.
+Time split of the emulation, in seconds: conversion / int8 GEMMs / CRT.
+
+| n | oz14 | ozw14 | oz16 |
+|---|---|---|---|
+| 8000 | 0.25 / 2.20 / 0.06 | 0.30 / 2.02 / 0.14 | 0.25 / 2.49 / 0.07 |
+| 12000 | 0.63 / 7.65 / 0.18 | 0.67 / 6.70 / 0.36 | 0.60 / 8.97 / 0.17 |
+| 20000 | 3.21 / 37.62 / 0.46 | 6.68 / 35.99 / 1.12 | 3.62 / 45.29 / 0.51 |
+
+The int8 GEMMs take 85-91% of the time.
+* At n = 6000-12000 the exact Winograd level removes 8-12% of the GEMM time.
+* At 16000-20000, where the larger residue planes force memory blocking, it removes 4% or nothing.
+* It always doubles the CRT and output-combination time.
+
+**Cold first call** (`results/cold.txt`, `bench/cold.sh`): a fresh process, then the first call and
+the next three, in seconds.
+
+| n | MKL first / then | oz14 | oz16 | ozw14 | sw1 |
+|---|---|---|---|---|---|
+| 2000 | 0.071 / 0.065-0.075 | 0.073 / 0.055-0.057 | 0.078 / 0.059-0.062 | 0.082 / 0.070-0.081 | 0.067 / 0.063-0.079 |
+| 8000 | 3.64 / 3.57-3.63 | 5.68 / 2.55-2.62 | 3.61 / 2.76-2.98 | 4.37 / 2.24-2.34 | 3.32 / 3.33-3.41 |
+
+The first call allocates the workspace (up to 8 GB) and faults its pages in. At n = 8000 this
+makes the first call as slow as MKL (oz16) or slower (oz14: 5.7 s against 3.6 s). From the second
+call on, the steady-state numbers in the tables above apply. A library would keep this workspace
+as a buffer pool, so the cost is paid once per process, but a program that does one large product
+and exits sees no gain.
 
 ### Speed ceiling of the emulation on this machine
 
@@ -339,7 +405,7 @@ above exclude this one-off cost, as is usual for library buffer pools.
 | int8 GEMMs needed for FP64 accuracy | s = 14-16 (each gives about 7.9 bits of the CRT modulus) |
 | upper bound on speed-up, GEMMs only | 26/14 = 1.86x (s = 14), 26/16 = 1.63x (s = 16) |
 | with one exact Winograd level per modulus | x 8/7 -> 2.1x / 1.86x |
-| measured, including conversion and CRT (2000 <= n <= 12000) | 1.2-1.5x (s = 14), 1.1-1.3x (s = 16) |
+| measured, including conversion and CRT (2000 <= n <= 20000) | 1.2-1.5x (s = 14), 1.1-1.3x (s = 16) |
 | if the AMX GEMM reached 60 % of its peak (about 12 Tops/s) | about 3x (s = 14) |
 
 ## 8. What is and is not new
@@ -397,9 +463,9 @@ as such in those files.
   not faster. The specialised Winograd version (`src/ozw.c`: unsigned residues, byte-level modular
   sums, output combination fused into the CRT) is 3-7% faster than the plain emulation at
   6000 <= n <= 12000 with 14 moduli. It loses at n <= 4000, where seven half-size GEMMs per modulus
-  are less efficient than one full-size GEMM and the per-call overhead is 7x larger, and when its
-  7/4 x larger residue planes force memory blocking (16 moduli at n >= 16000, where it now falls back
-  to the plain emulation). The gain is far below the 12.5% of int8 work it removes because the AMX
+  are less efficient than one full-size GEMM and the per-call overhead is 7x larger. It gains nothing
+  when its 7/4 x larger residue planes force memory blocking: at n = 16000 with 16 moduli it ties the
+  plain emulation (1.33 vs 1.30), and at 20000 it falls back to it. The gain is far below the 12.5% of int8 work it removes because the AMX
   GEMM runs at only about 35% of peak, so the half-size products lose some of their efficiency.
 * **Floating-point Strassen over emulated leaves.** No gain at n = 8000: the emulation is less
   efficient at n/2, and the accuracy reverts to Strassen's behaviour unless the inputs are scaled.

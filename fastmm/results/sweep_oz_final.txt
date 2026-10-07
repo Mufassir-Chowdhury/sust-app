@@ -45,3 +45,17 @@ time m=4000 k=4000 n=4000 method=oz14 reps=9 median=0.37200 min=0.34297 eff_gflo
 time m=4000 k=4000 n=4000 method=ozw14 reps=9 median=0.41298 min=0.39559 eff_gflops=309.9 speedup_vs_first=1.153 paired=1.166 [IQR 1.080-1.198] [scale 0.0059 conv 0.0577 gemm 0.3240 crt 0.0447]
 time m=4000 k=4000 n=4000 method=oz16 reps=9 median=0.39475 min=0.37162 eff_gflops=324.3 speedup_vs_first=1.206 paired=1.207 [IQR 1.134-1.267] [scale 0.0074 conv 0.0575 gemm 0.3256 crt 0.0287]
 time m=4000 k=4000 n=4000 method=ozw16 reps=9 median=0.45816 min=0.42374 eff_gflops=279.4 speedup_vs_first=1.039 paired=1.032 [IQR 0.987-1.066] [scale 0.0072 conv 0.0673 gemm 0.3977 crt 0.0535]
+time m=8000 k=8000 n=8000 method=dgemm reps=5 median=3.55974 min=3.42944 eff_gflops=287.7 speedup_vs_first=1.000 paired=1.000 [IQR 1.000-1.000]
+time m=8000 k=8000 n=8000 method=sw1 reps=5 median=3.30589 min=3.20247 eff_gflops=309.8 speedup_vs_first=1.077 paired=1.071 [IQR 1.037-1.111]
+time m=8000 k=8000 n=8000 method=g:slp/winograd-squared.slp:1:0:1 reps=5 median=3.20306 min=3.16759 eff_gflops=319.7 speedup_vs_first=1.111 paired=1.111 [IQR 1.021-1.130]
+time m=8000 k=8000 n=8000 method=g:slp/4x4x4_r48_plinopt-204.slp:1:0:1 reps=5 median=3.17682 min=3.08080 eff_gflops=322.3 speedup_vs_first=1.121 paired=1.121 [IQR 1.105-1.123]
+time m=8000 k=8000 n=8000 method=oz14 reps=5 median=2.54662 min=2.34104 eff_gflops=402.1 speedup_vs_first=1.398 paired=1.358 [IQR 1.284-1.381] [scale 0.0380 conv 0.2477 gemm 2.1977 crt 0.0630]
+time m=8000 k=8000 n=8000 method=ozw14 reps=5 median=2.43094 min=2.30976 eff_gflops=421.2 speedup_vs_first=1.464 paired=1.446 [IQR 1.439-1.473] [scale 0.0233 conv 0.2982 gemm 2.0187 crt 0.1390]
+time m=8000 k=8000 n=8000 method=oz16 reps=5 median=2.84474 min=2.59871 eff_gflops=360.0 speedup_vs_first=1.251 paired=1.272 [IQR 1.216-1.274] [scale 0.0351 conv 0.2526 gemm 2.4880 crt 0.0688]
+time m=8000 k=8000 n=8000 method=ozw16 reps=5 median=2.69358 min=2.60112 eff_gflops=380.2 speedup_vs_first=1.322 paired=1.311 [IQR 1.285-1.314] [scale 0.0230 conv 0.2790 gemm 2.2289 crt 0.1625]
+# ozw16 after small-block fallback Wed Oct  7 22:39:35 UTC 2026
+time m=16000 k=16000 n=16000 method=dgemm reps=3 median=28.94989 min=28.58679 eff_gflops=283.0 speedup_vs_first=1.000 paired=1.000 [IQR 1.000-1.000]
+time m=16000 k=16000 n=16000 method=ozw16 reps=3 median=21.83933 min=21.38104 eff_gflops=375.1 speedup_vs_first=1.326 paired=1.326 [IQR 1.281-1.337] [scale 0.0878 conv 2.5712 gemm 18.0782 crt 0.6435]
+time m=20000 k=20000 n=20000 method=dgemm reps=3 median=55.14131 min=55.07723 eff_gflops=290.2 speedup_vs_first=1.000 paired=1.000 [IQR 1.000-1.000]
+time m=20000 k=20000 n=20000 method=ozw16 reps=3 median=47.28634 min=47.17879 eff_gflops=338.4 speedup_vs_first=1.166 paired=1.166 [IQR 1.158-1.177] [scale 0.1515 conv 5.3608 gemm 41.5056 crt 0.5418]
+# done Wed Oct  7 22:50:07 UTC 2026
