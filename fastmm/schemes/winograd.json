@@ -1,0 +1,36 @@
+{
+  "name": "winograd",
+  "dims": [2, 2, 2],
+  "rank": 7,
+  "source": "Strassen-Winograd variant (Winograd 1971; see e.g. Probert 1976, Boyer-Dumas-Pernet-Zhou 2009); hand-written",
+  "ring": "Z",
+  "origin": "Winograd 1971 (Strassen-Winograd variant)",
+  "notes": "S1=A21+A22 S2=S1-A11 S3=A11-A21 S4=A12-S2; T1=B12-B11 T2=B22-T1 T3=B22-B12 T4=T2-B21; M1=A11*B11 M2=A12*B21 M3=S4*B22 M4=A22*T4 M5=S1*T1 M6=S2*T2 M7=S3*T3; C11=M1+M2 U2=M1+M6 U3=U2+M7 U4=U2+M5 C12=U4+M3 C21=U3-M4 C22=U3+M5; 15 additions with CSE (8 pre + 7 post)",
+  "U": [
+    [1,0,0,0],
+    [0,1,0,0],
+    [1,1,-1,-1],
+    [0,0,0,1],
+    [0,0,1,1],
+    [-1,0,1,1],
+    [1,0,-1,0]
+  ],
+  "V": [
+    [1,0,0,0],
+    [0,0,1,0],
+    [0,0,0,1],
+    [1,-1,-1,1],
+    [-1,1,0,0],
+    [1,-1,0,1],
+    [0,-1,0,1]
+  ],
+  "W": [
+    [1,1,1,1],
+    [1,0,0,0],
+    [0,1,0,0],
+    [0,0,-1,0],
+    [0,1,0,1],
+    [0,1,1,1],
+    [0,0,1,1]
+  ]
+}

@@ -1,0 +1,491 @@
+{
+ "summary": [
+  {
+   "dims": [
+    2,
+    2,
+    3
+   ],
+   "rank": 11,
+   "category": "ZQ",
+   "verified_candidates": 13,
+   "distinct": 6,
+   "distinct_nnz": [
+    48,
+    50,
+    53,
+    54,
+    59,
+    70
+   ],
+   "kept": [
+    "2x2x3_r11_fastmatmul-madan232-11-48",
+    "2x2x3_r11_fastmatmul-grey322-11-50",
+    "2x2x3_r11_alphatensor"
+   ]
+  },
+  {
+   "dims": [
+    2,
+    3,
+    2
+   ],
+   "rank": 11,
+   "category": "ZQ",
+   "verified_candidates": 13,
+   "distinct": 6,
+   "distinct_nnz": [
+    48,
+    50,
+    53,
+    54,
+    59,
+    70
+   ],
+   "kept": [
+    "2x3x2_r11_fastmatmul-madan232-11-48",
+    "2x3x2_r11_fastmatmul-grey322-11-50",
+    "2x3x2_r11_alphatensor"
+   ]
+  },
+  {
+   "dims": [
+    3,
+    2,
+    2
+   ],
+   "rank": 11,
+   "category": "ZQ",
+   "verified_candidates": 13,
+   "distinct": 6,
+   "distinct_nnz": [
+    48,
+    50,
+    53,
+    54,
+    59,
+    70
+   ],
+   "kept": [
+    "3x2x2_r11_fastmatmul-madan232-11-48",
+    "3x2x2_r11_fastmatmul-grey322-11-50",
+    "3x2x2_r11_alphatensor"
+   ]
+  },
+  {
+   "dims": [
+    2,
+    3,
+    3
+   ],
+   "rank": 15,
+   "category": "ZQ",
+   "verified_candidates": 16,
+   "distinct": 5,
+   "distinct_nnz": [
+    94,
+    103,
+    112,
+    113,
+    115
+   ],
+   "kept": [
+    "2x3x3_r15_fastmatmul-hk323-15-94",
+    "2x3x3_r15_fastmatmul-grey323-15-103",
+    "2x3x3_r15_flips"
+   ]
+  },
+  {
+   "dims": [
+    3,
+    3,
+    2
+   ],
+   "rank": 15,
+   "category": "ZQ",
+   "verified_candidates": 16,
+   "distinct": 5,
+   "distinct_nnz": [
+    94,
+    103,
+    112,
+    113,
+    115
+   ],
+   "kept": [
+    "3x3x2_r15_fastmatmul-hk323-15-94",
+    "3x3x2_r15_fastmatmul-grey323-15-103",
+    "3x3x2_r15_flips"
+   ]
+  },
+  {
+   "dims": [
+    2,
+    2,
+    4
+   ],
+   "rank": 14,
+   "category": "ZQ",
+   "verified_candidates": 12,
+   "distinct": 6,
+   "distinct_nnz": [
+    72,
+    76,
+    84,
+    84,
+    84,
+    135
+   ],
+   "kept": [
+    "2x2x4_r14_fmmcat",
+    "2x2x4_r14_kauers-structured",
+    "2x2x4_r14_fastmatmul-grey422-14-84"
+   ]
+  },
+  {
+   "dims": [
+    2,
+    4,
+    2
+   ],
+   "rank": 14,
+   "category": "ZQ",
+   "verified_candidates": 12,
+   "distinct": 6,
+   "distinct_nnz": [
+    72,
+    76,
+    84,
+    84,
+    84,
+    135
+   ],
+   "kept": [
+    "2x4x2_r14_fmmcat",
+    "2x4x2_r14_kauers-structured",
+    "2x4x2_r14_fastmatmul-grey422-14-84"
+   ]
+  },
+  {
+   "dims": [
+    2,
+    3,
+    4
+   ],
+   "rank": 20,
+   "category": "ZQ",
+   "verified_candidates": 21,
+   "distinct": 9,
+   "distinct_nnz": [
+    130,
+    133,
+    136,
+    138,
+    144,
+    209,
+    220,
+    231,
+    233
+   ],
+   "kept": [
+    "2x3x4_r20_kauers-structured",
+    "2x3x4_r20_kauers-structured-2",
+    "2x3x4_r20_alphatensor"
+   ]
+  },
+  {
+   "dims": [
+    3,
+    3,
+    3
+   ],
+   "rank": 23,
+   "category": "ZQ",
+   "verified_candidates": 25,
+   "distinct": 16,
+   "distinct_nnz": [
+    139,
+    142,
+    143,
+    143,
+    144,
+    149,
+    150,
+    152,
+    152,
+    153,
+    165,
+    174,
+    175,
+    177,
+    194,
+    221
+   ],
+   "kept": [
+    "3x3x3_r23_fastmatmul-smirnov333-23-139",
+    "3x3x3_r23_fastmatmul-grey333-23-142",
+    "3x3x3_r23_fastmatmul-grey333-23-143"
+   ]
+  },
+  {
+   "dims": [
+    2,
+    4,
+    4
+   ],
+   "rank": 26,
+   "category": "ZQ",
+   "verified_candidates": 17,
+   "distinct": 9,
+   "distinct_nnz": [
+    182,
+    190,
+    200,
+    212,
+    216,
+    230,
+    285,
+    379,
+    257
+   ],
+   "kept": [
+    "2x4x4_r26_alphatensor",
+    "2x4x4_r26_fmmcat",
+    "2x4x4_r26_perminov-addred"
+   ]
+  },
+  {
+   "dims": [
+    4,
+    2,
+    4
+   ],
+   "rank": 26,
+   "category": "ZQ",
+   "verified_candidates": 17,
+   "distinct": 9,
+   "distinct_nnz": [
+    182,
+    190,
+    200,
+    212,
+    216,
+    230,
+    285,
+    379,
+    257
+   ],
+   "kept": [
+    "4x2x4_r26_alphatensor",
+    "4x2x4_r26_fmmcat",
+    "4x2x4_r26_perminov-addred"
+   ]
+  },
+  {
+   "dims": [
+    3,
+    3,
+    4
+   ],
+   "rank": 29,
+   "category": "ZQ",
+   "verified_candidates": 15,
+   "distinct": 6,
+   "distinct_nnz": [
+    204,
+    212,
+    214,
+    218,
+    234,
+    272
+   ],
+   "kept": [
+    "3x3x4_r29_fastmatmul-smirnov343-29-204",
+    "3x3x4_r29_perminov-addred",
+    "3x3x4_r29_kauers-structured"
+   ]
+  },
+  {
+   "dims": [
+    3,
+    4,
+    4
+   ],
+   "rank": 38,
+   "category": "ZQ",
+   "verified_candidates": 11,
+   "distinct": 6,
+   "distinct_nnz": [
+    280,
+    282,
+    292,
+    312,
+    489,
+    619
+   ],
+   "kept": [
+    "3x4x4_r38_fmmcat",
+    "3x4x4_r38_perminov-addred",
+    "3x4x4_r38_alphatensor"
+   ]
+  },
+  {
+   "dims": [
+    4,
+    4,
+    4
+   ],
+   "rank": 48,
+   "category": "Q",
+   "verified_candidates": 6,
+   "distinct": 4,
+   "distinct_nnz": [
+    624,
+    760,
+    872,
+    1072
+   ],
+   "kept": [
+    "4x4x4_r48_plinopt-sparse",
+    "4x4x4_r48_plinopt-204",
+    "4x4x4_r48_plinopt-accurate"
+   ]
+  },
+  {
+   "dims": [
+    4,
+    4,
+    4
+   ],
+   "rank": 48,
+   "category": "C",
+   "verified_candidates": 1,
+   "distinct": 1,
+   "distinct_nnz": [
+    1376
+   ],
+   "kept": [
+    "4x4x4_r48_alphaevolve"
+   ]
+  },
+  {
+   "dims": [
+    4,
+    4,
+    4
+   ],
+   "rank": 49,
+   "category": "ZQ",
+   "verified_candidates": 13,
+   "distinct": 4,
+   "distinct_nnz": [
+    432,
+    582,
+    588,
+    743
+   ],
+   "kept": [
+    "4x4x4_r49_strassen-squared",
+    "4x4x4_r49_alphatensor",
+    "4x4x4_r49_winograd-squared"
+   ]
+  },
+  {
+   "dims": [
+    3,
+    3,
+    6
+   ],
+   "rank": 40,
+   "category": "ZQ",
+   "verified_candidates": 13,
+   "distinct": 2,
+   "distinct_nnz": [
+    960,
+    960
+   ],
+   "kept": [
+    "3x3x6_r40_fastmatmul-tichavsky_kovac336-40-960",
+    "3x3x6_r40_fastmatmul-smirnov336-40-960"
+   ]
+  },
+  {
+   "dims": [
+    2,
+    2,
+    5
+   ],
+   "rank": 18,
+   "category": "ZQ",
+   "verified_candidates": 13,
+   "distinct": 6,
+   "distinct_nnz": [
+    84,
+    96,
+    99,
+    102,
+    111,
+    176
+   ],
+   "kept": [
+    "2x2x5_r18_fmmcat",
+    "2x2x5_r18_perminov-addred",
+    "2x2x5_r18_fastmatmul-grey252-18-99"
+   ]
+  },
+  {
+   "dims": [
+    5,
+    5,
+    5
+   ],
+   "rank": 93,
+   "category": "ZQ",
+   "verified_candidates": 14,
+   "distinct": 9,
+   "distinct_nnz": [
+    1054,
+    1057,
+    1096,
+    1224,
+    1242,
+    1250,
+    1291,
+    1309,
+    1458
+   ],
+   "kept": [
+    "5x5x5_r93_perminov-addred",
+    "5x5x5_r93_alphaevolve",
+    "5x5x5_r93_perminov-seren"
+   ]
+  },
+  {
+   "dims": [
+    4,
+    4,
+    5
+   ],
+   "rank": 61,
+   "category": "ZQ",
+   "verified_candidates": 7,
+   "distinct": 3,
+   "distinct_nnz": [
+    594,
+    597,
+    600
+   ],
+   "kept": [
+    "4x4x5_r61_perminov-addred",
+    "4x4x5_r61_alphaevolve",
+    "4x4x5_r61_perminov-seren"
+   ]
+  }
+ ],
+ "failures": [
+  {
+   "source": "https://github.com/dronperminov/FastMatrixMultiplication/schemes/known/jakobmoosbauer_symmetric_flips/555m93_lifted.exp",
+   "reason": "parse error: line 41: trailing tokens: '(+a11 - a14 - a15 - a31 + a34 + a35 + a41 - a44 - a45) -b13 (-c13 + c33 - c53))'"
+  }
+ ]
+}

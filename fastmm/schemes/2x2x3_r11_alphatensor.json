@@ -1,0 +1,49 @@
+{
+  "name": "2x2x3_r11_alphatensor",
+  "dims": [2, 2, 3],
+  "rank": 11,
+  "source": "https://github.com/google-deepmind/alphatensor @ 1949163da3be : algorithms/factorizations_r.npz[2,2,3]",
+  "ring": "Z",
+  "origin": "Fawzi et al., Nature 610 (2022), AlphaTensor",
+  "source_convention": "factor matrices u (MK x r), v (KN x r), w (MN x r) [index order of w not documented]; read as U (i,k), V (k,j), W (j,i) i.e. C^T / trilinear tr(ABC)",
+  "also_in": ["https://github.com/dronperminov/FastMatrixMultiplication @ 64f58a5e4080 : schemes/known/alpha_tensor/2x2x3_m11_ZT.json"],
+  "U": [
+    [0,0,1,0],
+    [0,0,1,1],
+    [0,1,1,0],
+    [0,1,0,0],
+    [1,1,0,0],
+    [1,0,-1,0],
+    [1,0,0,0],
+    [0,1,0,-1],
+    [0,0,1,-1],
+    [0,1,0,0],
+    [0,0,0,1]
+  ],
+  "V": [
+    [0,1,0,0,-1,0],
+    [0,0,0,0,1,0],
+    [0,0,1,0,1,0],
+    [0,0,1,0,0,-1],
+    [0,0,1,0,0,0],
+    [0,1,1,0,0,0],
+    [1,0,-1,0,0,0],
+    [0,0,0,0,1,1],
+    [1,0,0,0,0,0],
+    [0,0,1,-1,0,0],
+    [1,0,0,1,0,0]
+  ],
+  "W": [
+    [0,1,0,0,1,0],
+    [0,0,0,0,1,-1],
+    [0,1,0,0,0,1],
+    [0,0,-1,0,0,-1],
+    [1,-1,1,0,0,0],
+    [0,1,0,0,0,0],
+    [1,0,0,0,0,0],
+    [0,0,0,0,0,-1],
+    [0,0,0,1,0,0],
+    [-1,0,0,0,0,0],
+    [0,0,0,1,0,0]
+  ]
+}

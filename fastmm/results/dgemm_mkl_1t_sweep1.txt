@@ -1,0 +1,7 @@
+dgemm n=500 reps=9 median=0.004563 s min=0.004050 s  54.8 GFLOP/s (median)
+dgemm n=750 reps=9 median=0.016641 s min=0.014395 s  50.7 GFLOP/s (median)
+dgemm n=1000 reps=9 median=0.033275 s min=0.030847 s  60.1 GFLOP/s (median)
+dgemm n=1500 reps=9 median=0.109043 s min=0.099965 s  61.9 GFLOP/s (median)
+dgemm n=2000 reps=9 median=0.250690 s min=0.245604 s  63.8 GFLOP/s (median)
+dgemm n=3000 reps=9 median=0.805893 s min=0.761093 s  67.0 GFLOP/s (median)
+dgemm n=4000 reps=9 median=1.937236 s min=1.878787 s  66.1 GFLOP/s (median)

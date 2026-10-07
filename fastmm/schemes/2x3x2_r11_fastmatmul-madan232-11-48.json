@@ -1,0 +1,49 @@
+{
+  "name": "2x3x2_r11_fastmatmul-madan232-11-48",
+  "dims": [2, 3, 2],
+  "rank": 11,
+  "source": "https://github.com/arbenson/fast-matmul @ 132358be7a6a : codegen/algorithms/madan232-11-48",
+  "ring": "Z",
+  "origin": "M. Musuvathi (SAT solver), via Benson-Ballard",
+  "source_convention": "columns of U (MK x r), V (KN x r), W (MN x r), row-major entries; read as U (i,k), V (k,j), W (i,j)",
+  "also_in": ["https://github.com/dronperminov/FastMatrixMultiplication @ 64f58a5e4080 : schemes/known/tensor/2x2x3_tensor.mpl", "https://github.com/dronperminov/FastMatrixMultiplication @ 64f58a5e4080 : schemes/results/addition_reduced_ZT/2x2x3_m11_cr20_cn20_ZT_reduced.json"],
+  "U": [
+    [1,0,0,0,0,0],
+    [1,0,0,0,0,0],
+    [0,1,-1,0,0,0],
+    [0,1,0,0,-1,0],
+    [0,0,1,0,-1,0],
+    [0,0,1,0,0,-1],
+    [0,0,1,0,0,0],
+    [0,0,0,1,0,0],
+    [0,0,0,1,0,0],
+    [0,0,0,0,1,-1],
+    [0,0,0,0,-1,0]
+  ],
+  "V": [
+    [1,0,0,0,0,0],
+    [0,1,0,0,0,0],
+    [0,0,1,0,0,0],
+    [0,0,-1,-1,0,0],
+    [0,0,-1,0,0,1],
+    [0,0,0,0,1,1],
+    [0,0,-1,0,-1,0],
+    [1,0,0,0,0,0],
+    [0,1,0,0,0,0],
+    [0,0,0,0,0,1],
+    [0,0,0,1,0,1]
+  ],
+  "W": [
+    [1,0,0,0],
+    [0,1,0,0],
+    [1,-1,0,0],
+    [0,-1,0,0],
+    [0,1,1,0],
+    [0,0,-1,0],
+    [-1,0,-1,0],
+    [0,0,1,0],
+    [0,0,0,1],
+    [0,0,1,-1],
+    [0,-1,0,-1]
+  ]
+}

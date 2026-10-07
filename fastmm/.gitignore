@@ -1,0 +1,4 @@
+bin/
+slp/
+__pycache__/
+*.o
