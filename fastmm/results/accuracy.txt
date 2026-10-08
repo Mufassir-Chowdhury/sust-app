@@ -854,3 +854,32 @@ acc type=decay r=32 m=4000 k=4000 n=4000 method=oz15 max_cw=1.806e-09 med_cw=2.0
 acc type=decay r=32 m=4000 k=4000 n=4000 method=oz16 max_cw=1.114e-10 med_cw=1.316e-17 max_rel=6.033e-05 med_rel=7.095e-16 nrm=1.261e-17
 acc type=decay r=32 m=4000 k=4000 n=4000 method=ozf14:slp/winograd.slp max_cw=1.449e-08 med_cw=1.648e-15 max_rel=1.130e-02 med_rel=9.229e-14 nrm=1.746e-16
 acc type=decay r=32 m=4000 k=4000 n=4000 method=ozc16 max_cw=7.771e-16 med_cw=1.394e-17 max_rel=1.593e-08 med_rel=5.998e-16 nrm=3.786e-16 uncertified=10031183 dot2=0 dgemm_tiles=0 fallback_blocks=1/1
+acc type=unif r=0 m=8000 k=8000 n=8000 method=dgemm max_cw=6.651e-17 med_cw=6.608e-18 max_rel=8.602e-08 med_rel=6.611e-16 nrm=4.727e-17
+acc type=unif r=0 m=8000 k=8000 n=8000 method=sw1 max_cw=2.070e-16 med_cw=1.438e-17 max_rel=1.013e-07 med_rel=1.505e-15 nrm=1.484e-16
+acc type=unif r=0 m=8000 k=8000 n=8000 method=sw2 max_cw=6.256e-16 med_cw=3.194e-17 max_rel=5.681e-07 med_rel=3.439e-15 nrm=4.527e-16
+acc type=unif r=0 m=8000 k=8000 n=8000 method=oz14 max_cw=2.101e-16 med_cw=2.537e-17 max_rel=4.909e-08 med_rel=2.523e-15 nrm=1.515e-16
+acc type=decay r=16 m=8000 k=8000 n=8000 method=dgemm max_cw=3.322e-16 med_cw=9.724e-18 max_rel=1.431e-08 med_rel=6.405e-16 nrm=1.823e-16
+acc type=unif r=0 m=8000 k=8000 n=8000 method=oz16 max_cw=7.213e-18 med_cw=3.064e-19 max_rel=2.878e-15 med_rel=3.846e-17 nrm=5.128e-18
+acc type=decay r=16 m=8000 k=8000 n=8000 method=sw1 max_cw=7.551e-13 med_cw=5.393e-17 max_rel=2.458e-05 med_rel=4.465e-15 nrm=4.219e-16
+acc type=unif r=0 m=8000 k=8000 n=8000 method=ozc16 max_cw=7.213e-18 med_cw=3.064e-19 max_rel=2.878e-15 med_rel=3.846e-17 nrm=5.128e-18 uncertified=0 dot2=0 dgemm_tiles=0 fallback_blocks=0/2
+acc type=decay r=16 m=8000 k=8000 n=8000 method=sw2 max_cw=2.574e-12 med_cw=3.072e-16 max_rel=9.703e-05 med_rel=2.431e-14 nrm=1.084e-15
+acc type=decay r=16 m=8000 k=8000 n=8000 method=oz14 max_cw=5.241e-13 med_cw=1.160e-16 max_rel=2.809e-05 med_rel=9.870e-15 nrm=1.734e-16
+acc type=decay r=16 m=8000 k=8000 n=8000 method=oz15 max_cw=6.487e-14 med_cw=1.475e-17 max_rel=4.435e-06 med_rel=1.246e-15 nrm=2.042e-17
+acc type=randexp r=48 m=8000 k=8000 n=8000 method=dgemm max_cw=1.483e-15 med_cw=7.784e-17 max_rel=1.170e-08 med_rel=2.639e-16 nrm=3.911e-17
+acc type=randexp r=48 m=8000 k=8000 n=8000 method=sw1 max_cw=3.286e-14 med_cw=2.679e-16 max_rel=5.016e-08 med_rel=9.203e-16 nrm=1.301e-16
+acc type=randexp r=48 m=8000 k=8000 n=8000 method=sw2 max_cw=1.417e-13 med_cw=8.275e-16 max_rel=9.778e-08 med_rel=2.941e-15 nrm=3.423e-16
+acc type=randexp r=48 m=8000 k=8000 n=8000 method=oz14 max_cw=4.621e-14 med_cw=6.912e-16 max_rel=4.805e-08 med_rel=2.298e-15 nrm=9.065e-17
+acc type=randexp r=48 m=8000 k=8000 n=8000 method=oz16 max_cw=3.880e-16 med_cw=1.277e-17 max_rel=3.578e-10 med_rel=4.755e-17 nrm=4.470e-18
+acc type=randexp r=48 m=8000 k=8000 n=8000 method=ozc16 max_cw=1.483e-15 med_cw=7.784e-17 max_rel=1.170e-08 med_rel=2.639e-16 nrm=3.911e-17 uncertified=26802112 dot2=0 dgemm_tiles=0 fallback_blocks=2/2
+acc type=randexp r=64 m=8000 k=8000 n=8000 method=dgemm max_cw=1.610e-15 med_cw=7.728e-17 max_rel=3.056e-09 med_rel=2.114e-16 nrm=3.903e-17
+acc type=randexp r=64 m=8000 k=8000 n=8000 method=sw1 max_cw=1.485e-13 med_cw=2.803e-16 max_rel=2.960e-08 med_rel=7.596e-16 nrm=1.057e-16
+acc type=randexp r=64 m=8000 k=8000 n=8000 method=sw2 max_cw=3.805e-13 med_cw=9.776e-16 max_rel=2.367e-07 med_rel=2.755e-15 nrm=3.755e-16
+acc type=randexp r=64 m=8000 k=8000 n=8000 method=oz14 max_cw=1.902e-13 med_cw=9.661e-16 max_rel=8.797e-08 med_rel=2.585e-15 nrm=8.465e-17
+acc type=randexp r=64 m=8000 k=8000 n=8000 method=oz16 max_cw=1.551e-15 med_cw=1.758e-17 max_rel=1.032e-09 med_rel=4.963e-17 nrm=5.479e-18
+acc type=randexp r=64 m=8000 k=8000 n=8000 method=ozc16 max_cw=1.610e-15 med_cw=7.728e-17 max_rel=3.056e-09 med_rel=2.114e-16 nrm=3.903e-17 uncertified=41148098 dot2=0 dgemm_tiles=0 fallback_blocks=2/2
+acc type=decay r=16 m=8000 k=8000 n=8000 method=dgemm max_cw=3.322e-16 med_cw=9.724e-18 max_rel=1.431e-08 med_rel=6.405e-16 nrm=1.823e-16
+acc type=decay r=16 m=8000 k=8000 n=8000 method=sw1 max_cw=7.551e-13 med_cw=5.393e-17 max_rel=2.458e-05 med_rel=4.465e-15 nrm=4.219e-16
+acc type=decay r=16 m=8000 k=8000 n=8000 method=sw2 max_cw=2.574e-12 med_cw=3.072e-16 max_rel=9.703e-05 med_rel=2.431e-14 nrm=1.084e-15
+acc type=decay r=16 m=8000 k=8000 n=8000 method=oz14 max_cw=5.241e-13 med_cw=1.160e-16 max_rel=2.809e-05 med_rel=9.870e-15 nrm=1.734e-16
+acc type=decay r=16 m=8000 k=8000 n=8000 method=oz16 max_cw=4.108e-15 med_cw=1.653e-18 max_rel=4.280e-08 med_rel=8.551e-17 nrm=6.910e-18
+acc type=decay r=16 m=8000 k=8000 n=8000 method=ozc16 max_cw=3.322e-16 med_cw=9.724e-18 max_rel=1.431e-08 med_rel=6.405e-16 nrm=1.823e-16 uncertified=25333744 dot2=0 dgemm_tiles=0 fallback_blocks=2/2

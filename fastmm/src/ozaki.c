@@ -287,9 +287,10 @@ typedef struct {
   size_t h, w;
   const double *n1A, *n1B, *fa, *fb;  // fa_i = 2^(sig_i - exA_i), fb_j = theta 2^(tau_j - exB_j - 53)
   const uint8_t *zrA, *zrB;
-  double ek0;           // k/4 + 2^(2L-80)
+  double ek0;           // k/4 + 2^-82 P (CRT low-part error)
   size_t count;
   size_t *tcnt, ntr;    // uncertified entries per CERT_T x CERT_T tile (ntr tiles along i)
+  const int *exA, *exB; // LB_ij = 2^-(exA_i + exB_j) sum qA qB: entries with LB < 2^-969 are not certified
 } cert_ctx;
 #define CERT_T 256        // tile of C recomputed by DGEMM when it holds many uncertified entries
 #define CERT_TILE_MAX 256  // ... more than this many (otherwise: Dot2 per entry, cheaper below ~400)
@@ -300,13 +301,14 @@ static void epi_cert(const int32_t *blk, size_t ld, size_t r0, size_t c0, void *
   size_t cnt = e->h - c0 < 32 ? e->h - c0 : 32, flagged = 0;
   const __m512d half = _mm512_set1_pd(0.5), ek0 = _mm512_set1_pd(e->ek0);
   const __m512d safety = _mm512_set1_pd(1.0 + 0x1p-30);  // rounding in the double sums n1A, n1B and here
-  __m512d n1a[4], fa[4];
+  __m512d n1a[4], fa[4], xa[4];
   __mmask8 mk[4], zr[4];
   for (int g = 0; g < 4; g++) {
     size_t o = 8 * (size_t)g;
     mk[g] = o >= cnt ? 0 : (cnt - o >= 8 ? 0xFF : (__mmask8)((1u << (cnt - o)) - 1));
     n1a[g] = _mm512_maskz_loadu_pd(mk[g], e->n1A + c0 + o);
     fa[g] = _mm512_maskz_loadu_pd(mk[g], e->fa + c0 + o);
+    xa[g] = _mm512_cvtepi32_pd(_mm256_maskz_loadu_epi32(mk[g], e->exA + c0 + o));
     __m128i z = _mm_maskz_loadu_epi8(mk[g], e->zrA + c0 + o);
     zr[g] = _mm_test_epi8_mask(z, z);
   }
@@ -315,12 +317,16 @@ static void epi_cert(const int32_t *blk, size_t ld, size_t r0, size_t c0, void *
     if (j >= e->w) break;
     uint8_t *f = e->F + c0 + j * e->h;
     __m512d nb = _mm512_set1_pd(e->n1B[j]), fb = _mm512_set1_pd(e->fb[j]);
+    __m512d xb = _mm512_set1_pd((double)e->exB[j] - 969.0);
     for (int g = 0; g < 4; g++) {
       if (!mk[g]) break;
       __m512d E = _mm512_mul_pd(_mm512_fmadd_pd(half, _mm512_add_pd(n1a[g], nb), ek0), safety);
       __m512d lb = _mm512_cvtepi32_pd(_mm256_loadu_si256((const __m256i *)(blk + rr * ld + 8 * g)));
       __m512d rhs = _mm512_mul_pd(_mm512_mul_pd(lb, fa[g]), fb);
-      __mmask8 bad = _mm512_mask_cmp_pd_mask(mk[g], E, rhs, _CMP_NLE_UQ) & (__mmask8)~zr[g];
+      __mmask8 bad = _mm512_mask_cmp_pd_mask(mk[g], E, rhs, _CMP_NLE_UQ);
+      // underflow guard: LB_int < 2^(exA + exB - 969)  <=>  LB < 2^-969
+      bad |= _mm512_mask_cmp_pd_mask(mk[g], lb, _mm512_scalef_pd(_mm512_set1_pd(1.0), _mm512_add_pd(xa[g], xb)), _CMP_LT_OQ);
+      bad &= (__mmask8)~zr[g];
       if (e->zrB[j]) bad = 0;
       _mm_mask_storeu_epi8(f + 8 * g, mk[g], _mm_maskz_set1_epi8(bad, 1));
       flagged += (size_t)__builtin_popcount(bad);
@@ -398,12 +404,33 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
   // dimensions are split and the partial products summed in double (one rounding per chunk).
   if (k > OZ_KMAX) {
     double *T = amalloc(m * n * sizeof(double));
+    // Certified mode: each chunk is certified with theta - 1, the chunk results (each rounded once,
+    // <= u|c_chunk|) are summed with TwoSum (error O(u^2)) and rounded once at the end, so the total
+    // stays within (theta + 1) u sum_k |a_ik||b_kj| (first order).
+    const double theta = g_cert_theta;
+    double *Lo = theta > 0 ? calloc(m * n, sizeof(double)) : NULL;
+    if (theta > 0) g_cert_theta = theta > 2 ? theta - 1 : theta / 2;
     for (size_t p0 = 0; p0 < k; p0 += OZ_KMAX) {
       size_t kk = k - p0 < OZ_KMAX ? k - p0 : OZ_KMAX;
       oz_dgemm(s, m, kk, n, A + p0 * lda, lda, B + p0, ldb, p0 ? T : C, p0 ? m : ldc, tm);
-      if (p0)
+      if (p0 && Lo) {
+        #pragma omp parallel for
+        for (size_t j = 0; j < n; j++)
+          for (size_t i = 0; i < m; i++) {
+            double a = C[i + j * ldc], b = T[i + j * m], sm = a + b, z = sm - a;
+            C[i + j * ldc] = sm;
+            Lo[i + j * m] += (a - (sm - z)) + (b - z);
+          }
+      } else if (p0) {
         #pragma omp parallel for
         for (size_t j = 0; j < n; j++) for (size_t i = 0; i < m; i++) C[i + j * ldc] += T[i + j * m];
+      }
+    }
+    if (Lo) {
+      #pragma omp parallel for
+      for (size_t j = 0; j < n; j++) for (size_t i = 0; i < m; i++) C[i + j * ldc] += Lo[i + j * m];
+      free(Lo);
+      g_cert_theta = theta;
     }
     free(T);
     return;
@@ -475,7 +502,7 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
         tcnt = realloc(tcnt, ntr * ntc * sizeof(size_t));
         memset(tcnt, 0, ntr * ntc * sizeof(size_t));
         cert_ctx cc = {Y[s], h, w, n1A + i0, n1B + j0, fa + i0, fb + j0, zrA + i0, zrB + j0,
-                       0.25 * (double)k + ldexp(1.0, 2 * L - 80), 0, tcnt, ntr};
+                       0.25 * (double)k + exp2(oz_const[s].log2P - 82.0), 0, tcnt, ntr, exA + i0, exB + j0};
         amx_gemm_s8s8(wp, hp, Kp, Bres[s], Ares[s], epi_cert, &cc);
         nflag = cc.count;
         size_t ndg = 0;

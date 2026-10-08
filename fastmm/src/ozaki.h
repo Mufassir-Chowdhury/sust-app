@@ -7,8 +7,8 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
               double *C, size_t ldc, oz_times *tm);
 void oz_release(void);  // free the persistent workspace
 // Certified mode (theta > 0; 0 = off): every entry of C is either certified to satisfy
-// |c^_ij - c_ij| <= (theta + 1) u sum_k |a_ik||b_kj| (rigorous bound of the emulation error against
-// a rigorous lower bound of |A||B| from one extra int8 GEMM), recomputed with a compensated dot
+// |c^_ij - c_ij| <= (theta + 1) u sum_k |a_ik||b_kj| to first order (bound of the emulation error
+// against a rigorous lower bound of |A||B| from one extra int8 GEMM), recomputed with a compensated dot
 // product (isolated entries), or computed by the BLAS DGEMM (256 x 256 tiles holding more than 256
 // uncertified entries; the whole block when more than 1/8 of its tiles do).
 void oz_set_certify(double theta);

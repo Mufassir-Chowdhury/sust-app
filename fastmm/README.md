@@ -31,11 +31,16 @@ n = 500-20000.
        1.1-1.3x MKL. That roughly ties the best Strassen-type plan. On inputs where large entries
        meet small ones (random exponents of 2^±48 or wider, checkerboard or diagonal-decay
        structure) it is 1.4 to 10^7 times less accurate than DGEMM.
-     * **16 moduli, certified** (new mode, section 5) attaches a rigorous per-entry error bound and
-       recomputes every entry it cannot certify with a compensated dot product or DGEMM. **It is
-       never less accurate than DGEMM on any input.** On inputs that certify it runs at
-       1.01-1.18x MKL: a tie with the best Strassen-type plan at n = 4000-8000, and a loss at
-       n = 2000. On inputs that do not certify it runs at about 0.8x MKL.
+     * **16 moduli, certified** (new mode, section 5) attaches an error bound to every entry. It
+       recomputes each entry it cannot certify with a compensated dot product or DGEMM.
+       * **Every entry's error is within 5u·sum_k|a_ik||b_kj|, or the entry comes from DGEMM.**
+         That is below DGEMM's own worst-case bound for k >= 5. Its measured maximum error never
+         exceeded DGEMM's in the 61 class/size combinations tested.
+       * It is not more accurate than DGEMM entry by entry: where DGEMM happens to be exact, a
+         certified entry can carry up to the 5u bound.
+       * On inputs that certify it runs at 1.01-1.18x MKL. That ties the best Strassen-type plan at
+         n = 4000-8000 and loses to it at n = 2000.
+       * On inputs that do not certify it runs at about 0.8x MKL.
 3. **Below n = 1500 nothing beats MKL** on this machine.
 
 **Measured paired speedups over MKL DGEMM**: AMX machine, 4 threads, median of interleaved rounds.
@@ -150,8 +155,11 @@ was restarted on the second (`results/machine2/`).
     much more than DGEMM's, so all tables now use all entries.
   * Metrics: max componentwise |C - C*| / (|A||B|), the quantity DGEMM bounds by about k*u; median
     relative error; and a normwise metric.
-  * Six input classes: uniform, positive, heavy cancellation, outside (row/column) scaling, inside
-    (k-dimension) scaling, and independent random exponents 2^e with e uniform in [-r, r].
+  * Eight input classes:
+    * uniform; positive; heavy cancellation;
+    * outside (row/column) scaling; inside (k-dimension) scaling;
+    * independent random exponents 2^e with e uniform in [-r, r];
+    * checkerboard exponents; decay away from the diagonal (section 6).
 
 ## 2. Baselines, and what limits Strassen on this machine
 
@@ -191,9 +199,9 @@ What limits Strassen-Winograd here, in plain words, with the measurements behind
   * Fused or task-parallel plans need 3-16 n^2. At n = 16000-20000 this, not speed, rules out the
     larger base cases.
 * **Stability** (section 6).
-  * Componentwise error is 2-4x DGEMM's per level on well-scaled data and 10-1000x on data with
-    wide exponent ranges.
-  * It reaches 1e+17 to 1e+21 (garbage) for rows or columns scaled by 2^±32.
+  * Componentwise error is 2-4x DGEMM's per level on well-scaled data, 3-10^6x with random
+    exponents, and 10^3-10^8x on matrices that decay away from the diagonal.
+  * It reaches 1e+18 to 1e+22 (garbage) for rows or columns scaled by 2^±32.
   * Outside-inside power-of-two scaling (Ballard et al. 2016) repairs the diagonally scaled cases
     but not entrywise exponent spread.
 
@@ -314,22 +322,36 @@ scaling, b_j: column j of B). DGEMM's error is bounded by k·u·sum_k |a_ik||b_k
 **Certified mode** (`oz_set_certify(theta)`, method `ozcS`; the default theta = 4 gives a 5u bound).
 Every entry of C is either certified or recomputed:
 
-1. **Rigorous error bound.** The packers also compute the 1-norms of the rounded scaled integer rows
-   and columns, n1A_i and n1B_j. The emulation error of c_ij is then at most
-   (n1A_i/2 + n1B_j/2 + k/4 + 2^(2L-80)) · 2^-(sigma_i + tau_j), a rigorous bound.
+1. **Error bound.** The packers also compute the 1-norms of the rounded scaled integer rows and
+   columns, n1A_i and n1B_j. Each scaled entry's rounding error is at most 1/2 and the CRT is exact,
+   except for a low-part term below 2^-82·P. So the emulation error of c_ij is at most
+   (n1A_i/2 + n1B_j/2 + k/4 + 2^-82·P) · 2^-(sigma_i + tau_j).
+   * The first version used 2^(2L-80) for the CRT term, which is about 2x too small. The second
+     review found this; no violation was ever observed from it.
 2. **Rigorous lower bound of sum_k |a_ik||b_kj|.**
    * |A| and |B| are quantised by floor to 7 bits, with each row or column scaled by its own power
      of two.
    * One extra int8 AMX GEMM gives the lower bound for every entry; it is 1/17 of the GEMM work.
-3. **Certificate.** An entry passes when its bound is at most theta·u times the lower bound. Then
-   |c^ - c| <= (theta + 1)·u·sum_k |a_ik||b_kj|, which is **5u|A||B| for theta = 4**. That is
-   below DGEMM's own worst-case bound (k·u|A||B|) and close to DGEMM's typical error.
+3. **Certificate.** An entry passes when its bound is at most theta·u times the lower bound.
+   * The final rounding adds u|c|, so to first order |c^ - c| <= (theta + 1)·u·sum_k |a_ik||b_kj|,
+     which is **5u|A||B| for theta = 4**.
+   * That is below DGEMM's own worst-case bound (about k·u|A||B|) for k >= 5, and close to DGEMM's
+     typical error.
+   * Entries whose lower bound is below 2^-969 are never certified, because there the final rounding
+     can fall into the subnormal range.
+   * For k > 131071 the inner dimension is split. Each chunk is then certified with theta - 1, and
+     the chunks are added with TwoSum and rounded once. The second review showed that plain
+     addition of certified chunks reached 5.6u.
 4. **Repair of the entries that fail.** Failing entries are recomputed with a compensated dot
    product (Dot2, Ogita-Rump-Oishi 2005; error <= u|c| + O(k^2 u^2)|A||B|).
    * A 256x256 tile with more than 256 failing entries is recomputed by MKL DGEMM instead.
    * The whole block goes to DGEMM when more than 1/8 of its tiles need DGEMM.
-5. **Guarantee.** Every entry is certified to 5u|A||B|, computed by Dot2, or computed by MKL's DGEMM.
-   **No input can make it less accurate than DGEMM.**
+5. **Guarantee.** Every entry is certified to 5u|A||B| (first order), computed by Dot2, or computed
+   by MKL's DGEMM.
+   * This is a bound, not a pointwise comparison. On an entry where DGEMM happens to be exact, a
+     certified entry may carry an error of up to 5u|A||B|.
+   * The second review built such a case with an error of 3.2u. Its adversarial search found no
+     certified entry above the bound (worst 4.45u before the fixes above).
 
 What it costs:
 * About 3% when everything certifies (uniform data at n = 8000: 1.18x MKL against 1.21x for oz16).
@@ -337,6 +359,12 @@ What it costs:
   call costs about 1.25x a DGEMM.
 * The bound is a worst case. It does not pass for some inputs where the actual emulation error is
   fine, for example decay with r = 8, where oz16 is 10x below DGEMM but some tiles are recomputed.
+* A few outlier rows or columns can spoil it for everyone. The inner scaling balances by the
+  largest entries, so four outlier rows and columns made 99% of the entries fail and sent the
+  product to DGEMM (second review); without inner scaling only the 16 affected entries failed.
+* NaN/Inf inputs still run the certificate before the final DGEMM, which is wasted work.
+* When intermediate products overflow, DGEMM returns Inf/NaN. The emulation returns the exact
+  result when it is representable, so the NaN/Inf patterns differ.
 * It needs 16 moduli. With 14 or 15 the bound (about 2^-54 to 2^-57) is above u·|A||B| for typical
   data, so almost nothing would certify.
 
@@ -421,7 +449,8 @@ Bold marks errors more than 10x DGEMM's.
   * 2-100x worse on random exponents up to 2^±32, and up to 10^9x worse on the hard classes.
   * On the checker class it is far worse than Strassen.
 * **Certified mode.**
-  * Never worse than DGEMM: max ratio 1.0 over all 57 class/size combinations.
+  * Its maximum error never exceeded DGEMM's maximum (ratio <= 1.0) over all 61 class/size
+    combinations. This is a measured outcome, not a guarantee: the guarantee is the 5u bound.
   * Where everything certifies, it is the 16-modulus result.
   * It certifies everything on uniform, positive, cancellation, diagonally scaled and 2^±10 random
     exponent inputs, and part of the entries for 2^±20 random exponents and decay 2^-8. Elsewhere it
@@ -559,8 +588,8 @@ and exits sees no gain.
 
 ## 8. What is and is not new
 
-Searched by two literature agents and a novelty-check agent (`docs/lit_bilinear.md`,
-`docs/lit_emulation.md`, `docs/novelty_check.md`). arXiv and publisher sites were blocked from this
+Searched by two literature agents and two novelty-check agents (`docs/lit_bilinear.md`,
+`docs/lit_emulation.md`, `docs/novelty_check.md`, `docs/novelty_certificate.md`). arXiv and publisher sites were blocked from this
 sandbox, so most paper-level facts come from abstracts, snippets and GitHub sources, and are tagged
 as such in those files.
 
@@ -569,8 +598,8 @@ as such in those files.
   * CPU AMX implementations exist: LIBXS by H. Pabst (open source, LD_PRELOAD DGEMM replacement,
     16 moduli by default), and Kouya 2026 (arXiv:2609.27831, multiple precision on Emerald Rapids,
     compared against MPFR and OpenBLAS-based Ozaki I).
-  * What I did not find published is a 53-bit-accurate comparison against **MKL DGEMM** and a careful
-    Strassen on the same machine. That measurement, the accuracy study, and the implementation choices
+  * What I did not find published is a comparison of this emulation against **MKL DGEMM** and a
+    careful Strassen on the same machine, with a full-entry accuracy study. That measurement, the accuracy study, and the implementation choices
     (exact 32-bit-split residues, built-in inner-dimension scaling) are this project's contribution.
     None is a new algorithm.
 * **Inner-dimension (k) power-of-two scaling** is Ballard et al.'s inside scaling for fast matrix
