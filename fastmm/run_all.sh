@@ -8,6 +8,12 @@ cd "$(dirname "$0")"
 lscpu | grep -E "Model name|^CPU\(s\)|L2|L3" ; python3 -c "import sys; print(sys.version)"
 bench/checks.sh 2>&1 | tee results/checks.txt
 bench/accuracy.sh results/accuracy.txt && python3 tools/acc_table.py results/accuracy.txt > results/accuracy.md
+if ! grep -qw amx_int8 /proc/cpuinfo; then
+  # without AMX the emulation runs on the portable exact kernel: results are identical but timings
+  # are meaningless (and the sweeps would take days)
+  echo "no AMX-INT8 on this CPU: checks and accuracy done; speed sweeps skipped"
+  exit 0
+fi
 if [ "$1" = quick ]; then bench/sweep.sh results/sweep.txt 500 1000 2000 4000
 else bench/sweep.sh results/sweep.txt; fi
 python3 tools/sweep_table.py results/sweep.txt > results/sweep.md

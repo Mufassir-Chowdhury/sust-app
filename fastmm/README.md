@@ -24,9 +24,9 @@ n = 500-20000.
      independent implementation, measured against MKL and Strassen.
    * It only pays on CPUs with AMX.
    * **It has a speed/accuracy trade-off that decides the answer:**
-     * **14 moduli** is clearly faster than both, 1.2-1.5x MKL at n >= 2000. Its accuracy is only
-       normwise per row and column: much worse than DGEMM, entry by entry, on inputs with wide
-       exponent ranges.
+     * **14 moduli** is faster than both at every size from 2000 to 20000: 1.2-1.5x MKL, and 5-28%
+       ahead of the best Strassen-type plan. Its accuracy is only normwise per row and column:
+       much worse than DGEMM, entry by entry, on inputs with wide exponent ranges.
      * **16 moduli** is DGEMM-accurate or better on well-scaled and diagonally scaled data, at
        1.1-1.3x MKL. That roughly ties the best Strassen-type plan. On inputs where large entries
        meet small ones (random exponents of 2^±48 or wider, checkerboard or diagonal-decay
@@ -93,7 +93,9 @@ faster than MKL, but not faster than the best Strassen-type plan. The 14-modulus
   cannot win on such CPUs.
 * **One consequence:** the final single-code-version speed sweep could not be run (section 10).
 * **Review.** Two independent reviews tried to break the results (`docs/independent_review*.md`).
-  The first found real problems, which were fixed or are reported here.
+  Both found real problems, which were fixed or are reported here:
+  * the first: sampling bias in the error metric, two inner-scaling bugs, nondeterminism;
+  * the second: gaps in the certified mode's bound.
 * **Reproduce.** `./run_all.sh` reruns all checks and benchmarks.
 
 ## Contents
@@ -423,6 +425,15 @@ Bold marks errors more than 10x DGEMM's.
 | decay to 2^-r | 16 | 4.5e-16 | **7.8e-13** | **2.5e-12** | **7.8e-13** | **1.7e-12** | **6.5e-13** | **5.1e-15** | 4.5e-16 | DGEMM fallback |
 | decay to 2^-r | 32 | 7.8e-16 | **2.7e-08** | **7.4e-08** | **2.7e-08** | **7.3e-08** | **1.4e-08** | **1.1e-10** | 7.8e-16 | DGEMM fallback |
 
+At n = 8000 (second machine; P48 and sc:sw1 not run):
+
+| input (n = 8000) | r | DGEMM | sw1 | sw2 | sc:sw1 | P48 | oz14 | oz16 | ozc16 | ozc16 did |
+|---|---|---|---|---|---|---|---|---|---|---|
+| uniform [-1,1] | 0 | 6.7e-17 | 2.1e-16 | 6.3e-16 | - | - | 2.1e-16 | 7.2e-18 | 7.2e-18 | all certified |
+| decay to 2^-r | 16 | 3.3e-16 | **7.6e-13** | **2.6e-12** | - | - | **5.2e-13** | **4.1e-15** | 3.3e-16 | DGEMM fallback |
+| random exponents 2^±r | 48 | 1.5e-15 | **3.3e-14** | **1.4e-13** | - | - | **4.6e-14** | 3.9e-16 | 1.5e-15 | DGEMM fallback |
+| random exponents 2^±r | 64 | 1.6e-15 | **1.5e-13** | **3.8e-13** | - | - | **1.9e-13** | 1.6e-15 | 1.6e-15 | DGEMM fallback |
+
 **What the table says:**
 * **DGEMM** is the only method that is accurate on every class.
 * **Strassen-type methods.**
@@ -442,8 +453,9 @@ Bold marks errors more than 10x DGEMM's.
     * random exponents 2^±64: 6-1100x;
     * checker 2^16: 140-380x; checker 2^32: 10^7x;
     * decay 2^-16: 5-11x; decay 2^-32: 10^5x.
-  * The error shrinks with n on random exponents: at 2^±64 it is 1100x at n = 1000, 61x at 2000
-    and 6x at 4000.
+  * The error shrinks with n on random exponents: at 2^±64 it is 1100x DGEMM's at n = 1000, 61x at
+    2000, 6x at 4000 and 1.0x at 8000. At 2^±48 it is 28x, 4x, 1.4x and then 0.26x.
+  * The decay and checker failures do not shrink with n: decay 2^-16 is still 12x at n = 8000.
 * **Emulation, 14 moduli.**
   * About DGEMM's error (0.2-3x) on well-scaled and diagonally scaled data.
   * 2-100x worse on random exponents up to 2^±32, and up to 10^9x worse on the hard classes.
@@ -723,6 +735,14 @@ as such in those files.
 * **Free memory:** the speed-ups assume that the workspace fits, which takes about 3-8 GB at
   n >= 8000. With less free memory the blocking shrinks and the gain disappears. At n = 8000 the
   review measured oz14 at 1.22x MKL with a 1.5 GB budget and 0.6-0.7x with 0.25-0.6 GB.
+* **AMX path vs portable kernel.** Their bit identity is argued from the instruction semantics. It was
+  verified on the error statistics of every emulation variant (all digits equal across the two
+  machines), not by running both kernels on one machine.
+* **Certified mode:**
+  * Its bound was checked by two adversarial searches (the second review's and the regression tests
+    in `bench/checks.sh`), not formally proved.
+  * When a block falls back to DGEMM, the result inherits MKL's own (thread-count dependent)
+    rounding.
 * **Not production code:**
   * The emulation keeps a process-wide workspace and flag, so it must not be called from several
     threads at once.
@@ -732,7 +752,8 @@ as such in those files.
 ## 11. Reproduce; code map
 
 ```
-./run_all.sh          # build, checks, accuracy study, speed sweeps, cold start (many hours: n up to 20000)
+./run_all.sh          # build, checks, accuracy study, speed sweeps, cold start (many hours: n up to 20000;
+                      # without AMX only checks and accuracy run, slowly)
 ./run_all.sh quick    # same with the main sweep limited to n <= 4000 and no final sweep
 bench/checks.sh       # correctness only (~5-10 min); also runs without AMX (portable kernel)
 ```

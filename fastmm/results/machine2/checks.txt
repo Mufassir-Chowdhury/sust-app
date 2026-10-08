@@ -184,4 +184,29 @@ refcheck: 0 entries differ between the blocked and the per-entry reference ok
 4 20 1500 1500 1500    oz16                               max_cw=1.84e-16 limit=4.8e-15 ok
 4 20 1500 1500 1500    ozf14:slp/winograd.slp             max_cw=1.55e-14 limit=1.0e-12 ok
 4 20 1500 1500 1500    ozc16                              max_cw=2.41e-15 limit=4.8e-15 ok
+== 7. certified mode: adversarial drivers of the second independent review (review2/)
+near qa=127 qs=9 kappa=2^47        | emu/dot2 max 4.451u (at 48,54) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 3.61
+near qa=64 qs=5 kappa=2^48         | emu/dot2 max 3.999u (at 16,12) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 6.40
+near qa=127 qs=19 kappa=2^46       | emu/dot2 max 0.994u (at 61,20) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 3.47
+near qa=101 qs=19 kappa=2^46       | emu/dot2 max 0.775u (at 8,21) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 3.31u
+dgemm-exact design qa=64 qs=5      | emu/dot2 max 3.200u (at 0,0) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 0.00u 
+split 2 chunks qa=127 qs=9         | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 1024 (max 4.19u) | DGEMM max 5.1
+split 4 chunks qa=127 qs=9         | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 1024 (max 4.34u) | DGEMM max 4.3
+subnormal output 2^-520 each       | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 87000 (max 162727.80u) | DGEMM m
+subnormal output 2^-540 each       | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 87000 (max 3226244381721459.00u)
+subnormal output 2^-560 each       | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 87000 (max 3226244381721459.00u)
+subnormal A (2^-1060), B 2^1000    | emu/dot2 max 0.262u (at 133,186) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 3.
+products overflow (2^1000 x 2^30)  | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 0.00u 
+outputs near DBL_MAX               | emu/dot2 max 0.996u (at 276,195) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 16
+NaN in A                           | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 86710 (max 3.75u) | DGEMM max 3.
+Inf in B                           | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 86700 (max 3.75u) | DGEMM max 3.
+Inf*0                              | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 86710 (max 3.75u) | DGEMM max 3.
+integers |x|<=1e6                  | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 0.00u 
+zero rows/cols, huge entries, tiny row | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 87000 (max 15.68u) | DGEMM m
+quantisation boundaries            | emu/dot2 max 0.259u (at 133,72) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 2.7
+theta=3                            | emu/dot2 max 0.261u (at 71,98) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 4.06
+theta=0.3                          | emu/dot2 max 0.261u (at 71,98) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 4.06
+theta=1e-3                         | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 87000 (max 4.06u) | DGEMM max 4.
+randexp r=1000                     | emu/dot2 max 0.000u (at 0,0) VIOL=0 | dgemm-routed 0 (max 0.00u) | DGEMM max 0.00u 
+ok
 ALL CHECKS PASSED

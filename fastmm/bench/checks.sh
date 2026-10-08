@@ -5,6 +5,7 @@
 #  3. CRT constants are regenerated with exact integer checks;
 #  4. AMX int8 kernel matches a naive integer product on awkward shapes;
 #  5. emulation with modular Strassen is bitwise identical to the plain emulation;
+#  7. certified mode: no certified entry above (theta+1) u |A||B| on the review's adversarial inputs;
 #  6. error regression on odd shapes for every method (thresholds relative to dgemm), including inner
 #     scalings of 2^+-300 and the edge cases found by the independent review (underflow, reproducibility).
 set -e
@@ -67,4 +68,10 @@ for shape in ("0 0 1 1 1", "0 0 33 65 97", "0 0 301 517 203", "1 0 777 1000 555"
         print(f"{shape:22s} {m:34s} max_cw={e:.2e} limit={lim:.1e} {'ok' if ok else 'FAIL'}")
 sys.exit(1 if fails else 0)
 PY
+echo "== 7. certified mode: adversarial drivers of the second independent review (review2/)"
+for t in t_adv t_misc; do sh review2/build.sh $t; done
+{ ./review2/t_adv near; ./review2/t_adv exact; ./review2/t_adv split 2 32; ./review2/t_adv split 4 32; ./review2/t_misc; } \
+  | tee /tmp/fastmm_cert_checks.txt | grep -E "VIOL=" | sed 's/ m=.* | emu/ | emu/' | cut -c1-120
+if grep -q "VIOL=[1-9]" /tmp/fastmm_cert_checks.txt; then echo "FAIL: certified entry above its bound"; exit 1; fi
+echo ok
 echo "ALL CHECKS PASSED"
