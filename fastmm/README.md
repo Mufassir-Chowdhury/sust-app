@@ -132,7 +132,9 @@ with `./run_all.sh`.
   * All threads: `OMP_NUM_THREADS=4 MKL_NUM_THREADS=4 OMP_PROC_BIND=close`.
 * **Accuracy protocol** (`bin/fmmtest acc`):
   * The reference is a double-double dot product, with error about k*u^2*|A||B|.
-  * Error is computed on all entries (n = 1000) or 20000 sampled entries (n > 1000).
+  * Error is computed on **every entry** of C. An earlier version sampled 20000 entries for n > 1000;
+    the independent review showed that this understated the emulation's heavy-tailed maximum error
+    much more than DGEMM's, so all tables now use all entries.
   * Metrics: max componentwise |C - C*| / (|A||B|), the quantity DGEMM bounds by about k*u; median
     relative error; and a normwise metric.
   * Six input classes: uniform, positive, heavy cancellation, outside (row/column) scaling, inside
@@ -239,9 +241,14 @@ Full table: `docs/ideas.md`. In short:
 `src/ozaki.c`, `src/amx.c`, `src/oz_internal.h`, `tools/gen_oz_consts.py`.
 
 1. **Scale.** Each row of A gets a power of two 2^sigma_i, each column of B 2^tau_j, and the inner
-   dimension a balancing 2^e_k, with A' = A·2^e and B' = 2^-e·B, exact. The scaled entries are rounded
-   to integers with ||row||_2, ||col||_2 < 2^L. By Cauchy-Schwarz every entry of the integer product is
-   below P/4, where P is the product of the moduli.
+   dimension a balancing 2^e_k, with A' = A·2^e and B' = 2^-e·B.
+   * e_k balances max|A_:,k| against max|B_k,:|. It is clamped so that no nonzero entry leaves the
+     normal range, so the scaling is exact.
+   * Norms are computed on exponents, so nothing in them can overflow or underflow.
+   * The scaled entries are rounded to integers with ||row||_2, ||col||_2 < 2^L.
+   * By Cauchy-Schwarz every entry of the integer product is below P/4, where P is the product of the
+     moduli. P/2 would suffice; the extra factor of 2 is a safety margin that costs one bit of L at
+     s = 15 and 16.
 2. **Residues.** For s pairwise coprime moduli <= 256, the residues are int8. They are computed
    exactly from a 32-bit split of each integer, with one FMA-based floor per modulus, and written
    straight into AMX tile layout with non-temporal stores.
@@ -254,9 +261,15 @@ Full table: `docs/ideas.md`. In short:
 5. **Guards.** Memory blocking keeps the workspace under 80% of the memory actually available, the
    smaller of the kernel's MemAvailable and the cgroup limit (n = 20000 fits in 15 GB). A
    persistent pre-faulted workspace is used. NaN/Inf inputs fall back to MKL.
+6. **Reproducibility.** The result is bitwise identical from run to run and for any number of threads.
+   Every reduction runs in a fixed order, and the int32 accumulation is exact. This is checked by
+   `fmmtest edge`.
 
-* The only rounding errors are the rounding of the scaled inputs to L-bit integers and the final
-  rounding to double.
+* The errors are:
+  * the rounding of the scaled inputs to L-bit integers (the dominant term);
+  * the final rounding to double;
+  * a term of at most about 1.7e-25·P in the low part of the CRT reconstruction (negligible);
+  * for k > 131071, one rounding per k-chunk when the chunk results are added.
 * L is about 54 bits for 14 moduli, 57 for 15, and 61 for 16, at k = 8192.
 * Throughput: the AMX GEMM reaches 7.2-7.6 Tops/s on 4 cores, against oneDNN 3.9.2's 7.0 Tops/s and
   MKL's `cblas_gemm_s8u8s32` at 5.2 Tops/s on this machine. That is about 26x the DGEMM rate but only
@@ -485,15 +498,25 @@ as such in those files.
   prior work are from abstracts, snippets and code; for example, whether Dumas, Pernet, Sedoglavic &
   Tichavsky 2026 contains wall-clock timings for <4,4,4;48> is unverified.
 * **Accuracy:**
-  * The error study is empirical: 6 input classes, n <= 4000 with sampled entries above 1000.
+  * The error study is empirical: 6 input classes at n <= 4000, and 2 classes at n = 8000, with every
+    entry checked. Nothing above n = 8000 was checked.
   * The emulation's error bound is analysed (Cauchy-Schwarz range bound, rounding of the scaled
     inputs) but not formally proved here.
   * The accuracy of the emulation on entrywise wide exponent ranges beyond 2^±64 was not tested.
 * **Not run:** no flip-graph, ALS or SAT search for new schemes (justified by the model, but still not
   done), and no Karstadt-Schwartz alternative-basis implementation.
 * **First call:** the emulation keeps a persistent, pre-faulted workspace of up to 8 GB, as a BLAS
-  buffer pool would. The first call pays for allocating and faulting it; that cost is reported
-  separately in section 7 and excluded from the steady-state numbers.
+  buffer pool would. The first call pays for allocating and faulting it.
+  * That cost is reported separately in section 7 and excluded from the steady-state numbers.
+  * The cold timings are single samples per method; the review's repeat runs varied by 2x.
+* **Free memory:** the speed-ups assume that the workspace fits, which takes about 3-8 GB at
+  n >= 8000. With less free memory the blocking shrinks and the gain disappears. At n = 8000 the
+  review measured oz14 at 1.22x MKL with a 1.5 GB budget and 0.6-0.7x with 0.25-0.6 GB.
+* **Not production code:**
+  * The emulation keeps a process-wide workspace and flag, so it must not be called from several
+    threads at once.
+  * There is no transposed-operand or alpha/beta interface: it computes C = A·B, column-major, with
+    leading dimensions.
 
 ## 11. Reproduce; code map
 

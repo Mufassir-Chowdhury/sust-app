@@ -6,6 +6,7 @@
 // Timing runs the methods round-robin (interleaved) and reports median and min per method.
 #include <stdio.h>
 #include <string.h>
+#include <omp.h>
 #include "fmm.h"
 #include "blas.h"
 #include "ozaki.h"
@@ -46,6 +47,7 @@ static method parse(const char *s) {
     return m;
   }
   if (!strncmp(s, "ozw", 3)) { strcpy(m.kind, "ozw"); m.param = atoi(s + 3); return m; }
+  if (!strncmp(s, "ozc", 3)) { strcpy(m.kind, "ozc"); m.param = atoi(s + 3); return m; }  // certified
   if (!strcmp(s, "dgemm")) { strcpy(m.kind, "dgemm"); return m; }
   if (!strncmp(s, "sw", 2)) { strcpy(m.kind, "sw"); m.param = atoi(s + 2); return m; }
   if (!strncmp(s, "oz", 2)) { strcpy(m.kind, "oz"); m.param = atoi(s + 2); return m; }
@@ -122,7 +124,11 @@ static void run(method me, size_t m, size_t k, size_t n, const double *A, const 
   } else if (!strcmp(me.kind, "oz")) oz_dgemm(me.param, m, k, n, A, m, B, k, C, m, &g_ozt);
   else if (!strcmp(me.kind, "ozf")) oz_dgemm_fmm(me.param, me.g, m, k, n, A, m, B, k, C, m, &g_ozt);
   else if (!strcmp(me.kind, "ozw")) oz_dgemm_w(me.param, m, k, n, A, m, B, k, C, m, &g_ozt);
-  else if (!strcmp(me.kind, "gen")) {
+  else if (!strcmp(me.kind, "ozc")) {
+    oz_set_certify(getenv("OZ_CERT_THETA") ? atof(getenv("OZ_CERT_THETA")) : 4.0);
+    oz_dgemm(me.param, m, k, n, A, m, B, k, C, m, &g_ozt);
+    oz_set_certify(0);
+  } else if (!strcmp(me.kind, "gen")) {
     size_t ws = gen_workspace(me.g, m, k, n, me.param, me.dfs, me.bfs);
     if (ws > g_work_sz) { free(g_work); g_work = amalloc(ws * 8); g_work_sz = ws; }
     gen_dgemm(me.g, me.param, me.dfs, me.bfs, m, k, n, A, m, B, k, C, m, g_work);
@@ -140,10 +146,16 @@ int main(int argc, char **argv) {
     for (int a = 8; a < argc; a++) {
       method me = parse(argv[a]);
       memset(C, 0, m * n * 8);
+      oz_cert_stats c0 = oz_get_cert_stats();
       run(me, m, k, n, A, B, C);
+      oz_cert_stats c1 = oz_get_cert_stats();
       errstats e = err_sampled(m, k, n, A, B, C, ns, 7);
-      printf("acc type=%s r=%d m=%zu k=%zu n=%zu method=%s max_cw=%.3e med_cw=%.3e max_rel=%.3e med_rel=%.3e nrm=%.3e\n",
-             testmat_name[type], r, m, k, n, argv[a], e.max_cw, e.med_cw, e.max_rel, e.med_rel, e.nrm);
+      char cs[160] = "";
+      if (!strcmp(me.kind, "ozc"))
+        snprintf(cs, sizeof cs, " uncertified=%zu recomputed=%zu fallback_blocks=%zu/%zu", c1.flagged - c0.flagged,
+                 c1.recomputed - c0.recomputed, c1.fallback_blocks - c0.fallback_blocks, c1.blocks - c0.blocks);
+      printf("acc type=%s r=%d m=%zu k=%zu n=%zu method=%s max_cw=%.3e med_cw=%.3e max_rel=%.3e med_rel=%.3e nrm=%.3e%s\n",
+             testmat_name[type], r, m, k, n, argv[a], e.max_cw, e.med_cw, e.max_rel, e.med_rel, e.nrm, cs);
       fflush(stdout);
     }
     return 0;
@@ -209,6 +221,50 @@ int main(int argc, char **argv) {
     fails += differ + differw > 0;
     printf("edge reproducibility: oz14 differs from its first run in %d/200 runs, ozw14 differs from oz14 in %d/200 %s\n",
            differ, differw, differ + differw ? "FAIL" : "ok");
+    // 3. the result must not depend on the number of threads
+    size_t N = 700;
+    double *A3 = amalloc(N * N * 8), *B3 = amalloc(N * N * 8), *C3 = amalloc(N * N * 8), *C4 = amalloc(N * N * 8);
+    testmat_fill(4, 48, N, N, N, A3, B3, 5);
+    int nt = omp_get_max_threads(), tdiff = 0;
+    for (int s = 14; s <= 16; s += 2) {
+      oz_dgemm(s, N, N, N, A3, N, B3, N, C3, N, NULL);
+      omp_set_num_threads(1);
+      oz_dgemm(s, N, N, N, A3, N, B3, N, C4, N, NULL);
+      tdiff += memcmp(C3, C4, N * N * 8) != 0;
+      oz_dgemm_w(s, N, N, N, A3, N, B3, N, C4, N, NULL);
+      tdiff += memcmp(C3, C4, N * N * 8) != 0;
+      omp_set_num_threads(nt);
+    }
+    fails += tdiff > 0;
+    printf("edge thread count: oz/ozw with 1 thread vs %d threads: %d of 4 results differ %s\n", nt, tdiff, tdiff ? "FAIL" : "ok");
+    // 4. certified mode: rows 0/1 of A large at even/odd k, columns 3/4 of B large at odd/even k, so that
+    //    every column of A and row of B has the same maximum (no inner scaling helps) and entries (0,3),
+    //    (1,4) pair large with small entries only: they must be detected and recomputed, and every entry
+    //    must meet the certified bound 5u|a_i||b_j|
+    size_t M = 600;
+    double *A4 = amalloc(M * M * 8), *B4 = amalloc(M * M * 8), *C5 = amalloc(M * M * 8);
+    testmat_fill(0, 0, M, M, M, A4, B4, 9);
+    for (size_t p = 0; p < M; p++) {
+      A4[(p & 1) + p * M] = ldexp(A4[(p & 1) + p * M], 30);
+      B4[p + (3 + !(p & 1)) * M] = ldexp(B4[p + (3 + !(p & 1)) * M], 30);
+    }
+    oz_cert_stats s0 = oz_get_cert_stats();
+    oz_set_certify(4.0);
+    oz_dgemm(16, M, M, M, A4, M, B4, M, C5, M, NULL);
+    oz_set_certify(0);
+    oz_cert_stats s1 = oz_get_cert_stats();
+    double worst = 0;
+    for (size_t j = 0; j < M; j++)
+      for (size_t i = 0; i < M; i++) {
+        double lo, ab, r = ref_entry(M, M, A4, B4, i, j, &lo, &ab);
+        double ecw = fabs((C5[i + j * M] - r) - lo) / ab;
+        if (ecw > worst) worst = ecw;
+      }
+    size_t rec = s1.recomputed - s0.recomputed;
+    int ok4 = worst <= 5 * 0x1p-53 && rec >= 1 && rec < 100 && s1.fallback_blocks == s0.fallback_blocks;
+    fails += !ok4;
+    printf("edge certified: %zu entries recomputed, max componentwise error %.2e (bound 5u = %.2e) %s\n", rec, worst,
+           5 * 0x1p-53, ok4 ? "ok" : "FAIL");
     return fails != 0;
   }
   if (!strcmp(argv[1], "nancheck")) {  // NaN/Inf must propagate like in the BLAS
@@ -289,7 +345,7 @@ int main(int argc, char **argv) {
       double rmed = median(rat, reps), rlo = rat[reps / 4], rhi = rat[(3 * reps) / 4];  // rat sorted now
       printf("time m=%zu k=%zu n=%zu method=%s reps=%d median=%.5f min=%.5f eff_gflops=%.1f speedup_vs_first=%.3f paired=%.3f [IQR %.3f-%.3f]",
              m, k, n, argv[6 + a], reps, tmed, tmin, flop / tmed * 1e-9, tref / tmed, rmed, rlo, rhi);
-      if (!strcmp(me[a].kind, "oz") || !strcmp(me[a].kind, "ozf") || !strcmp(me[a].kind, "ozw")) {
+      if (!strcmp(me[a].kind, "oz") || !strcmp(me[a].kind, "ozf") || !strcmp(me[a].kind, "ozw") || !strcmp(me[a].kind, "ozc")) {
         oz_times o = ozt[a][reps - 1];
         printf(" [scale %.4f conv %.4f gemm %.4f crt %.4f]", o.scale, o.convert, o.gemm, o.crt);
       }

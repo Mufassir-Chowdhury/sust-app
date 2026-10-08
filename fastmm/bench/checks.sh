@@ -41,10 +41,10 @@ python3 - <<'PY'
 import subprocess, re, sys
 W1, W2, P48 = "slp/winograd.slp", "slp/winograd-squared.slp", "slp/4x4x4_r48_plinopt-204.slp"
 meths = ["dgemm", "sw1", "sw2", "sw3", f"g:{W1}:2:0:2", f"g:{W2}:1:0:1", f"g:{P48}:1:0:1", f"sw1+g:{W2}:1:0:1",
-         "oz14", "oz15", "oz16", f"ozf14:{W1}"]
+         "oz14", "oz15", "oz16", f"ozf14:{W1}", "ozc16"]
 fails = 0
 for shape in ("0 0 1 1 1", "0 0 33 65 97", "0 0 301 517 203", "1 0 777 1000 555", "5 0 1000 1000 1000",
-              "2 32 600 600 600", "3 32 600 600 600", "3 300 500 500 500", "2 400 300 300 300",
+              "2 32 600 600 600", "3 32 600 600 600", "3 300 500 500 500", "2 400 300 300 300", "6 16 500 700 300",
               "4 20 1500 1500 1500"):
     out = subprocess.run(["./bin/fmmtest", "acc"] + shape.split()[:2] + shape.split()[2:] + ["0"] + meths,
                          capture_output=True, text=True, check=True).stdout
@@ -55,7 +55,13 @@ for shape in ("0 0 1 1 1", "0 0 33 65 97", "0 0 301 517 203", "1 0 777 1000 555"
         e = float(res[m]["max_cw"])
         # limits: emulation with 16 moduli never worse than 2x dgemm (scaling handles rowcol/inner);
         # 14/15 moduli and fast schemes: only sanity limits on well-scaled inputs
-        lim = 2 * max(ref, 1e-16) if m == "oz16" else (1e-12 if t in ("unif", "pos", "cancel") or m.startswith("oz") else float("inf"))
+        # certified emulation: every entry within 5u|a_i||b_j|, or computed by DGEMM (on a block).
+        # The uncertified emulation has only a row/column-normwise bound: on the checker class
+        # (large entries meeting small ones) it has no DGEMM-level limit (README section 6).
+        if m == "ozc16": lim = max(5 * 2.0**-53, 2 * ref)
+        elif t == "checker": lim = float("inf")
+        elif m == "oz16": lim = 2 * max(ref, 1e-16)
+        else: lim = 1e-12 if t in ("unif", "pos", "cancel") or m.startswith("oz") else float("inf")
         ok = e <= lim
         fails += not ok
         print(f"{shape:22s} {m:34s} max_cw={e:.2e} limit={lim:.1e} {'ok' if ok else 'FAIL'}")

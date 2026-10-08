@@ -9,8 +9,11 @@
 //  3 inner  : A = U*D,  B = D^-1*U (scaling along the inner dimension; rows of A span 2^+-r)
 //  4 randexp: each entry u*2^e with e uniform integer in [-r,r], independently (wide range everywhere)
 //  5 cancel : A = [U U], B = [V; -V + 2^-30 W]  (|C| ~ 2^-30 |A||B|: heavy cancellation)
-static const char *testmat_name[] = {"unif", "pos", "rowcol", "inner", "randexp", "cancel"};
-#define TESTMAT_COUNT 6
+//  6 checker: A_ik = u*2^(r*((i+k)&1)), B_kj = v*2^(r*(1-((k+j)&1))): every row and column mixes
+//             entries ~1 and ~2^r, and for i+j even each product pairs a large with a small entry.
+//             No diagonal (row, column or inner) scaling can remove this structure.
+static const char *testmat_name[] = {"unif", "pos", "rowcol", "inner", "randexp", "cancel", "checker"};
+#define TESTMAT_COUNT 7
 
 static inline int rnd_exp(uint64_t *s, int r) { return r ? (int)(rng_next(s) % (2 * r + 1)) - r : 0; }
 
@@ -49,6 +52,11 @@ static void testmat_fill(int type, int r, size_t m, size_t k, size_t n, double *
     #pragma omp parallel for
     for (size_t j = 0; j < n; j++) for (size_t p = 0; p < k; p++) B[p + j * k] = ldexp(B[p + j * k], -e[p]);
     free(e);
+  } else if (type == 6) {
+    #pragma omp parallel for
+    for (size_t p = 0; p < k; p++) for (size_t i = 0; i < m; i++) A[i + p * m] = ldexp(A[i + p * m], r * (int)((i + p) & 1));
+    #pragma omp parallel for
+    for (size_t j = 0; j < n; j++) for (size_t p = 0; p < k; p++) B[p + j * k] = ldexp(B[p + j * k], r * (int)(1 - ((p + j) & 1)));
   } else if (type == 4) {
     #pragma omp parallel for
     for (size_t j = 0; j < k; j++) {
