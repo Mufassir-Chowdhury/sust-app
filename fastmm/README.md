@@ -277,6 +277,55 @@ Full table: `docs/ideas.md`. In short:
 * Time split at n = 8000 with 14 moduli: conversion 0.25 s, int8 GEMMs 2.2-2.6 s, CRT 0.06-0.08 s, scaling
   0.02 s.
 
+### What the error bound is, and the certified mode (`ozc16`)
+
+**The error bound is normwise per row and column, not componentwise.** The emulation's error in c_ij
+is at most about 2^-L (||a_i||_1 ||b_j||_2 + ||a_i||_2 ||b_j||_1) / 2 (a_i: row i of A after the inner
+scaling, b_j: column j of B). DGEMM's error is bounded by k·u·sum_k |a_ik||b_kj|.
+
+* When the large entries of a_i meet large entries of b_j, the two bounds are similar and 16 moduli
+  (L about 61) beat DGEMM.
+* When large entries of a_i meet only small entries of b_j, sum_k |a_ik||b_kj| can be far below
+  ||a_i|| ||b_j||. The emulation's componentwise error then grows without limit, while DGEMM's does
+  not. A 2x2 example with entries 2^g and 1/3 gives an oz16 error of 4e-14 at g = 16 and 6e-10 at
+  g = 32; DGEMM is exact.
+* No diagonal (row, column or inner) scaling removes this, because it is a property of the
+  individual entries. This weakness of fixed-precision Ozaki-type emulation is known: Abdelfattah,
+  Dongarra, Fasi, Mikaitis & Tisseur 2025, and the LIBXS documentation; see
+  `docs/novelty_certificate.md`.
+* Section 6 measures it with two input classes:
+  * `checker`: exponents alternate in a checkerboard;
+  * `decay`: entries decay away from the diagonal, as in kernel or covariance matrices.
+
+**Certified mode** (`oz_set_certify(theta)`, method `ozcS`; the default theta = 4 gives a 5u bound).
+Every entry of C is either certified or recomputed:
+
+1. **Rigorous error bound.** The packers also compute the 1-norms of the rounded scaled integer rows
+   and columns, n1A_i and n1B_j. The emulation error of c_ij is then at most
+   (n1A_i/2 + n1B_j/2 + k/4 + 2^(2L-80)) · 2^-(sigma_i + tau_j), a rigorous bound.
+2. **Rigorous lower bound of sum_k |a_ik||b_kj|.**
+   * |A| and |B| are quantised by floor to 7 bits, with each row or column scaled by its own power
+     of two.
+   * One extra int8 AMX GEMM gives the lower bound for every entry; it is 1/17 of the GEMM work.
+3. **Certificate.** An entry passes when its bound is at most theta·u times the lower bound. Then
+   |c^ - c| <= (theta + 1)·u·sum_k |a_ik||b_kj|, which is **5u|A||B| for theta = 4**. That is
+   below DGEMM's own worst-case bound (k·u|A||B|) and close to DGEMM's typical error.
+4. **Repair of the entries that fail.** Failing entries are recomputed with a compensated dot
+   product (Dot2, Ogita-Rump-Oishi 2005; error <= u|c| + O(k^2 u^2)|A||B|).
+   * A 256x256 tile with more than 256 failing entries is recomputed by MKL DGEMM instead.
+   * The whole block goes to DGEMM when more than 1/8 of its tiles need DGEMM.
+5. **Guarantee.** Every entry is certified to 5u|A||B|, computed by Dot2, or computed by MKL's DGEMM.
+   **No input can make it less accurate than DGEMM.**
+
+What it costs:
+* About 3% when everything certifies (uniform data at n = 8000: 1.18x MKL against 1.21x for oz16).
+* On inputs that fail everywhere, the emulation's conversion and the extra GEMM are wasted and the
+  call costs about 1.25x a DGEMM.
+* The bound is a worst case. It does not pass for some inputs where the actual emulation error is
+  fine, for example decay with r = 8, where oz16 is 10x below DGEMM but some tiles are recomputed.
+* It needs 16 moduli. With 14 or 15 the bound (about 2^-54 to 2^-57) is above u·|A||B| for typical
+  data, so almost nothing would certify.
+
 ## 6. Accuracy
 
 Full tables: `results/accuracy.md` (raw: `results/accuracy.txt`, script `bench/accuracy.sh`). Sizes
@@ -447,6 +496,22 @@ as such in those files.
     remark that they cost no accuracy (Uchino et al. 2025, Caday 2026).
   * Real block Strassen inside Ozaki II was not found. It is a direct transfer; the specialised
     version gains 3-7% at 6000-12000 and loses elsewhere.
+* **The certified mode** (per-entry rigorous certificate plus selective repair). Its components are
+  known:
+  * an extra int8 GEMM of |A| and |B| is used by GEMMul8's "accurate mode" (Uchino et al. 2025),
+    but as an *upper* bound and only to choose the scaling;
+  * Rump-style verified products bound errors through |A||B|;
+  * Dot2 is Ogita-Rump-Oishi 2005;
+  * libraries that adapt to the input (cuBLAS's FP64 emulation, ozIMMU) decide once per call and
+    fall back to FP64 for the whole call.
+
+  What I did not find is a per-entry certificate (floor-quantised lower bound against the
+  emulation's rigorous error bound) with repair of only the failing entries or tiles. The search
+  could not read the papers themselves; Ozaki, Ogita & Oishi (NLAA 2016) on a posteriori validation
+  of Ozaki scheme I is the closest candidate and should be checked first. So this is at most a new
+  combination of known pieces (`docs/novelty_certificate.md`).
+* **The accuracy weakness** of the emulation (componentwise failure when large entries meet small
+  ones) is already published; my `checker` and `decay` classes are further instances of it.
 * **Fused multi-level Strassen with task-parallel leaves on a vendor BLAS** is engineering on
   Benson & Ballard 2015 and Huang et al. 2017.
 * **The cost model** combines measured leaf efficiency (including concurrent single-threaded leaves),
