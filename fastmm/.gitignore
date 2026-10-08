@@ -2,3 +2,13 @@ bin/
 slp/
 __pycache__/
 *.o
+review/oztest
+review2/crt
+review2/t_adv
+review2/t_classes
+review2/t_inner
+review2/t_kernel
+review2/t_misc
+review2/t_natural
+review2/t_ovf
+review2/t_routes

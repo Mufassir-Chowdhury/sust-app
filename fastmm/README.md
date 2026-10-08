@@ -279,13 +279,16 @@ Full table: `docs/ideas.md`. In short:
 3. **Products.** One AMX int8 GEMM per modulus (`src/amx.c`: 1x4 tile kernel, 128x256 macro tiles,
    K chunks of 512). The int32 accumulation is exact for k <= 131071; longer k is split. The epilogue
    reduces mod p to bytes.
+   * Without AMX, a portable AVX-512BW kernel computes the same exact products (section 1): same
+     results, much slower.
 4. **CRT.** Reconstruction in double with a three-way split of the CRT weights. The constants are
    generated and checked with exact integers. The high and middle sums are exact, then the result is
    rescaled with `scalef`.
 5. **Guards.** Memory blocking keeps the workspace under 80% of the memory actually available, the
    smaller of the kernel's MemAvailable and the cgroup limit (n = 20000 fits in 15 GB). A
    persistent pre-faulted workspace is used. NaN/Inf inputs fall back to MKL.
-6. **Reproducibility.** The result is bitwise identical from run to run and for any number of threads.
+6. **Reproducibility.** The plain emulation's result is bitwise identical from run to run, for any
+   number of threads and on both machines.
    Every reduction runs in a fixed order, and the int32 accumulation is exact. This is checked by
    `fmmtest edge`.
 
