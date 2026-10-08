@@ -1,96 +1,95 @@
 # fastmm: looking for a dense double-precision matrix multiply faster than Strassen in practice
 
-Research log and code. One machine: 4 vCPUs of an Intel Xeon 5th-gen ("Emerald Rapids",
-family 6 model 207) with AVX-512 and **AMX-INT8**, 15 GB RAM, KVM guest. All numbers below were
-measured there with 4 threads unless stated.
+Research log and code.
+* **Measurements:** all speed numbers come from 4 vCPUs of an Intel Xeon 5th-gen ("Emerald Rapids",
+  family 6 model 207) with AVX-512 and **AMX-INT8**, 15 GB RAM, KVM guest, 4 threads.
+* **Second machine:** a second CPU without AMX was used only for checks, the n = 8000 accuracy rows
+  and one int8 measurement (section 1).
 
 ## Verdict
 
-**Goal:** a general dense algorithm, accurate in double precision, measurably faster than both a tuned
+**Goal.** A general dense algorithm, accurate in double precision, measurably faster than both a tuned
 BLAS (MKL here; OpenBLAS and BLIS are slower on this machine) and a careful Strassen-Winograd, for
 n = 500-20000.
 
-**Result: a partial success, reached by changing the kind of algorithm, and the method is not new.**
+**Result: partial. The goal is not met in full.**
 
-* **Strassen-type algorithms.** No bilinear (Strassen-type) algorithm I built or found beats a
-  careful Strassen-Winograd by more than the measurement noise.
-* **What beats both.** FP64 GEMM emulated with exact int8 products on the CPU's AMX matrix units
-  (Ozaki scheme II with the Chinese remainder theorem) beats both MKL and the best Strassen-type
-  plan from n = 1500 to 20000.
-* **Not new.** The method is published, and open-source CPU implementations exist. This is an
-  independent implementation and measurement.
-* **Limits.**
-  * It does not help at n <= 1000.
-  * It needs AMX-class int8 hardware.
-  * Matching DGEMM's accuracy takes 16 moduli, and even then not on every input.
+1. **No Strassen-type (bilinear) algorithm beats a careful Strassen-Winograd** by more than the
+   measurement noise. This covers 59 verified schemes, a validated cost model, fused multi-level and
+   task-parallel implementations, and the lower-exponent base cases (<4,4,4;48>, <3,3,6;40>,
+   <5,5,5;93>).
+2. **What does beat both is a different kind of algorithm**, FP64 GEMM emulated with exact int8
+   products on the CPU's AMX matrix units (Ozaki scheme II with the Chinese remainder theorem).
+   * It is a published method, and open-source CPU implementations exist. This work is an
+     independent implementation, measured against MKL and Strassen.
+   * It only pays on CPUs with AMX.
+   * **It has a speed/accuracy trade-off that decides the answer:**
+     * **14 moduli** is clearly faster than both, 1.2-1.5x MKL at n >= 2000. Its accuracy is only
+       normwise per row and column: much worse than DGEMM, entry by entry, on inputs with wide
+       exponent ranges.
+     * **16 moduli** is DGEMM-accurate or better on well-scaled and diagonally scaled data, at
+       1.1-1.3x MKL. That roughly ties the best Strassen-type plan. On inputs where large entries
+       meet small ones (random exponents of 2^±48 or wider, checkerboard or diagonal-decay
+       structure) it is 1.4 to 10^7 times less accurate than DGEMM.
+     * **16 moduli, certified** (new mode, section 5) attaches a rigorous per-entry error bound and
+       recomputes every entry it cannot certify with a compensated dot product or DGEMM. **It is
+       never less accurate than DGEMM on any input.** On inputs that certify it runs at
+       1.01-1.18x MKL: a tie with the best Strassen-type plan at n = 4000-8000, and a loss at
+       n = 2000. On inputs that do not certify it runs at about 0.8x MKL.
+3. **Below n = 1500 nothing beats MKL** on this machine.
 
-Measured on an Intel Xeon (Emerald Rapids), 4 cores, MKL 2026.1, 4 threads. Each entry is the
-paired speedup over MKL DGEMM: the median of interleaved rounds, where > 1 means faster than MKL.
-Where two numbers are given, they come from two separate sessions: the main sweep and the
-final-code runs.
+**Measured paired speedups over MKL DGEMM**: AMX machine, 4 threads, median of interleaved rounds.
+Ranges cover separate sessions and code versions (section 7). "-" means not measured.
 
-| n | best Strassen-type plan | emulation, 14 moduli | emulation, 16 moduli |
-|---|---|---|---|
-| 500 | 0.83 | 0.54 | 0.48 |
-| 1000 | 0.93 | 0.88 | 0.75 |
-| 1500 | 1.00 | 1.04 | 0.97 |
-| 2000 | 1.25 | 1.35 | 1.17 |
-| 3000 | 1.30 | 1.46 | 1.32 |
-| 4000 | 1.04-1.05 | 1.19-1.33 | 1.12-1.21 |
-| 6000 | 1.07 | 1.25-1.37 (exact-Winograd variant: 1.45) | 1.09-1.19 |
-| 8000 | 1.12 | 1.36-1.38 (1.45) | 1.21-1.27 |
-| 10000 | 1.15 | 1.31 | 1.18 |
-| 12000 | 1.23 | 1.40-1.43 (1.52) | 1.22-1.25 |
-| 16000 | 1.27 | 1.33-1.42 | 1.16-1.30 |
-| 20000 | 1.23 | 1.39-1.41 | 1.18-1.25 |
+| n | best Strassen-type plan | emulation, 14 moduli | 16 moduli | 16 moduli, certified |
+|---|---|---|---|---|
+| 500 | 0.83 | 0.54 | 0.48 | - |
+| 1000 | 0.93 | 0.88 | 0.75 | - |
+| 1500 | 1.00 | 1.04 | 0.97 | - |
+| 2000 | 1.25 | 1.35 | 1.17 | 1.05 |
+| 3000 | 1.30 | 1.46 | 1.32 | - |
+| 4000 | 1.04-1.05 | 1.19-1.33 | 1.10-1.21 | 1.01-1.07 |
+| 6000 | 1.07 | 1.25-1.37 | 1.09-1.19 | - |
+| 8000 | 1.11-1.12 | 1.36-1.38 | 1.21-1.27 | 1.15-1.18 |
+| 10000 | 1.15 | 1.31 | 1.18 | - |
+| 12000 | 1.23 | 1.40-1.43 | 1.22-1.25 | - |
+| 16000 | 1.27 | 1.33-1.42 | 1.16-1.30 | - |
+| 20000 | 1.23 | 1.39-1.41 | 1.18-1.25 | - |
 
-What these numbers mean against the goal:
+The exact-Strassen-Winograd variant of the emulation (bit-identical results) adds 3-7% at
+6000-12000 with 14 moduli: 1.45 at 6000 and 8000, 1.52 at 12000.
 
-1. **Speed, 14 moduli.**
-   * Faster than MKL and than the best Strassen-type plan at every measured size from 1500 to
-     20000.
-   * The margin over the Strassen-type plan is 8-28% for 2000 <= n <= 12000 and 5-15% at
-     16000-20000. At 1500 it is 4%, which is within noise.
-   * Accuracy:
-     * About DGEMM's on well-scaled and diagonally scaled data.
-     * 5-100x worse than DGEMM, componentwise, on entries with random exponents in 2^±20 to
-       2^±32, and up to 10^5 x worse at 2^±64.
-     * On every tested input class it is as accurate as or more accurate than the two-level
-       Strassen-type plans it is compared with, and close to one Strassen-Winograd level.
-2. **Speed, 16 moduli.** This is the variant that is DGEMM-accurate.
-   * Faster than MKL for n >= 2000.
-   * Faster than the best Strassen-type plan by 8-15% only at n = 4000 and 8000.
-   * At 3000, 10000, 12000 and 20000 it is within ±5% of that plan (a tie).
-   * At 6000 it is 2-11% faster and at 16000 9% slower to 2% faster, depending on the session.
-   * At 2000 it is slower (1.17 vs 1.25).
-3. **Accuracy, 16 moduli** (section 6).
-   * Componentwise error at or below MKL's on every class tested: uniform, positive, cancellation,
-     rows or columns scaled by 2^±32, inner dimension scaled by 2^±20, and random exponents up
-     to 2^±32.
-   * The exception is entries with independently random exponents of 2^±48 or wider at small n:
-     28x worse than DGEMM at 2^±48 and 1000x worse at 2^±64, both at n = 1000.
-   * The Strassen-type plans are 2-20x worse than DGEMM on well-scaled data, up to 10^5-10^6 x
-     worse at 2^±64 (n = 1000), and completely wrong on row- or column-scaled data unless the
-     inputs are rescaled.
-4. **Below n = 1500, nothing beats MKL** on this machine: neither Strassen-type plans nor the
-   emulation.
-5. **The first call is slow.** The emulation allocates and pre-faults a persistent workspace of up
-   to 8 GB. At n = 8000 the first call takes 3.6-5.7 s, against 2.3-2.9 s afterwards and 3.6 s for
-   MKL. A single isolated product is therefore not faster; repeated products are.
-6. **It is hardware-specific.** The gain exists only because int8 matrix units are about 26x faster
-   per operation than FP64 FMA here. On a CPU without AMX (AVX512-VNNI: about 8x) the emulation
-   loses.
-7. **Strassen applied exactly inside the modular int8 products** gives bit-identical results to the
-   plain emulation. The specialised version adds 3-7% at 6000 <= n <= 12000 with 14 moduli and
-   loses at n <= 4000.
-8. **The existing open-source AMX Ozaki code (LIBXS)**, as I configured it, was 3-6x slower than MKL
-   on this machine. It loses about 10 digits on inputs whose inner dimension is badly scaled
-   (`results/libxs_compare.md`). The speed and the robustness reported here come from engineering
-   (int8 kernel, conversion, inner scaling), not from a new method.
+**Accuracy relative to DGEMM** (section 6). Each entry is the max componentwise error
+|C - C*| / (|A||B|), divided by DGEMM's, over n = 1000, 2000 and 4000 with every entry checked. A
+value of 1 means DGEMM's accuracy.
 
-It is not a new matrix multiplication algorithm, and it does not lower the exponent. Everything was
-measured on one 4-core VM. Full tables, method and caveats follow below. Everything can be re-run
-with `./run_all.sh`.
+| input | Strassen-Winograd, 1 level / 2 levels | emulation, 14 moduli | 16 moduli | 16 moduli, certified |
+|---|---|---|---|---|
+| well-scaled (uniform, positive, cancellation) | 0.8-4 / 0.8-15 | 0.2-3 | 0.001-0.1 | 0.001-0.1 |
+| rows, columns or inner dimension scaled by up to 2^±32 | 10^5-10^38 (wrong); 2-3 with rescaling | 1-3 | 0.07-0.09 | 0.07-0.09 |
+| random exponents 2^±10 | 3-4 / 8-11 | 1.6-2.6 | 0.05-0.07 | 0.05-0.07 |
+| random exponents 2^±20 to 2^±32 | 6-300 / 15-700 | 4-100 | 0.05-1 | 0.05-1 |
+| random exponents 2^±48 / 2^±64 | 10^2-10^4 / 10^3-10^6 | 10^2-10^4 / 10^3-10^5 | 1.4-28 / 6-1100 | 1 |
+| checkerboard exponents 2^8 / 2^16 / 2^32 | 2-11 | 10^2 / 10^4 / 10^9 | 0.6-1.5 / 140-380 / 10^7 | 1 |
+| decay away from the diagonal to 2^-8 / 2^-16 / 2^-32 | 10-100 / 10^3 / 10^7-10^8 | 5-14 / 10^3 / 10^7 | 0.04-0.1 / 5-11 / 10^5 | 0.3 / 1 / 1 |
+
+**Plainly:** a general, double-precision-safe algorithm that is clearly faster than both MKL and
+Strassen-Winograd was **not** found. The certified emulation is safe and at most about 15-18%
+faster than MKL, but not faster than the best Strassen-type plan. The 14-modulus emulation is up to
+1.5x faster than MKL, but it is not DGEMM-accurate on all inputs. Neither is Strassen.
+
+**What else to know:**
+* **The first call is slow.** It allocates and pre-faults a workspace of up to 8 GB; at n = 8000 that
+  call takes 3.6-5.7 s against 2.3-2.9 s afterwards.
+* **It needs free memory**, about 3-8 GB of workspace at n >= 8000.
+* **The machine changed during the work.** Near the end, the container moved to a CPU without AMX
+  (Cascade Lake). There the emulation runs through a portable exact int8 kernel: same results, bit
+  for bit, but slow. MKL's int8 GEMM reaches only 1.2-3.2x its DGEMM rate there, so the emulation
+  cannot win on such CPUs.
+* **One consequence:** the final single-code-version speed sweep could not be run (section 10).
+* **Review.** Two independent reviews tried to break the results (`docs/independent_review*.md`).
+  The first found real problems, which were fixed or are reported here.
+* **Reproduce.** `./run_all.sh` reruns all checks and benchmarks.
 
 ## Contents
 
@@ -108,13 +107,27 @@ with `./run_all.sh`.
 
 ## 1. Machine, libraries, method
 
-* **CPU:** Intel Xeon 5th generation, family 6 model 207 (Emerald Rapids), 4 vCPUs (KVM), 1 thread per core.
+Two machines were used. Everything up to the last stage ran on the first. Near the end the container
+was restarted on the second (`results/machine2/`).
+
+* **AMX machine** (all speed results; accuracy for n <= 4000):
+  Intel Xeon 5th generation, family 6 model 207 (Emerald Rapids), 4 vCPUs (KVM), 1 thread per core.
   * AVX-512, AVX512-VNNI/BF16/FP16, AMX-INT8/BF16.
   * L2 2 MB per core. The guest reports a 260 MB L3, but streaming measurements suggest the effective
     share is far smaller.
   * DRAM bandwidth 25-35 GB/s (STREAM-like `src/stream.c`).
   * Cores run at about 2.5 GHz under load. Measured AMX peak is 5.1-5.6 Tera int8-ops/s per core, and
     it does not drop with all 4 cores busy.
+* **Second machine** (no AMX):
+  * Intel Xeon family 6 model 85 stepping 7 (Cascade Lake), 4 vCPUs at 2.8 GHz, AVX-512 with VNNI,
+    no AMX, no VBMI. Same OS image and MKL.
+  * The emulation runs here through a portable exact int8 kernel (`src/amx.c`,
+    `amx_gemm_portable`: int16 multiply-add with int32 accumulation, the same wrap-around as AMX).
+    Its results were verified to match the AMX machine's digit for digit on every statistic tested.
+  * Used for: the checks without AMX (`results/machine2/checks.txt`), the n = 8000 accuracy rows,
+    and the int8-vs-FP64 measurement in section 9.
+  * Timings on this VM were too noisy for speed comparisons: MKL DGEMM varied between 116 and
+    201 GFLOP/s at n = 8000.
 * **Software:** Ubuntu 24.04, gcc 13.3, `-O3 -march=native -fopenmp`.
   * **MKL 2026.1** (pip `mkl`, GNU OpenMP threading layer) is the reference BLAS. It is by far the
     fastest DGEMM here: about 280 GFLOP/s on 4 cores for n >= 4000, against OpenBLAS 0.3.26 at about
@@ -199,6 +212,7 @@ Full table: `docs/ideas.md`. In short:
 | 7 | Border-rank (APA) schemes | multiplication count | error analysis | killed: about sqrt(u), 8 digits lost |
 | 9 | Faster AMX kernel | dominant cost of #1 | beat oneDNN (7.0 Tops/s) | matched (7.2-7.6), not beaten |
 | 10 | Power-of-two outside-inside scaling | sensitivity to badly scaled data | accuracy tests | fixes diagonal scalings for both families |
+| 11 | Certified emulation: rigorous per-entry error bound, lower bound of abs(A)·abs(B) from one extra int8 GEMM, repair of uncertified entries | the emulation's componentwise failures (found after the first review) | overhead > 10%, or any entry worse than DGEMM | overhead about 3%; never worse than DGEMM; but conservative, and with 16 moduli only 1.0-1.18x MKL |
 
 ## 4. Bilinear schemes: library, exactness, engine, cost model, search
 
@@ -328,73 +342,130 @@ What it costs:
 
 ## 6. Accuracy
 
-Full tables: `results/accuracy.md` (raw: `results/accuracy.txt`, script `bench/accuracy.sh`). Sizes
-n = 1000 (all entries checked), 2000 and 4000 (20000 sampled entries). Reference: double-double dot
-products. Metric shown here: max componentwise |C - C*| / (|A||B|), the quantity DGEMM bounds by
-about k*u; `accuracy.md` also has the median relative error and a normwise metric.
+Full tables: `results/accuracy.md` (max componentwise, median relative and normwise errors for every
+method; raw data `results/accuracy.txt`; script `bench/accuracy.sh`; summary table below made by
+`tools/acc_summary.py`).
 
-Columns: `sw1-3` = 1-3 memory-lean Winograd levels; `sc:` = the same with outside-inside power-of-two
-scaling; `W2`, `P48` = one task-parallel <4,4,4;49> / <4,4,4;48> level; `ozS` = emulation with S
-moduli (built-in row, column and inner scaling).
+**Method.**
+* Every entry of C is compared with a double-double reference (error about k·u²·|A||B|).
+* Sizes n = 1000, 2000 and 4000, with all methods and all input classes; n = 8000 for a subset.
+* The metric is the max componentwise error |C - C*| / (|A||B|), the quantity DGEMM bounds by about
+  k·u.
+* An earlier version sampled 20000 entries for n > 1000. The first independent review showed that
+  sampling understated the emulation's heavy-tailed maximum error (4-13x) far more than DGEMM's
+  (1.4-1.8x), so every number now uses all entries.
 
-| n | input | DGEMM | sw1 | sw2 | sc:sw1 | P48 | oz14 | oz15 | oz16 |
-|---|---|---|---|---|---|---|---|---|---|
-| 2000 | uniform [-1,1] | 1.3e-16 | 3.3e-16 | 9.8e-16 | 3.3e-16 | 8.0e-16 | 1.5e-16 | 7.4e-18 | 7.4e-18 |
-| 2000 | positive | 1.1e-15 | 1.0e-15 | 7.1e-16 | 1.0e-15 | 5.6e-15 | 2.2e-16 | 1.2e-16 | 1.1e-16 |
-| 2000 | cancellation | 1.4e-16 | 4.9e-16 | 1.1e-15 | 4.9e-16 | 7.7e-16 | 1.0e-16 | 1.2e-17 | 1.9e-19 |
-| 2000 | row/col scaled 2^±32 | 1.3e-16 | **1.8e+17** | **1.5e+21** | 3.3e-16 | **2.3e+20** | 1.5e-16 | 7.4e-18 | 7.4e-18 |
-| 2000 | inner scaled 2^±20 | 1.3e-16 | **8.7e-06** | **3.1e-05** | 3.3e-16 | **3.2e-05** | 1.5e-16 | 7.4e-18 | 7.4e-18 |
-| 2000 | random exponents 2^±20 | 1.2e-15 | 1.3e-14 | 2.2e-14 | 1.3e-14 | 2.4e-14 | 6.9e-15 | 9.5e-16 | 1.0e-16 |
-| 2000 | random exponents 2^±32 | 1.1e-15 | 4.8e-14 | 1.7e-13 | 4.8e-14 | 8.9e-14 | 3.3e-14 | 3.8e-15 | 3.5e-16 |
-| 2000 | random exponents 2^±48 | 1.3e-15 | 2.2e-13 | 3.6e-13 | 2.0e-13 | 4.4e-13 | 1.4e-13 | 1.8e-14 | 9.4e-16 |
-| 2000 | random exponents 2^±64 | 1.0e-15 | 1.3e-12 | 3.2e-12 | 1.3e-12 | 7.1e-12 | 1.0e-12 | 1.3e-13 | **1.0e-14** |
-| 1000 | random exponents 2^±48 | 2.1e-15 | 1.1e-11 | 4.1e-11 | 1.3e-11 | 4.3e-11 | 7.7e-12 | 1.4e-12 | **5.8e-14** |
-| 1000 | random exponents 2^±64 | 1.3e-15 | 2.8e-10 | 2.2e-09 | 2.6e-10 | 8.8e-10 | 1.0e-10 | 2.3e-11 | **1.3e-12** |
-| 4000 | random exponents 2^±64 | 1.0e-15 | 1.4e-13 | 3.1e-13 | 1.4e-13 | 5.8e-13 | 1.3e-13 | 2.5e-14 | 7.1e-16 |
+**Input classes:**
+* uniform [-1,1]; positive [0,1]; heavy cancellation (|C| about 2^-30 |A||B|);
+* rows and columns scaled by 2^±r, or the inner dimension scaled by 2^±r (diagonal scalings);
+* independent random exponents 2^±r per entry;
+* checker: exponents 0 and r alternating in a checkerboard, so large entries meet small ones and no
+  diagonal scaling can remove it;
+* decay: entries decaying away from the diagonal to 2^-r, as in kernel, covariance or
+  inverse-operator matrices.
 
-What the tables say:
+**Columns:**
+* sw1, sw2: 1 and 2 memory-lean Winograd levels;
+* sc:sw1: sw1 with outside-inside power-of-two scaling;
+* P48: one task-parallel <4,4,4;48> level;
+* oz14, oz16: the emulation with 14 or 16 moduli;
+* ozc16: certified mode.
 
+Bold marks errors more than 10x DGEMM's.
+
+| input (n = 4000) | r | DGEMM | sw1 | sw2 | sc:sw1 | P48 | oz14 | oz16 | ozc16 | ozc16 did |
+|---|---|---|---|---|---|---|---|---|---|---|
+| uniform [-1,1] | 0 | 9.9e-17 | 3.0e-16 | 9.7e-16 | 3.0e-16 | **1.0e-15** | 3.0e-16 | 7.4e-18 | 7.4e-18 | all certified |
+| positive [0,1] | 0 | 1.0e-15 | 1.1e-15 | 9.8e-16 | 1.1e-15 | 6.9e-15 | 3.5e-16 | 1.1e-16 | 1.1e-16 | all certified |
+| cancellation | 0 | 1.1e-16 | 5.0e-16 | **1.5e-15** | 5.0e-16 | 7.6e-16 | 2.1e-16 | 4.8e-19 | 4.8e-19 | all certified |
+| rows/cols scaled 2^±r | 10 | 9.9e-17 | **6.4e-05** | **1.4e-04** | 3.0e-16 | **1.8e-04** | 3.0e-16 | 7.4e-18 | 7.4e-18 | all certified |
+| rows/cols scaled 2^±r | 32 | 9.9e-17 | **1.9e+19** | **3.0e+22** | 3.0e-16 | **1.2e+22** | 3.0e-16 | 7.4e-18 | 7.4e-18 | all certified |
+| inner dim. scaled 2^±r | 10 | 9.9e-17 | **1.6e-11** | **5.2e-11** | 3.0e-16 | **5.3e-11** | 3.0e-16 | 7.4e-18 | 7.4e-18 | all certified |
+| inner dim. scaled 2^±r | 20 | 9.9e-17 | **1.2e-05** | **3.2e-05** | 3.0e-16 | **3.6e-05** | 3.0e-16 | 7.4e-18 | 7.4e-18 | all certified |
+| inner dim. scaled 2^±r | 32 | 9.9e-17 | **1.1e+02** | **4.0e+02** | 3.0e-16 | **6.0e+02** | 3.0e-16 | 7.4e-18 | 7.4e-18 | all certified |
+| random exponents 2^±r | 10 | 9.0e-16 | 2.7e-15 | 7.7e-15 | 2.7e-15 | 7.2e-15 | 2.4e-15 | 6.2e-17 | 6.2e-17 | all certified |
+| random exponents 2^±r | 20 | 1.8e-15 | 1.0e-14 | **2.9e-14** | 1.0e-14 | **2.9e-14** | 7.8e-15 | 9.5e-17 | 9.5e-17 | 0.1% recomputed |
+| random exponents 2^±r | 32 | 1.9e-15 | **3.3e-14** | **1.2e-13** | **4.4e-14** | **1.2e-13** | **3.5e-14** | 3.0e-16 | 1.9e-15 | DGEMM fallback |
+| random exponents 2^±r | 48 | 1.7e-15 | **2.0e-13** | **8.4e-13** | **2.0e-13** | **5.5e-13** | **2.1e-13** | 2.3e-15 | 1.7e-15 | DGEMM fallback |
+| random exponents 2^±r | 64 | 1.6e-15 | **1.2e-12** | **6.3e-12** | **1.2e-12** | **4.2e-12** | **1.2e-12** | 9.1e-15 | 1.6e-15 | DGEMM fallback |
+| checker, spread 2^r | 8 | 1.4e-16 | 3.9e-16 | 1.2e-15 | 3.9e-16 | **1.5e-15** | **2.9e-14** | 2.1e-16 | 1.4e-16 | DGEMM fallback |
+| checker, spread 2^r | 16 | 1.4e-16 | 4.3e-16 | 1.2e-15 | 4.3e-16 | 1.1e-15 | **6.2e-12** | **5.4e-14** | 1.4e-16 | DGEMM fallback |
+| checker, spread 2^r | 32 | 9.9e-17 | 3.0e-16 | 8.5e-16 | 3.0e-16 | **1.0e-15** | **4.6e-07** | **3.4e-09** | 9.9e-17 | DGEMM fallback |
+| decay to 2^-r | 8 | 2.9e-16 | **6.7e-15** | **2.7e-14** | **6.7e-15** | **1.3e-14** | **4.1e-15** | 3.2e-17 | 1.0e-16 | 4.6% recomputed (20 DGEMM tiles) |
+| decay to 2^-r | 16 | 4.5e-16 | **7.8e-13** | **2.5e-12** | **7.8e-13** | **1.7e-12** | **6.5e-13** | **5.1e-15** | 4.5e-16 | DGEMM fallback |
+| decay to 2^-r | 32 | 7.8e-16 | **2.7e-08** | **7.4e-08** | **2.7e-08** | **7.3e-08** | **1.4e-08** | **1.1e-10** | 7.8e-16 | DGEMM fallback |
+
+**What the table says:**
+* **DGEMM** is the only method that is accurate on every class.
+* **Strassen-type methods.**
+  * Well-scaled data: 2-15x DGEMM's error.
+  * Diagonally scaled data: wrong, with errors of 10^5 to 10^38 times DGEMM's (rows or columns
+    scaled by 2^±32 give errors of order 10^19-10^22). The outside-inside scaling (sc:) fully
+    repairs this.
+  * Random exponents: 3-10^6x, depending on the range.
+  * Decay: 10^3-10^8x at r >= 16. Rescaling does not help either case.
+  * Checker: harmless, 2-11x.
 * **Emulation, 16 moduli.**
-  * At or below DGEMM's componentwise error on every tested size for uniform, positive,
-    cancellation, row/column-scaled, inner-scaled inputs, and random exponents up to 2^±32. The
-    median relative error is 5x to several hundred times *below* DGEMM's on these classes.
-  * Random exponents 2^±48: at n = 2000 and 4000 about DGEMM's (0.6-0.7x), but **28x worse at
-    n = 1000**. Random exponents 2^±64: **10x worse at n = 2000 and 1000x worse at n = 1000**
-    (0.7x at n = 4000).
-  * Why: the error is about 2^-L ||a_i|| ||b_j|| per entry (L is about 61-62 bits for 16 moduli at these k),
-    which is far below k·u·|a_i||b_j| unless the entries of a row span many binades and the large
-    entries of a_i and b_j sit at different k. DGEMM's error does not depend on that.
-    The normwise error stays at DGEMM's level or below in all cases.
-* **Emulation, 14 moduli.** About DGEMM's componentwise error on uniform, positive, cancellation and
-  diagonally scaled inputs; the median relative error is 2-4x DGEMM's. On random exponents it is
-  5-100x worse at 2^±20-2^±32, and up to 10^5 x worse at 2^±64 (n = 1000). **14 moduli is not a
-  drop-in DGEMM replacement for badly scaled data; 16 moduli is close to one, with the exception
-  above.**
-* **Exact modular Winograd inside the emulation** (`oz14+modW` in `accuracy.md`) is bit-identical
-  to `oz14` in every case (also checked by `bench/checks.sh`, section 5).
-* **Strassen-type algorithms.**
-  * Well-scaled data: 2-3x DGEMM's error per level (sw1 2.5x, sw2 7.5x, sw3 up to 19x; the
-    task-parallel 49/48 levels 4-8x).
-  * Random exponents: 4-20x worse (2^±10), up to 10^5-10^6 x worse (2^±64, n = 1000).
-  * Row/column scaling 2^±32: completely wrong (10^17-10^21). Inner scaling: errors 1e-11 at 2^±10,
-    1e-5 at 2^±20 (11 digits lost), above 1 at 2^±32.
-  * The outside-inside power-of-two scaling `sc:` (Ballard et al. 2016) repairs the diagonally scaled
-    cases fully (sc:sw1 = sw1 on unscaled data) but not random exponents.
-* **NaN and Inf** (`bin/fmmtest nancheck`, a single NaN or Inf in A): the emulation detects them
-  and calls DGEMM, so the NaN/Inf pattern of C matches DGEMM exactly. One Strassen-Winograd level
-  spreads a single NaN to 448 entries that DGEMM leaves finite (853 for an Inf), because the
-  pre-additions mix rows and columns that the classical product keeps apart.
-* **Long k.** For k > 131071 the int32 accumulators could overflow; the emulation splits k
-  (checked at k = 140000: oz16 error 1.6e-18, DGEMM 9.1e-18).
-* **LIBXS** (the open-source AMX Ozaki-II code) on the same inputs: `results/libxs_compare.md`.
-  Without inner scaling it loses about 10 digits on inner-scaled inputs (3.9e-6).
+  * At least as accurate as DGEMM, usually 10-800x more accurate, on well-scaled and diagonally
+    scaled data and on random exponents up to 2^±32.
+  * Its error bound is normwise per row and column (section 5), so it fails where large entries
+    meet small ones:
+    * random exponents 2^±48: 1.4-28x DGEMM's error;
+    * random exponents 2^±64: 6-1100x;
+    * checker 2^16: 140-380x; checker 2^32: 10^7x;
+    * decay 2^-16: 5-11x; decay 2^-32: 10^5x.
+  * The error shrinks with n on random exponents: at 2^±64 it is 1100x at n = 1000, 61x at 2000
+    and 6x at 4000.
+* **Emulation, 14 moduli.**
+  * About DGEMM's error (0.2-3x) on well-scaled and diagonally scaled data.
+  * 2-100x worse on random exponents up to 2^±32, and up to 10^9x worse on the hard classes.
+  * On the checker class it is far worse than Strassen.
+* **Certified mode.**
+  * Never worse than DGEMM: max ratio 1.0 over all 57 class/size combinations.
+  * Where everything certifies, it is the 16-modulus result.
+  * It certifies everything on uniform, positive, cancellation, diagonally scaled and 2^±10 random
+    exponent inputs, and part of the entries for 2^±20 random exponents and decay 2^-8. Elsewhere it
+    falls back to DGEMM.
+  * The certificate is conservative. On checker 2^8 the plain 16-modulus result is already as
+    accurate as DGEMM, but it cannot be certified.
+* **Exact modular Winograd inside the emulation** (ozw, ozf in `accuracy.md`) is bit-identical to the
+  plain emulation in every case. This is also checked by `bench/checks.sh`.
+* **NaN and Inf** (`bin/fmmtest nancheck`, a single NaN or Inf in A).
+  * The emulation detects them and calls DGEMM, so the NaN/Inf pattern of C matches DGEMM's.
+  * One Strassen-Winograd level spreads a single NaN to 448 entries that DGEMM leaves finite (853
+    for an Inf), because its pre-additions mix rows and columns.
+* **Long k.** For k > 131071 the int32 accumulators could overflow, so the inner dimension is split.
+  Checked at k = 140000: oz16 error 1.6e-18, DGEMM 9.1e-18.
+* **LIBXS**, the open-source AMX Ozaki-II code, on the same inputs: `results/libxs_compare.md`.
+  Without inner scaling it loses about 10 digits on inner-scaled inputs (error 3.9e-6).
+* **n = 8000** (subset of classes, run on the second machine): `results/accuracy.md`. The emulation
+  results there are machine-independent (verified bit-identical, section 1); DGEMM and Strassen use
+  that machine's MKL.
 
 ## 7. Speed: full tables
 
-All numbers: paired speedup over MKL DGEMM (4 threads), median over interleaved rounds; > 1 means
-faster than MKL. Raw data: `results/sweep.txt`, `results/sweep_oz_final.txt`.
+All numbers: paired speedup over MKL DGEMM (4 threads) on the AMX machine, median over interleaved
+rounds; > 1 means faster than MKL. Raw data: `results/sweep.txt`, `results/sweep_oz_final.txt`,
+`results/certified_timing_raw.txt`.
 
-**Main sweep** (`results/sweep.md`, all methods in one session, `bench/sweep.sh`):
+**Provenance.** The speed data come from three sessions on the same AMX machine, with three code
+versions:
+
+| session | time (UTC) | what | code | differences from the final code |
+|---|---|---|---|---|
+| S1, main sweep | Oct 7, 18:44-20:39 | all methods, n = 500-20000 | working tree committed in 30c415a | no memory blocking fixes, old (2-norm) inner scaling, no certified mode |
+| S2, final emulation runs | Oct 7, 20:45-22:50 | emulation variants, n = 4000-20000, Strassen plans at 4000 and 8000 | 30c415a / fc5857d | old inner scaling; the n = 16000 row predates two blocking fixes |
+| S3, post-review | Oct 8, 00:41-00:50 | oz16 vs certified ozc16 at 2000, 4000, 8000 and 4 input classes at 4000 | 22c1a88 / 16502f1 | final emulation, certified mode during tuning (see below) |
+
+* Between sessions only O(n^2) parts changed: the inner scaling (2-norm to max-abs), blocking
+  rules, and guards.
+* The plain 16-modulus emulation measured in S3 (1.17 at 2000, 1.10-1.12 at 4000, 1.21-1.23 at
+  8000) agrees with S1 and S2 (1.17; 1.12-1.21; 1.21-1.27).
+* A final sweep of the final code with one version for everything (`bench/sweep_final.sh`) was
+  written but could not be run: the container moved to a CPU without AMX before it started
+  (section 10).
+
+**S1, main sweep** (`results/sweep.md`, all methods in one session, `bench/sweep.sh`):
 
 | n | MKL GFLOP/s | OpenBLAS GF/s | BLIS GF/s | best Strassen-type plan | its speedup | emulation 14 moduli | 15 | 16 |
 |---|---|---|---|---|---|---|---|---|
@@ -412,7 +483,7 @@ faster than MKL. Raw data: `results/sweep.txt`, `results/sweep_oz_final.txt`.
 | 16000 | 272 | 216 | 127 | lean + <4,4,4;48> | 1.27 | **1.33** | 1.22 | 1.16 |
 | 20000 | 273 | 221 | 112 | 2 lean levels | 1.23 | **1.41** | 1.33 | 1.25 |
 
-**Final emulation code** (`results/sweep_oz_final.md`, scripts `bench/sweep_final_small.sh` and
+**S2, emulation variants** (`results/sweep_oz_final.md`, scripts `bench/sweep_final_small.sh` and
 `bench/sweep_final_oz.sh`, run after the main sweep). What changed since the sweep:
 * memory blocking that converts each operand once where it fits and respects the container's cgroup
   memory limit;
@@ -444,6 +515,21 @@ The int8 GEMMs take 85-91% of the time.
 * At n = 6000-12000 the exact Winograd level removes 8-12% of the GEMM time.
 * At 16000-20000, where the larger residue planes force memory blocking, it removes 4% or nothing.
 * It always doubles the CRT and output-combination time.
+
+**Certified mode (S3)**, `results/certified_timing_raw.txt`, verbatim tool outputs recovered from the
+session log, with commands and timestamps:
+
+| n, input | oz16 | ozc16 | ozc16 code state |
+|---|---|---|---|
+| 2000, uniform | 1.17 | 1.05 | first version, scalar certificate epilogue |
+| 4000, uniform | 1.10-1.12 | 1.01 / 1.07 | first version / final |
+| 8000, uniform | 1.21-1.23 | 1.15 / 1.18 | first version / vectorised epilogue (final) |
+| 4000, decay 2^-8 | 1.13 | 1.03 | some tiles recomputed by DGEMM (intermediate per-tile rule; with the final rule 20 of 256 tiles) |
+| 4000, checker 2^16 | 1.14 | 0.80 | nothing certifies: the whole product falls back to DGEMM |
+| 4000, decay 2^-16 | 1.10 | 0.63 | an intermediate rule (47% of tiles by DGEMM). The final rule falls back to DGEMM once more than 1/8 of tiles need it; that case was not timed. |
+
+* When every entry certifies, the certificate costs about 3% of the plain emulation's time.
+* When nothing certifies, the call costs about 1.25x a DGEMM.
 
 **Cold first call** (`results/cold.txt`, `bench/cold.sh`): a fresh process, then the first call and
 the next three, in seconds.
@@ -550,21 +636,52 @@ as such in those files.
   efficient at n/2, and the accuracy reverts to Strassen's behaviour unless the inputs are scaled.
 * **Border-rank schemes.** Rejected by error analysis (Bini-Lotti): an O(eps) truncation plus
   O(u/eps) rounding gives at best about sqrt(u) = 1e-8, which is not double precision.
+* **A DGEMM-accurate emulation that is also clearly faster than Strassen (failed).**
+  * The emulation's error is bounded per row and column (about 2^-L ||a_i|| ||b_j||), not per entry.
+  * The fast 14-modulus version is therefore not DGEMM-accurate on inputs that mix magnitudes. The
+    16-modulus version fails on the harder ones (checker, decay, random exponents of 2^±48 or
+    more; section 6).
+  * More moduli would push the problem further out but never remove it: each modulus adds about
+    8 bits, and the checkerboard class needs 2·log2(spread) extra bits.
+  * The certified mode makes the result safe on every input. But its rigorous bound is pessimistic
+    (a sum of absolute values where the actual errors partly cancel), so it needs 16 moduli and
+    still rejects some inputs whose actual error is fine.
+  * Its 3% overhead plus 16 moduli leave it at 1.0-1.18x MKL, a tie with Strassen-type plans.
+  * A tighter certificate, for example a statistical bound or a second low-precision product,
+    could not be made rigorous in the time available.
+* **The emulation on CPUs without AMX (measured).** On the second machine (Cascade Lake, AVX-512
+  VNNI) MKL's int8 GEMM (`cblas_gemm_s8u8s32`) ran at 244-375 GOP/s against DGEMM's
+  116-201 GFLOP/s, 1.2-3.2x in a noisy VM. The hardware peak ratio there is 8x.
+  * With 14-16 int8 GEMMs per product the emulation cannot win on such CPUs
+    (`results/machine2/int8_vs_fp64.txt`).
+  * On the AMX machine the ratio is about 26x.
 
 ## 10. What I could not do or verify
 
-* **One machine only**, a 4-vCPU VM with noisy neighbours.
-  * Absolute numbers and crossovers will differ on bare metal, on more cores (MKL scales differently),
-    and certainly on CPUs without AMX, where the emulation does not pay.
+* **One AMX machine**, a 4-vCPU VM with noisy neighbours.
+  * Absolute numbers and crossovers will differ on bare metal and on more cores (MKL scales
+    differently).
   * Small-n differences under about 10% are within the noise.
+* **No final single-version speed sweep.** The container moved to a CPU without AMX before the
+  final sweep of the final code (`bench/sweep_final.sh`) could run.
+  * The speed numbers therefore come from three sessions with three code versions (section 7). The
+    changes between them are O(n^2) parts, and the plain emulation's speed agrees across sessions
+    within the noise.
+  * The certified mode was timed only at n = 2000, 4000 and 8000 on uniform data, and on 3 other
+    input classes at n = 4000. Its timing under the final fallback rule on inputs that partly
+    certify was not measured.
+  * Its speed at n >= 10000 is not measured. From its constant 3% overhead it should be about 3%
+    below the plain 16-modulus numbers, but that is not a measurement.
 * **No hardware performance counters** (no PMU in the guest, no matching `perf`), so the AMX GEMM
   bottleneck is inferred, not measured.
 * **Literature:** paper full texts were not readable from the sandbox (arXiv blocked). Claims about
   prior work are from abstracts, snippets and code; for example, whether Dumas, Pernet, Sedoglavic &
   Tichavsky 2026 contains wall-clock timings for <4,4,4;48> is unverified.
 * **Accuracy:**
-  * The error study is empirical: 6 input classes at n <= 4000, and 2 classes at n = 8000, with every
-    entry checked. Nothing above n = 8000 was checked.
+  * The error study is empirical: 8 input classes at n <= 4000, and 4 classes at n = 8000 (on the
+    second machine), with every entry checked. Nothing above n = 8000 was checked.
+  * Real application matrices were not tested; the decay class is a stand-in for kernel and
+    covariance matrices.
   * The emulation's error bound is analysed (Cauchy-Schwarz range bound, rounding of the scaled
     inputs) but not formally proved here.
   * The accuracy of the emulation on entrywise wide exponent ranges beyond 2^±64 was not tested.
@@ -586,35 +703,49 @@ as such in those files.
 ## 11. Reproduce; code map
 
 ```
-./run_all.sh          # build, checks, accuracy study, full speed sweep (several hours: n up to 20000)
-./run_all.sh quick    # same with the sweep limited to n <= 4000
-bench/checks.sh       # correctness only (~5 min)
+./run_all.sh          # build, checks, accuracy study, speed sweeps, cold start (many hours: n up to 20000)
+./run_all.sh quick    # same with the main sweep limited to n <= 4000 and no final sweep
+bench/checks.sh       # correctness only (~5-10 min); also runs without AMX (portable kernel)
 ```
 
 Requirements:
-* gcc >= 13 and Python 3.
-* An Intel CPU with AMX-INT8 (Sapphire Rapids or later) and Linux >= 5.16.
+* gcc >= 13 and Python 3; Linux >= 5.16.
+* An Intel CPU with AMX-INT8 (Sapphire Rapids or later) for the speed results. Any AVX-512BW CPU
+  runs everything else, slowly and with identical results.
 * MKL (`pip install mkl mkl-devel`, installs to /usr/local), OpenBLAS and BLIS (`apt install
-  libopenblas-openmp-dev libblis-openmp-dev`).
-* The Makefile hard-codes those paths.
+  libopenblas-openmp-dev libblis-openmp-dev`). The Makefile hard-codes those paths.
+
+Methods in `bin/fmmtest` (`acc`, `time`, `bitcmp`, `cold`, `edge`, `refcheck`, `nancheck` modes):
+* `dgemm`: MKL.
+* `swD`: D memory-lean Winograd levels.
+* `g:<slp>:<depth>:<dfs>:<bfs>`: generic scheme engine.
+* `swD+<method>`: lean top levels over another method.
+* `sc:<method>`: outside-inside scaling.
+* `ozS`: emulation with S moduli.
+* `ozwS`: the same with exact Winograd per modulus.
+* `ozfS:<slp>`: the same with any integer scheme per modulus.
+* `ozcS`: certified (theta from `OZ_CERT_THETA`, default 4).
+* `time` mode uses uniform inputs unless `FMM_TIME_TYPE` / `FMM_TIME_R` are set.
 
 | path | what |
 |---|---|
 | `src/common.h`, `src/blas.h` | timing, allocation, BLAS shim |
 | `src/sw.c` | memory-lean Strassen-Winograd (Boyer et al. schedule, fused post-additions), optional generic leaves |
 | `src/gen.c`, `src/slp.h` | generic bilinear-scheme engine (SLP-driven fused passes, DFS/BFS, peeling) |
-| `src/amx.c` | AMX int8 GEMM (s8 x s8 and u8 x u8), 1x4 tile kernel, macro tiling |
-| `src/ozaki.c`, `src/oz_internal.h`, `src/oz_consts.h` | FP64 emulation (Ozaki II/CRT): scaling, residues, CRT, blocking, guards |
+| `src/amx.c` | AMX int8 GEMM (s8 x s8 and u8 x u8), 1x4 tile kernel, macro tiling; portable exact fallback without AMX |
+| `src/ozaki.c`, `src/oz_internal.h`, `src/oz_consts.h` | FP64 emulation (Ozaki II/CRT): scaling, residues, CRT, blocking, guards, certified mode |
 | `src/ozw.c` | emulation with one exact Strassen-Winograd level per modulus (specialised, unsigned residues) |
 | `src/ozfmm.c` | emulation with any integer-coefficient scheme per modulus (generic, slower) |
-| `src/fmmtest.c` | driver: `acc`, `time` (interleaved, paired), `bitcmp`, `cold`, `passes` |
-| `src/testmat.h` | input classes, double-double reference, error metrics |
-| `src/bench_*.c`, `src/stream.c` | DGEMM, AMX, oneDNN, concurrency and bandwidth probes |
+| `src/fmmtest.c` | driver (see above) |
+| `src/testmat.h` | 8 input classes, double-double reference (per entry and blocked for all entries), error metrics |
+| `src/bench_*.c`, `src/stream.c` | DGEMM, AMX, oneDNN, MKL int8, concurrency and bandwidth probes |
 | `tools/scheme_check.py`, `tools/import_schemes.py`, `tools/fetch_scheme_sources.sh` | exact verification and import of the scheme library |
 | `tools/slp.py` | scheme to straight-line programs (CSE, composition) |
 | `tools/gen_oz_consts.py` | exact CRT constants |
 | `tools/costmodel.py`, `calibrate.py`, `validate_model.py`, `rank_plans.py` | cost model, calibration, validation, search |
-| `tools/acc_table.py`, `tools/sweep_table.py` | result tables |
+| `tools/acc_table.py`, `acc_summary.py`, `sweep_table.py`, `oz_table.py`, `final_table.py` | result tables |
+| `bench/` | `checks.sh`, `accuracy.sh`, `sweep.sh`, `sweep_final*.sh`, `cold.sh` |
 | `schemes/` | 59 verified schemes (JSON) + `INDEX.md` |
-| `results/` | raw outputs and tables (`sweep.md`, `accuracy.md`, `model_validation.md`, `plan_ranking.md`, ...) |
-| `docs/` | literature surveys, novelty check, cost model, ideas, independent review |
+| `results/` | raw outputs and tables; `results/machine2/`: second machine (no AMX) |
+| `review/`, `review2/` | test code written by the independent reviewers |
+| `docs/` | literature surveys, novelty checks, cost model, ideas, independent reviews |

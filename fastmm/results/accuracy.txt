@@ -852,3 +852,5 @@ acc type=decay r=32 m=4000 k=4000 n=4000 method=oz13 max_cw=2.266e-07 med_cw=2.6
 acc type=decay r=32 m=4000 k=4000 n=4000 method=oz14 max_cw=1.449e-08 med_cw=1.648e-15 max_rel=1.130e-02 med_rel=9.229e-14 nrm=1.746e-16
 acc type=decay r=32 m=4000 k=4000 n=4000 method=oz15 max_cw=1.806e-09 med_cw=2.059e-16 max_rel=9.835e-04 med_rel=1.153e-14 nrm=2.658e-17
 acc type=decay r=32 m=4000 k=4000 n=4000 method=oz16 max_cw=1.114e-10 med_cw=1.316e-17 max_rel=6.033e-05 med_rel=7.095e-16 nrm=1.261e-17
+acc type=decay r=32 m=4000 k=4000 n=4000 method=ozf14:slp/winograd.slp max_cw=1.449e-08 med_cw=1.648e-15 max_rel=1.130e-02 med_rel=9.229e-14 nrm=1.746e-16
+acc type=decay r=32 m=4000 k=4000 n=4000 method=ozc16 max_cw=7.771e-16 med_cw=1.394e-17 max_rel=1.593e-08 med_rel=5.998e-16 nrm=3.786e-16 uncertified=10031183 dot2=0 dgemm_tiles=0 fallback_blocks=1/1
