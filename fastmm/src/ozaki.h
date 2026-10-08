@@ -9,9 +9,10 @@ void oz_release(void);  // free the persistent workspace
 // Certified mode (theta > 0; 0 = off): every entry of C is either certified to satisfy
 // |c^_ij - c_ij| <= (theta + 1) u sum_k |a_ik||b_kj| (rigorous bound of the emulation error against
 // a rigorous lower bound of |A||B| from one extra int8 GEMM), recomputed with a compensated dot
-// product, or (when a block has many uncertified entries) computed by the BLAS DGEMM.
+// product (isolated entries), or computed by the BLAS DGEMM (256 x 256 tiles holding more than 256
+// uncertified entries; the whole block when more than 1/8 of its tiles do).
 void oz_set_certify(double theta);
-typedef struct { size_t entries, flagged, recomputed, blocks, fallback_blocks; } oz_cert_stats;
+typedef struct { size_t entries, flagged, recomputed, dgemm_tiles, blocks, fallback_blocks; } oz_cert_stats;
 oz_cert_stats oz_get_cert_stats(void);  // cumulative since program start
 #include "gen.h"
 // Same emulation, but each modular product is computed with one level of the bilinear scheme g

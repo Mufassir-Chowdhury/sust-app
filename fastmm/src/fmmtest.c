@@ -152,8 +152,9 @@ int main(int argc, char **argv) {
       errstats e = err_sampled(m, k, n, A, B, C, ns, 7);
       char cs[160] = "";
       if (!strcmp(me.kind, "ozc"))
-        snprintf(cs, sizeof cs, " uncertified=%zu recomputed=%zu fallback_blocks=%zu/%zu", c1.flagged - c0.flagged,
-                 c1.recomputed - c0.recomputed, c1.fallback_blocks - c0.fallback_blocks, c1.blocks - c0.blocks);
+        snprintf(cs, sizeof cs, " uncertified=%zu dot2=%zu dgemm_tiles=%zu fallback_blocks=%zu/%zu", c1.flagged - c0.flagged,
+                 c1.recomputed - c0.recomputed, c1.dgemm_tiles - c0.dgemm_tiles, c1.fallback_blocks - c0.fallback_blocks,
+                 c1.blocks - c0.blocks);
       printf("acc type=%s r=%d m=%zu k=%zu n=%zu method=%s max_cw=%.3e med_cw=%.3e max_rel=%.3e med_rel=%.3e nrm=%.3e%s\n",
              testmat_name[type], r, m, k, n, argv[a], e.max_cw, e.med_cw, e.max_rel, e.med_rel, e.nrm, cs);
       fflush(stdout);
@@ -319,7 +320,9 @@ int main(int argc, char **argv) {
     method me[32];
     for (int a = 0; a < nm; a++) me[a] = parse(argv[6 + a]);
     double *A = amalloc(m * k * 8), *B = amalloc(k * n * 8), *C = amalloc(m * n * 8);
-    testmat_fill(0, 0, m, k, n, A, B, 42);
+    // input class (default uniform): FMM_TIME_TYPE / FMM_TIME_R, as in `acc`
+    testmat_fill(getenv("FMM_TIME_TYPE") ? atoi(getenv("FMM_TIME_TYPE")) : 0,
+                 getenv("FMM_TIME_R") ? atoi(getenv("FMM_TIME_R")) : 0, m, k, n, A, B, 42);
     double flop = 2.0 * m * n * k;
     for (int a = 0; a < nm; a++) run(me[a], m, k, n, A, B, C);  // warm-up
     double (*t)[64] = calloc(nm, sizeof *t);

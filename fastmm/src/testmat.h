@@ -12,8 +12,11 @@
 //  6 checker: A_ik = u*2^(r*((i+k)&1)), B_kj = v*2^(r*(1-((k+j)&1))): every row and column mixes
 //             entries ~1 and ~2^r, and for i+j even each product pairs a large with a small entry.
 //             No diagonal (row, column or inner) scaling can remove this structure.
-static const char *testmat_name[] = {"unif", "pos", "rowcol", "inner", "randexp", "cancel", "checker"};
-#define TESTMAT_COUNT 7
+//  7 decay  : A_ik = u*2^(-r|i-k|/m'), B_kj = v*2^(-r|k-j|/m'), m' = max(m,k,n): entries decay away
+//             from the diagonal (as in kernel, covariance or inverse-operator matrices), so c_ij for
+//             distant i, j is much smaller than ||a_i|| ||b_j||.
+static const char *testmat_name[] = {"unif", "pos", "rowcol", "inner", "randexp", "cancel", "checker", "decay"};
+#define TESTMAT_COUNT 8
 
 static inline int rnd_exp(uint64_t *s, int r) { return r ? (int)(rng_next(s) % (2 * r + 1)) - r : 0; }
 
@@ -57,6 +60,14 @@ static void testmat_fill(int type, int r, size_t m, size_t k, size_t n, double *
     for (size_t p = 0; p < k; p++) for (size_t i = 0; i < m; i++) A[i + p * m] = ldexp(A[i + p * m], r * (int)((i + p) & 1));
     #pragma omp parallel for
     for (size_t j = 0; j < n; j++) for (size_t p = 0; p < k; p++) B[p + j * k] = ldexp(B[p + j * k], r * (int)(1 - ((p + j) & 1)));
+  } else if (type == 7) {
+    double mm = (double)(m > k ? (m > n ? m : n) : (k > n ? k : n));
+    #pragma omp parallel for
+    for (size_t p = 0; p < k; p++)
+      for (size_t i = 0; i < m; i++) A[i + p * m] *= exp2(-(double)r * fabs((double)i - (double)p) / mm);
+    #pragma omp parallel for
+    for (size_t j = 0; j < n; j++)
+      for (size_t p = 0; p < k; p++) B[p + j * k] *= exp2(-(double)r * fabs((double)p - (double)j) / mm);
   } else if (type == 4) {
     #pragma omp parallel for
     for (size_t j = 0; j < k; j++) {

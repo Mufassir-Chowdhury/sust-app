@@ -289,7 +289,10 @@ typedef struct {
   const uint8_t *zrA, *zrB;
   double ek0;           // k/4 + 2^(2L-80)
   size_t count;
+  size_t *tcnt, ntr;    // uncertified entries per CERT_T x CERT_T tile (ntr tiles along i)
 } cert_ctx;
+#define CERT_T 256        // tile of C recomputed by DGEMM when it holds many uncertified entries
+#define CERT_TILE_MAX 256  // ... more than this many (otherwise: Dot2 per entry, cheaper below ~400)
 
 static void epi_cert(const int32_t *blk, size_t ld, size_t r0, size_t c0, void *vctx) {
   cert_ctx *e = vctx;
@@ -323,7 +326,10 @@ static void epi_cert(const int32_t *blk, size_t ld, size_t r0, size_t c0, void *
       flagged += (size_t)__builtin_popcount(bad);
     }
   }
-  if (flagged) __atomic_add_fetch(&e->count, flagged, __ATOMIC_RELAXED);
+  if (flagged) {
+    __atomic_add_fetch(&e->count, flagged, __ATOMIC_RELAXED);
+    __atomic_add_fetch(&e->tcnt[c0 / CERT_T + (r0 / CERT_T) * e->ntr], flagged, __ATOMIC_RELAXED);
+  }
 }
 
 // Compensated dot product (Ogita, Rump & Oishi 2005, Dot2) in 4 interleaved chains, combined with
@@ -441,6 +447,7 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
   }
   double tconv = 0, tgemm = 0, tcrt = 0;
   double *n1A = NULL, *n1B = NULL, *fa = NULL, *fb = NULL;
+  size_t *tcnt = NULL, ntr = 0, ntc = 0;
   int *exA = NULL, *exB = NULL;
   uint8_t *zrA = NULL, *zrB = NULL;
   if (cert) {
@@ -464,12 +471,18 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
       size_t nflag = 0;
       if (cert) {
         for (size_t j = j0; j < j0 + w; j++) fb[j] = g_cert_theta * ldexp(1.0, tau[j] - exB[j] - 53);
+        ntr = (h + CERT_T - 1) / CERT_T; ntc = (w + CERT_T - 1) / CERT_T;
+        tcnt = realloc(tcnt, ntr * ntc * sizeof(size_t));
+        memset(tcnt, 0, ntr * ntc * sizeof(size_t));
         cert_ctx cc = {Y[s], h, w, n1A + i0, n1B + j0, fa + i0, fb + j0, zrA + i0, zrB + j0,
-                       0.25 * (double)k + ldexp(1.0, 2 * L - 80), 0};
+                       0.25 * (double)k + ldexp(1.0, 2 * L - 80), 0, tcnt, ntr};
         amx_gemm_s8s8(wp, hp, Kp, Bres[s], Ares[s], epi_cert, &cc);
         nflag = cc.count;
+        size_t ndg = 0;
+        for (size_t t = 0; t < ntr * ntc; t++) ndg += tcnt[t] > CERT_TILE_MAX;
         g_cert_stats.entries += h * w; g_cert_stats.flagged += nflag; g_cert_stats.blocks++;
-        if (nflag * 2000 > h * w) {  // many uncertified entries: this block is computed by the BLAS
+        // emulation + DGEMM on more than 1/8 of the tiles costs more than DGEMM on the whole block
+        if (8 * ndg > ntr * ntc) {
           g_cert_stats.fallback_blocks++;
           dgemm_nn(h, w, k, 1.0, A + i0, lda, B + j0 * ldb, ldb, 0.0, C + i0 + j0 * ldc, ldc);
           double t3 = now_sec();
@@ -483,19 +496,32 @@ void oz_dgemm(int s, size_t m, size_t k, size_t n, const double *A, size_t lda, 
       }
       double t3 = now_sec();
       reconstruct(s, h, w, Y, h, sig + i0, tau + j0, C + i0 + j0 * ldc, ldc);
-      if (nflag) {  // few uncertified entries: recompute them with a compensated dot product
+      if (nflag) {  // uncertified entries: tiles with many of them by DGEMM, the others by Dot2
         const uint8_t *F = Y[s];
-        #pragma omp parallel for schedule(dynamic, 16)
-        for (size_t j = 0; j < w; j++)
-          for (size_t i = 0; i < h; i++)
-            if (F[i + j * h]) C[i0 + i + (j0 + j) * ldc] = dot2(k, A + i0 + i, lda, B + (j0 + j) * ldb);
-        g_cert_stats.recomputed += nflag;
+        size_t nrec = 0, ntd = 0;
+        #pragma omp parallel for schedule(dynamic, 1) reduction(+ : nrec, ntd)
+        for (size_t t = 0; t < ntr * ntc; t++) {
+          if (!tcnt[t]) continue;
+          size_t ti = (t % ntr) * CERT_T, tj = (t / ntr) * CERT_T;
+          size_t th = h - ti < CERT_T ? h - ti : CERT_T, tw = w - tj < CERT_T ? w - tj : CERT_T;
+          if (tcnt[t] > CERT_TILE_MAX) {
+            int old = blas_set_threads_local(1);
+            dgemm_nn(th, tw, k, 1.0, A + i0 + ti, lda, B + (j0 + tj) * ldb, ldb, 0.0, C + i0 + ti + (j0 + tj) * ldc, ldc);
+            blas_set_threads_local(old);
+            ntd++;
+          } else {
+            for (size_t j = tj; j < tj + tw; j++)
+              for (size_t i = ti; i < ti + th; i++)
+                if (F[i + j * h]) { C[i0 + i + (j0 + j) * ldc] = dot2(k, A + i0 + i, lda, B + (j0 + j) * ldb); nrec++; }
+          }
+        }
+        g_cert_stats.recomputed += nrec; g_cert_stats.dgemm_tiles += ntd;
       }
       double t4 = now_sec();
       tconv += t2 - t1; tgemm += t3 - t2; tcrt += t4 - t3;
     }
   }
-  if (cert) { free(n1A); free(fa); free(exA); free(zrA); free(n1B); free(fb); free(exB); free(zrB); }
+  if (cert) { free(n1A); free(fa); free(exA); free(zrA); free(n1B); free(fb); free(exB); free(zrB); free(tcnt); }
   free(sig); free(tau); free(ek);
   if (oz_nonfinite_seen) {  // NaN/Inf in the input: recompute with the BLAS so they propagate as in IEEE
     dgemm_nn(m, n, k, 1.0, A, lda, B, ldb, 0.0, C, ldc);

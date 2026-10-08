@@ -10,14 +10,14 @@ M="dgemm sw1 sw2 sw3 sc:sw1 sc:sw2 g:$W2:1:0:1 g:$P48:1:0:1 g:$S336:1:0:1 oz13 o
 : > "$OUT"
 # every entry of C is checked (last-but-methods argument 0); the reference is computed once per input
 for n in 1000 2000 4000; do
-  for cfg in "0 0" "1 0" "5 0" "2 10" "2 32" "3 10" "3 20" "3 32" "4 10" "4 20" "4 32" "4 48" "4 64" "6 8" "6 16" "6 32"; do
+  for cfg in "0 0" "1 0" "5 0" "2 10" "2 32" "3 10" "3 20" "3 32" "4 10" "4 20" "4 32" "4 48" "4 64" "6 8" "6 16" "6 32" "7 8" "7 16" "7 32"; do
     set -- $cfg
     ./bin/fmmtest acc $1 $2 $n $n $n 0 $M >> "$OUT"
   done
 done
 # n = 8000: the input classes where the methods differ most, fewer methods; the emulation's
 # workspace is capped at 3 GB because the all-entry reference and error arrays take another 3 GB
-for cfg in "0 0" "4 32" "4 48" "4 64" "6 16"; do
+for cfg in "0 0" "4 32" "4 48" "4 64" "6 16" "7 16"; do
   set -- $cfg
   OZ_MEM_GB=3 ./bin/fmmtest acc $1 $2 8000 8000 8000 0 dgemm sw1 sw2 oz14 oz15 oz16 ozw14 ozw16 ozc16 >> "$OUT"
 done

@@ -13,8 +13,7 @@ else bench/sweep.sh results/sweep.txt; fi
 python3 tools/sweep_table.py results/sweep.txt > results/sweep.md
 bench/cold.sh results/cold.txt
 if [ "$1" != quick ]; then
-  bench/sweep_final_small.sh results/sweep_oz_final.txt   # n = 4000, 8000 (+ ozw16 at 16000, 20000)
-  bench/sweep_final_oz.sh results/sweep_oz_final.txt      # n = 6000 ... 20000
-  python3 tools/oz_table.py results/sweep_oz_final.txt > results/sweep_oz_final.md
+  bench/sweep_final.sh results/sweep_final.txt   # final code: emulation variants vs best Strassen-type plans
+  python3 tools/final_table.py results/sweep_final.txt > results/sweep_final.md
 fi
-echo "results in results/: checks.txt accuracy.md sweep.md cold.txt sweep_oz_final.md"
+echo "results in results/: checks.txt accuracy.md sweep.md cold.txt sweep_final.md"

@@ -544,3 +544,4 @@ acc type=randexp r=64 m=4000 k=4000 n=4000 method=oz14 max_cw=1.230e-12 med_cw=9
 acc type=randexp r=64 m=4000 k=4000 n=4000 method=oz15 max_cw=1.669e-13 med_cw=1.169e-16 max_rel=4.834e-08 med_rel=2.477e-16 nrm=1.317e-17
 acc type=randexp r=64 m=4000 k=4000 n=4000 method=oz16 max_cw=9.066e-15 med_cw=2.218e-17 max_rel=1.745e-09 med_rel=4.808e-17 nrm=8.495e-18
 acc type=randexp r=64 m=4000 k=4000 n=4000 method=ozf14:slp/winograd.slp max_cw=1.230e-12 med_cw=9.076e-16 max_rel=7.163e-07 med_rel=1.948e-15 nrm=9.420e-17
+acc type=unif r=0 m=4000 k=4000 n=4000 method=ozc16 max_cw=7.374e-18 med_cw=4.207e-19 max_rel=2.617e-15 med_rel=3.849e-17 nrm=5.067e-18 uncertified=0 dot2=0 dgemm_tiles=0 fallback_blocks=0/1
