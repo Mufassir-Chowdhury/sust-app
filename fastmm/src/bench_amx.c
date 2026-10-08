@@ -29,7 +29,7 @@ static void epi_store(const int32_t *blk, size_t ld, size_t i0, size_t j0, void 
 static void epi_none(const int32_t *blk, size_t ld, size_t i0, size_t j0, void *vctx) { (void)blk; (void)ld; (void)i0; (void)j0; (void)vctx; }
 
 int main(int argc, char **argv) {
-  if (amx_init()) { fprintf(stderr, "AMX not available\n"); return 1; }
+  if (amx_init()) printf("AMX not available: testing the portable int8 kernel (same packed layouts)\n");
   // correctness on odd-sized problems (sampled check against a naive product)
   size_t shapes[][3] = {{77, 45, 200}, {2000, 2000, 2000}, {1500, 1500, 1500}, {1000, 1000, 1000}, {96, 64, 64}, {100, 64, 64}};
   for (int sh = 0; sh < (int)(sizeof shapes / sizeof shapes[0]); sh++) {

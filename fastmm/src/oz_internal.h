@@ -72,6 +72,23 @@ static inline __m256i resid_split(split_t x, double c, double q, double p, doubl
   v = _mm512_fnmadd_pd(t, _mm512_set1_pd(p), v);
   return _mm512_cvtpd_epi32(v);
 }
+// Byte transpose 4 x 16 -> 16 x 4 (dest byte c*4+q = src byte q*16+c), as used to build the AMX VNNI
+// layout.  vpermb (AVX512-VBMI) when available, otherwise SSE unpacks (same result).
+static inline __m512i oz_perm_cq(__m512i perm, __m512i z) {
+#ifdef __AVX512VBMI__
+  return _mm512_permutexvar_epi8(perm, z);
+#else
+  (void)perm;
+  __m128i L0 = _mm512_extracti32x4_epi32(z, 0), L1 = _mm512_extracti32x4_epi32(z, 1);
+  __m128i L2 = _mm512_extracti32x4_epi32(z, 2), L3 = _mm512_extracti32x4_epi32(z, 3);
+  __m128i t0 = _mm_unpacklo_epi8(L0, L1), t1 = _mm_unpackhi_epi8(L0, L1);
+  __m128i t2 = _mm_unpacklo_epi8(L2, L3), t3 = _mm_unpackhi_epi8(L2, L3);
+  __m512i r = _mm512_castsi128_si512(_mm_unpacklo_epi16(t0, t2));
+  r = _mm512_inserti32x4(r, _mm_unpackhi_epi16(t0, t2), 1);
+  r = _mm512_inserti32x4(r, _mm_unpacklo_epi16(t1, t3), 2);
+  return _mm512_inserti32x4(r, _mm_unpackhi_epi16(t1, t3), 3);
+#endif
+}
 static inline __m128i pack16(__m256i lo, __m256i hi) {
   return _mm512_cvtepi32_epi8(_mm512_inserti64x4(_mm512_castsi256_si512(lo), hi, 1));
 }

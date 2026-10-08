@@ -193,7 +193,7 @@ static void pack_left(int s, int L, const geom_t *G, const gen_scheme *g, const 
               w = _mm512_inserti32x4(w, ln[1], 1);
               w = _mm512_inserti32x4(w, ln[2], 2);
               w = _mm512_inserti32x4(w, ln[3], 3);
-              widen(_mm512_permutexvar_epi8(perm, w), &blo[b], &bhi[b]);
+              widen(oz_perm_cq(perm, w), &blo[b], &bhi[b]);
             }
             slp_mod16(&g->s[0], blo, flo, (int)mc[l].p);
             slp_mod16(&g->s[0], bhi, fhi, (int)mc[l].p);

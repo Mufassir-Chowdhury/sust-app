@@ -220,13 +220,13 @@ static void pack_A_res(int s, int L, size_t m, size_t k, const double *A, size_t
                                   resid_split(x[2 * q + 1], mc[l].c, mc[l].q, mc[l].p, mc[l].invp));
               z = _mm512_inserti32x4(z, bb, q);
             }
-            z = _mm512_permutexvar_epi8(perm, z);
+            z = oz_perm_cq(perm, z);
             _mm512_stream_si512((void *)(out[l] + amx_tile_off(i16, kb, Kp) + r * 64), z);
           }
           if (cp) {
             __m512i z = _mm512_setzero_si512();
             for (int q = 0; q < 4; q++) z = _mm512_inserti32x4(z, pack16(qv[2 * q], qv[2 * q + 1]), q);
-            z = _mm512_permutexvar_epi8(perm, z);
+            z = oz_perm_cq(perm, z);
             _mm512_stream_si512((void *)(cp->q + amx_tile_off(i16, kb, Kp) + r * 64), z);
           }
         }

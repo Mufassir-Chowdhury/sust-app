@@ -10,7 +10,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-int amx_init(void);  // request permission from the kernel; returns 0 on success
+int amx_init(void);  // request permission from the kernel; returns 0 on success (AMX in use)
+int amx_hardware(void);  // 1 if the AMX path is used, 0 if the portable (exact, slow) kernel is
 
 static inline size_t amx_pad(size_t x, size_t q) { return (x + q - 1) / q * q; }
 

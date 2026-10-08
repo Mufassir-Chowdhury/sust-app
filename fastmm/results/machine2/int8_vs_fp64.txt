@@ -1,0 +1,12 @@
+dgemm n=4000 reps=5 median=1.103068 s min=1.071991 s  116.0 GFLOP/s (median)
+dgemm n=8000 reps=5 median=7.904017 s min=6.320623 s  129.6 GFLOP/s (median)
+s8u8s32 n=4000 0.3417 s  374.6 GOP/s
+s16s16s32 n=4000 0.7146 s  179.1 GOP/s
+s8u8s32 n=8000 3.0351 s  337.4 GOP/s
+s16s16s32 n=8000 5.8645 s  174.6 GOP/s
+dgemm n=4000 reps=5 median=1.071988 s min=1.048003 s  119.4 GFLOP/s (median)
+dgemm n=8000 reps=5 median=5.085762 s min=4.951101 s  201.3 GFLOP/s (median)
+s8u8s32 n=4000 0.3773 s  339.3 GOP/s
+s16s16s32 n=4000 0.6471 s  197.8 GOP/s
+s8u8s32 n=8000 4.1875 s  244.5 GOP/s
+s16s16s32 n=8000 8.1280 s  126.0 GOP/s

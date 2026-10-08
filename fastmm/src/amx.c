@@ -36,7 +36,71 @@ typedef struct {
   uint8_t rows[16];
 } __attribute__((packed)) tilecfg_t;
 
-int amx_init(void) { return (int)syscall(SYS_arch_prctl, ARCH_REQ_XCOMP_PERM, XFEATURE_XTILEDATA); }
+// AMX is used when the CPU has AMX-TILE and AMX-INT8 (CPUID 7.0:EDX bits 24, 25), the kernel grants the
+// tile state, and AMX_DISABLE is not set.  Otherwise a portable AVX-512BW kernel computes the same
+// exact int32 products (bit-identical results, much slower): see amx_gemm_portable below.
+#include <cpuid.h>
+static int g_amx = -1;
+static int amx_available(void) {
+  if (g_amx < 0) {
+    unsigned a, b, c, d;
+    int has = __get_cpuid_count(7, 0, &a, &b, &c, &d) && ((d >> 24) & 1) && ((d >> 25) & 1);
+    const char *e = getenv("AMX_DISABLE");
+    if (e && atoi(e)) has = 0;
+    if (has && syscall(SYS_arch_prctl, ARCH_REQ_XCOMP_PERM, XFEATURE_XTILEDATA) != 0) has = 0;
+    g_amx = has;
+  }
+  return g_amx;
+}
+int amx_init(void) { return amx_available() ? 0 : -1; }
+int amx_hardware(void) { return amx_available(); }
+
+// Portable exact int8 GEMM on the same packed layouts: int8 -> int16, vpmaddwd (pairs of k), int32
+// accumulation with the same two's-complement wrap-around as the AMX dot products.
+static void amx_gemm_portable(int uns, size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8_t *Bp,
+                              amx_epilogue_fn epi, void *ctx) {
+  size_t nkb = Kp / 64, nbi = Mp / 32, nbj = Np / 32;
+  #pragma omp parallel
+  {
+    int32_t blk[32 * 32] __attribute__((aligned(64)));
+    int16_t a16[16 * 64] __attribute__((aligned(64)));
+    __m512i b16[16][2];
+    #pragma omp for schedule(dynamic, 1) collapse(2)
+    for (size_t bi = 0; bi < nbi; bi++)
+      for (size_t bj = 0; bj < nbj; bj++) {
+        for (int ti = 0; ti < 2; ti++)
+          for (int tj = 0; tj < 2; tj++) {
+            size_t i16 = 2 * bi + ti, j16 = 2 * bj + tj;
+            __m512i acc[16][2];
+            for (int r = 0; r < 16; r++) acc[r][0] = acc[r][1] = _mm512_setzero_si512();
+            for (size_t kb = 0; kb < nkb; kb++) {
+              const int8_t *at = Ap + amx_tile_off(i16, kb, Kp), *bt = Bp + amx_tile_off(j16, kb, Kp);
+              for (int r = 0; r < 16; r++)
+                for (int h = 0; h < 2; h++) {
+                  __m256i a8 = _mm256_loadu_si256((const __m256i *)(at + 64 * r + 32 * h));
+                  __m256i b8 = _mm256_loadu_si256((const __m256i *)(bt + 64 * r + 32 * h));
+                  _mm512_store_si512(a16 + 64 * r + 32 * h, uns ? _mm512_cvtepu8_epi16(a8) : _mm512_cvtepi8_epi16(a8));
+                  b16[r][h] = uns ? _mm512_cvtepu8_epi16(b8) : _mm512_cvtepi8_epi16(b8);
+                }
+              for (int r = 0; r < 16; r++)  // row r of the A tile = output row
+                for (int rb = 0; rb < 16; rb++) {  // row rb of the B tile = k values 4rb..4rb+3 of 16 columns
+                  long long w;
+                  memcpy(&w, a16 + 64 * r + 4 * rb, 8);
+                  __m512i bc = _mm512_set1_epi64(w);
+                  acc[r][0] = _mm512_add_epi32(acc[r][0], _mm512_madd_epi16(b16[rb][0], bc));
+                  acc[r][1] = _mm512_add_epi32(acc[r][1], _mm512_madd_epi16(b16[rb][1], bc));
+                }
+            }
+            for (int r = 0; r < 16; r++)
+              for (int h = 0; h < 2; h++) {
+                __m512i sum = _mm512_add_epi32(acc[r][h], _mm512_srli_epi64(acc[r][h], 32));
+                _mm256_storeu_si256((__m256i *)(blk + (16 * ti + r) * 32 + 16 * tj + 8 * h), _mm512_cvtepi64_epi32(sum));
+              }
+          }
+        epi(blk, 32, 32 * bi, 32 * bj, ctx);
+      }
+  }
+}
 
 static void tile_config(void) {
   tilecfg_t cfg;
@@ -170,6 +234,7 @@ static void amx_gemm_impl(int uns, size_t Mp, size_t Np, size_t Kp, const int8_t
 
 void amx_gemm_s8s8(size_t Mp, size_t Np, size_t Kp, const int8_t *Ap, const int8_t *Bp, amx_epilogue_fn epi,
                    void *ctx) {
+  if (!amx_available()) { amx_gemm_portable(0, Mp, Np, Kp, Ap, Bp, epi, ctx); return; }
   amx_gemm_impl(0, Mp, Np, Kp, Ap, Bp, epi, ctx);
 }
 void amx_gemm_u8u8(size_t Mp, size_t Np, size_t Kp, const uint8_t *Ap, const uint8_t *Bp, amx_epilogue_fn epi,
@@ -177,5 +242,6 @@ void amx_gemm_u8u8(size_t Mp, size_t Np, size_t Kp, const uint8_t *Ap, const uin
 #if AMX_KERNEL == 22
 #error "unsigned products are only implemented for the 1x4 kernel"
 #endif
+  if (!amx_available()) { amx_gemm_portable(1, Mp, Np, Kp, (const int8_t *)Ap, (const int8_t *)Bp, epi, ctx); return; }
   amx_gemm_impl(1, Mp, Np, Kp, (const int8_t *)Ap, (const int8_t *)Bp, epi, ctx);
 }

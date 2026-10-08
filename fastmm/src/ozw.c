@@ -122,7 +122,7 @@ static void wpack_left(int s, int L, const kgeom_t *G, size_t r0, size_t H, cons
                                                uresid(x[2][b][1], mc[l].c, mc[l].q, mc[l].p, mc[l].invp)), 2);
               w = _mm512_inserti32x4(w, pack16(uresid(x[3][b][0], mc[l].c, mc[l].q, mc[l].p, mc[l].invp),
                                                uresid(x[3][b][1], mc[l].c, mc[l].q, mc[l].p, mc[l].invp)), 3);
-              blk[b] = _mm512_permutexvar_epi8(perm, w);
+              blk[b] = oz_perm_cq(perm, w);
             }
             __m512i A11 = blk[0], A12 = blk[1], A21 = blk[2], A22 = blk[3];
             __m512i S1 = madd8(A21, A22, p), S2 = msub8(S1, A11, p), S3 = msub8(A11, A21, p), S4 = msub8(A12, S2, p);

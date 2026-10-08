@@ -16,8 +16,10 @@ for n in 1000 2000 4000; do
   done
 done
 # n = 8000: the input classes where the methods differ most, fewer methods; the emulation's
-# workspace is capped at 3 GB because the all-entry reference and error arrays take another 3 GB
-for cfg in "0 0" "4 32" "4 48" "4 64" "6 16" "7 16"; do
+# workspace is capped at 3 GB because the all-entry reference and error arrays take another 3 GB.
+# (These rows were run on the second machine, without AMX, with the portable int8 kernel, which gives
+# results bit-identical to the AMX path; DGEMM and the Strassen rows use that machine's MKL.)
+for cfg in "0 0" "4 48" "4 64" "7 16"; do
   set -- $cfg
-  OZ_MEM_GB=3 ./bin/fmmtest acc $1 $2 8000 8000 8000 0 dgemm sw1 sw2 oz14 oz15 oz16 ozw14 ozw16 ozc16 >> "$OUT"
+  OZ_MEM_GB=3 ./bin/fmmtest acc $1 $2 8000 8000 8000 0 dgemm sw1 sw2 oz14 oz16 ozc16 >> "$OUT"
 done
